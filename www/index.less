@@ -1,0 +1,138 @@
+@import "../lib/bootstrap-3.3.7/less/variables.less";
+
+@body-border-width: 1px;
+@title-font-size: 14px;
+body {
+    background: whitesmoke;
+    border: solid @body-border-width;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+@panel-height: ~'calc(100% - 80px)';
+@component-panel-width:90px;
+.component-panel {
+    position: absolute;
+    background: white;
+    margin-right: 10px;
+    height: @panel-height;
+    width: @component-panel-width;
+    margin-bottom: 0;
+    font-size: @title-font-size;
+
+    .panel-heading {
+        text-align: center;
+    }
+    ul {
+        li {
+            /* float: left; */
+            width: 64px;
+            text-align: center;
+        }
+    }
+}
+
+@editor-panel-width: 300px;
+.editor-panel {
+    position: absolute;
+    right: 0;
+    width: @editor-panel-width;
+    height: @panel-height;
+    background: white;
+    margin: 0;
+    font-size: @title-font-size;
+
+    label {
+        width: 80px;
+        float: left;
+        padding: 4px;
+    }
+    .control {
+        padding-left: 90px;
+    }
+    .empty {
+        padding-top: 200px;
+        text-align: center;
+    }
+}
+
+.main-panel {
+    @margin-left :@component-panel-width + 6px;
+    @margin-right: @editor-panel-width + 6px;
+    position: absolute;
+    left: @margin-left;
+    height: @panel-height;
+    width: ~"calc(100% -  @{margin-left} - @{margin-right})";
+}
+
+.page-container {
+    @nav-height: 42px;
+    position: absolute;
+    width: 320px;
+    height: ~"calc(100% - 42px)";
+    top: @nav-height;
+}
+
+.toolbar {
+    margin-bottom: 0;
+    background-color: @brand-primary;
+    color: white;
+    padding: 4px 0 4px 0px;
+    h3 {
+        margin: 0;
+        padding: 8px 0 0 10px;   
+        font-size: @title-font-size;
+    }
+    .btn {
+        border: none;
+        background: none;
+        color: unset;
+    }
+}
+
+.page-view {
+    width: 100%;
+    background: white;
+    list-style: none;
+    font-size: 10pt;
+    font-family: 'Microsoft YaHei', 'FangSong_GB2312','Hiragino Sans GB',Helvetica,Arial,'Lucida Grande',sans-serif;
+    header {
+        min-height: 2cm;
+        // border: dotted 3px #ccc;
+    }
+    section {
+        // border: dotted 0.1cm #ccc;
+    }
+    footer {
+        min-height: 2cm;
+        // border: dotted 0.1cm #ccc;
+    }
+    .control-container {
+        .empty {
+            text-align: center;
+            padding-top: 1cm;
+        }
+    }
+}
+
+:focus {
+    /* -webkit-focus-ring-color = '#5B9DD9' */
+    outline:none;
+}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:hover, .nav-tabs > li.active > a:focus{
+ background-color: @brand-primary;
+ color: white;
+}
+
+.spliter {
+    background-color: #ccc;
+}
+
+button {
+    span {
+        padding-left: 4px
+    }
+}
+

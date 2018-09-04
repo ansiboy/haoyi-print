@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "none",
+        "sourceMap": true,
+        "declaration": true,
+        "outFile": "../lib/jueying.js",
+        "rootDir": ".",
+        "jsx": "react",
+        "jsxFactory": "h",
+        "strict": false,
+    }
+}

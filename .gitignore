@@ -1,0 +1,6 @@
+node_modules
+host/**/*.js
+page-designer/**/*.js
+www/**/*.js
+**/*.map
+print-templates
