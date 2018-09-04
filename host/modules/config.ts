@@ -1,11 +1,13 @@
-import { readConfig, writeConfig, Config } from "../config";
+import { readConfig, writeConfig, UserConfig } from "../config";
 import { argumentNull } from "../errors";
 
 export async function get() {
     let c = await readConfig()
     return c
 }
-export function save({ config }: { config: Config }) {
+export async function save({ config }: { config: UserConfig }) {
     if (!config) throw argumentNull('config')
-    return writeConfig(config)
+    let c = await readConfig()
+    c.userConfig = config
+    return writeConfig(c)
 }

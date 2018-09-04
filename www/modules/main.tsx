@@ -5,11 +5,10 @@ import * as React from 'react';
 import 'components/placeholder'
 import { showPrintDialog, generatePrintHTML } from 'print'
 import { ControlSize } from 'components/controlSize';
-import { ServiceDocumentStorage } from 'designer/serviceDocumentStorage';
 import { Service } from 'service';
 import { showSettingsDialog } from '../controls/settingsDialog';
+import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
 
-let service = new Service()
 class MainPage extends ext.DesignerFramework {
     private _storage1: extentions.DocumentStorage;
     constructor(props) {
@@ -23,12 +22,8 @@ class MainPage extends ext.DesignerFramework {
     }
     get window() {
         const { remote } = nodeRequire('electron');
-        let win = remote.BrowserWindow.getAllWindows()[0];
+        let win = remote.getCurrentWindow();
         return win
-    }
-    test() {
-        // service.printByTemplate('仓库库位', { Storage: 'BJ-ST1', Location: 'M-K-A-2-111' })
-        service.printByTemplate('仓库库位', { Storage: 'BJ-ST1', Location: 'M-K-2-3-234' })
     }
     print() {
         let { pageDocuments, activeDocumentIndex } = this.state
@@ -48,7 +43,10 @@ class MainPage extends ext.DesignerFramework {
         showSettingsDialog()
     }
     windowMax() {
-        service.uiMaxMainWindow()
+        if (this.window.isMaximized())
+            this.window.unmaximize()
+        else
+            this.window.maximize()
     }
     windowMin() {
         this.window.minimize()
@@ -170,3 +168,5 @@ ipcRenderer.on('generate-template-html', async function (event: Electron.Event, 
     let html = await generatePrintHTML(args.templateName, args.templateData)
     ipcRenderer.send('generate-template-html', html)
 })
+
+

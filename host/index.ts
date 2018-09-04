@@ -60,7 +60,7 @@ function start() {
     }
   })
   */
- 
+
   app.on('activate', function () {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
@@ -70,7 +70,7 @@ function start() {
   })
 
   readConfig().then(config => {
-    webServer.listen(config.port, config.hostname)
+    webServer.listen(config.userConfig.port, config.userConfig.hostname)
 
   })
 

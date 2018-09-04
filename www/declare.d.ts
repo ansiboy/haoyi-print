@@ -1,12 +1,10 @@
 /// <reference path="../node_modules/electron/electron.d.ts"/>
-/// <reference path="../lib/typings/require.d.ts"/>
-/// <reference path="../lib/typings/chitu.d.ts"/>
-/// <reference path="../lib/typings/qrcode.d.ts"/>
-/// <reference path="../lib/typings/ui.d.ts"/>
-/// <reference path="../lib/jueying.d.ts"/>
 
 declare module 'jueying' {
 	export = jueying;
+}
+declare module 'jueying.extentions' {
+	export = jueying.extentions
 }
 
 declare namespace jueying {

@@ -1,8 +1,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { ServiceDocumentStorage } from "designer/serviceDocumentStorage";
 import { PageViewProps, ControlFactory, guid } from "jueying";
 import { Service } from "./service";
+import { ServiceDocumentStorage } from "./designer/serviceDocumentStorage";
 
 var printDialogElement: HTMLElement = document.createElement('div')
 printDialogElement.className = 'modal fade'

@@ -28,14 +28,14 @@ export async function print({ deviceName, html }: { deviceName: string, html: st
 
 export async function getDefaultPrinter(): Promise<string | undefined> {
     let config = await readConfig()
-    return config.defaultPrinter;
+    return config.userConfig.defaultPrinter;
 }
 
 export async function setDefaultPrinter({ value }: { value: string }) {
     if (!value) throw argumentNull('value')
 
     let config = await readConfig()
-    config.defaultPrinter = value
+    config.userConfig.defaultPrinter = value
     writeConfig(config)
 }
 

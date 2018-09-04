@@ -7,7 +7,7 @@ import { readConfig } from '../config';
 
 let encoding = 'utf8'
 export async function list(): Promise<{ name: string, data: object }[]> {
-    let config = await readConfig()
+    let config = (await readConfig()).applicationConfig
     return new Promise<{ name: string, data: object }[]>((resolve, reject) => {
         fs.readdir(config.templatePath, async function (err, files) {
             if (err) reject(err)
@@ -27,7 +27,7 @@ export async function save({ name, item }: { name: string, item: object }) {
     if (!name) throw errors.argumentNull('name')
     if (!item) throw errors.argumentNull('item')
 
-    let config = await readConfig()
+    let config = (await readConfig()).applicationConfig
     let filename = path.join(config.templatePath, name)
     return new Promise((resolve, reject) => {
         fs.writeFile(filename, JSON.stringify(item), (err) => {
@@ -41,7 +41,7 @@ export async function save({ name, item }: { name: string, item: object }) {
     })
 }
 async function fileContent(name: string) {
-    let config = await readConfig()
+    let config = (await readConfig()).applicationConfig
     let filename = path.join(config.templatePath, name)
     return new Promise<string>((resolve, reject) => {
         fs.readFile(filename, encoding, (err, data) => {

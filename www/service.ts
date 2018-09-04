@@ -4,10 +4,11 @@
 import { ElementData } from "jueying";
 import * as chitu from 'chitu';
 import { PrintTask } from "../host/modules/printTask";
-import { Config } from "../host/config";
+import { UserConfig } from "../host/config";
 
 
 export class Service extends chitu.Service {
+
     get<T>(url: string, data?: { [key: string]: any }) {
         data = data || {};
         let params = "";
@@ -75,18 +76,30 @@ export class Service extends chitu.Service {
     }
     getConfig() {
         let url = this.url('config/get')
-        return this.get<Config>(url)
+        return this.get<UserConfig>(url)
     }
     saveConfig(config) {
         let url = this.url('config/save')
-        return this.postByJson<Config>(url, { config })
+        return this.postByJson<UserConfig>(url, { config })
     }
-    uiMaxMainWindow() {
-        let url = this.url('ui/maxMainWindow')
-        return this.postByJson(url, {})
-    }
-    uiMinMainWindow() {
-        let url = this.url('ui/minMainWindow')
-        return this.postByJson(url, {})
+
+    ui = {
+        maxMainWindow: () => {
+            let url = this.url('ui/maxMainWindow')
+            return this.postByJson(url, {})
+        },
+        minMainWindow: () => {
+            let url = this.url('ui/minMainWindow')
+            return this.postByJson(url, {})
+        },
+        getMainWindowPosition: () => {
+            return this.get<number[]>('ui/getMainWindowPosition')
+        },
+        setMainWindowPosition: (x: number, y: number) => {
+            return this.postByJson('ui/setMainWindowPosition', { x, y })
+        },
+        exists: () => {
+            return this.postByJson('ui/exists')
+        }
     }
 }

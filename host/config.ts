@@ -3,21 +3,32 @@ import fs = require('fs')
 import { app } from 'electron';
 
 
-export type Config = {
+export type UserConfig = {
     defaultPrinter?: string,
     port: number,
     hostname: string,
-    templatePath: string,
-    productName: string,
     enableInnerPrintService: boolean,
 }
 
-const defaultConfig = {
+export type ApplicationConfig = {
+    productName: string,
+    templatePath: string,
+}
+
+export type Config = {
+    userConfig: UserConfig,
+    applicationConfig: ApplicationConfig
+}
+
+const defaultUserConfig: UserConfig = {
     hostname: '127.0.0.1',
     port: 52894,
+    enableInnerPrintService: true,
+}
+
+const defaultApplicationConfig: ApplicationConfig = {
     templatePath: './print-templates',
     productName: '好易标签打印',
-    enableInnerPrintService: true,
 }
 
 
@@ -29,7 +40,12 @@ export function configPath() {
 export async function readConfig(): Promise<Config> {
     let filepath = configPath()
     if (!fs.existsSync(filepath)) {
-        return defaultConfig
+        let config: Config = {
+            userConfig: defaultUserConfig,
+            applicationConfig: defaultApplicationConfig
+        }
+        writeConfig(config)
+        return config;
     }
 
     return new Promise<Config>((resolve, reject) => {
@@ -43,7 +59,7 @@ export async function readConfig(): Promise<Config> {
 }
 
 export async function writeConfig(config: Config) {
-    config = Object.assign({}, defaultConfig, config)
+    config = Object.assign({}, defaultUserConfig, config)
     let filepath = configPath()
     fs.writeFileSync(filepath, JSON.stringify(config))
 }

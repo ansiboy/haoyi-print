@@ -1,7 +1,7 @@
-import { Config } from "host/config";
+import { UserConfig } from "host/config";
 import React = require("react");
 import ReactDOM = require("react-dom");
-import { PageView, PageViewProps } from "../chitu-react";
+import { PageViewProps } from "../chitu-react";
 import { Service } from "../service";
 
 interface State {
@@ -9,7 +9,7 @@ interface State {
     // defaultPrinter?: string,
     // bindIP?: string,
     // port?: string,
-    config?: Config
+    config?: UserConfig
 }
 
 interface Props extends PageViewProps {
@@ -28,7 +28,7 @@ export default function (page: chitu.Page) {
 
 export class SettingsView extends React.Component<Props, State>{
     element: HTMLElement;
-    config: Config;
+    config: UserConfig;
 
     constructor(props) {
         super(props)
