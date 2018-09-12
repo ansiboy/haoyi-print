@@ -1,5 +1,4 @@
 import React = require("react");
-import { toPix } from "./baseControl";
 
 interface Props {
     size: string | number,
@@ -21,7 +20,7 @@ export class ControlSize extends React.Component<Props, State>{
         let value = Number.parseFloat(ControlSize.toDefaultUnitSize(size))
         this.state = {
             value,
-            valueText: value.toFixed(1),
+            valueText: isNaN(value) ? '' : value.toFixed(1),
         }
     }
     componentWillReceiveProps(props: Props) {
@@ -32,6 +31,9 @@ export class ControlSize extends React.Component<Props, State>{
 
     /** 将尺寸转换为默认的值 */
     static toDefaultUnitSize(size: string | number): string {
+        if (size == null || size == '')
+            return size as string
+
         if (typeof size == 'number') {
             size = size + 'px'
         }
@@ -86,3 +88,51 @@ export class ControlSize extends React.Component<Props, State>{
         </div>
     }
 }
+
+export let toPix = (function () {
+
+    // cache con, el for reused
+    var con: HTMLElement, el: HTMLElement
+    // high sample will more accurate?
+    var sample = 100
+
+    function initElements() {
+        con = document.createElement('div')
+        con.style.width = `0`
+        con.style.height = `0`
+        con.style.visibility = 'hidden'
+        con.style.overflow = 'hidden'
+
+        el = document.createElement('div')
+
+        con.appendChild(el)
+    }
+
+    function pxPerUnit(unit): number {
+        if (!con) initElements()
+        el.style.width = sample + unit
+        document.body.appendChild(con)
+        var dimension = el.getBoundingClientRect()
+        con.parentNode.removeChild(con)
+        return dimension.width / sample
+    }
+
+    function toPx(length: string): number {
+        var unitRe = /^\s*([+-]?[\d\.]*)\s*(.*)\s*$/i
+        var match = unitRe.exec(length)
+        while (1) {
+            if (!match || match.length < 3) break
+            var val = Number(match[1])
+            if (isNaN(val)) break
+            var unit = match[2]
+            if (!unit) break
+            var valid = true
+            val = val || 1
+            break
+        }
+        if (!valid) throw new TypeError('Error parsing length')
+        return unit == 'px' ? val : pxPerUnit(unit) * val
+    }
+
+    return toPx
+})()

@@ -25,6 +25,4 @@ export class ServiceDocumentStorage implements jueying.extentions.DocumentStorag
     remove(name: string): Promise<any> {
         throw new Error("Method not implemented.");
     }
-
-
 }

@@ -5,6 +5,7 @@ import { BaseControl } from "../baseControl";
 export interface Props extends ControlProps<Label> {
     text: string,
     fontSize?: string,
+    fontFa?: string,
 }
 
 export default class Label extends BaseControl<Props, {}>{

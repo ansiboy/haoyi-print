@@ -1,7 +1,7 @@
 import { BaseControlEditor } from "../baseControl";
 import { Props as ControlProps } from './control';
 import React = require("react");
-import { ControlSize } from "../controlSize";
+import { ControlSize } from "../controls/controlSize";
 
 export default class SquareCodeEditor extends BaseControlEditor<ControlProps>{
     renderControlProps(): JSX.Element {

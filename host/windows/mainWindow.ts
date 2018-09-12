@@ -9,7 +9,7 @@ export function createMainWindow() {
     let mainWindow = new BrowserWindow({
         width: 1024, height: 800,
         webPreferences: { nativeWindowOpen: true },
-        frame: true,
+        frame: false,
         show: false,
     })
 

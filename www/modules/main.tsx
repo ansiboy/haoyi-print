@@ -4,7 +4,7 @@ import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import 'components/placeholder'
 import { showPrintDialog, generatePrintHTML } from 'print'
-import { ControlSize } from 'components/controlSize';
+import { ControlSize } from 'components/controls/controlSize';
 import { Service } from 'service';
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';

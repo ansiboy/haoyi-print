@@ -1,7 +1,7 @@
 import * as React from 'react';
 import 'qrcode'
 import { BaseControlProps, BaseControl } from "../baseControl";
-import { ControlSize } from "../controlSize";
+import { ControlSize } from "../controls/controlSize";
 
 export interface Props extends BaseControlProps<SquareCode> {
     // value: string,

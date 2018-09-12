@@ -19,22 +19,6 @@ interface PrintDialogState {
     templateDataText?: string,
 }
 
-// export async function defaultPrinterName(): Promise<string>
-// export async function defaultPrinterName(value: string): Promise<void>
-// export async function defaultPrinterName(value?: string): Promise<string | void> {
-//     if (value === undefined)
-//         return 'Gprinter  GP-2120TL' //localStorage.getItem('defaultPrinterName')
-
-//     if (value === null) {
-//         localStorage.removeItem('defaultPrinterName')
-//         return
-//     }
-
-//     localStorage.setItem('defaultPrinterName', value)
-// }
-
-
-
 class PrintDialog extends React.Component<PrintDialogProps, PrintDialogState>{
     constructor(props: PrintDialogProps) {
         super(props)
@@ -160,7 +144,7 @@ export async function generatePrintHTML(templateName: string, data?: object) {
             
                   .page-view {
                     font-size: 10pt;
-                    font-family: 'Microsoft YaHei', 'FangSong_GB2312', 'Hiragino Sans GB',Helvetica,Arial,'Lucida Grande',sans-serif;
+                    font-family: 'Microsoft YaHei','Hiragino Sans GB','FangSong_GB2312','Microsoft Sans Serif',Helvetica, Arial,'Lucida Grande','sans-serif';
                   }
                 </style>
                 <link rel="stylesheet" href="../lib/Font-Awesome-3.2.1/css/font-awesome.css" />

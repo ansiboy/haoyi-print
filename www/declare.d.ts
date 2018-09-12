@@ -13,6 +13,7 @@ declare namespace jueying {
 		// height?: number,
 		data?: { [key: string]: any },
 		unit: string,
+		fontFamily?: string,
 	}
 	export interface ControlPlaceholderProps {
 		showField?: boolean,

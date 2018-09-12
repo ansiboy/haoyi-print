@@ -2,7 +2,6 @@ import * as path from 'path'
 import fs = require('fs')
 import { app } from 'electron';
 
-
 export type UserConfig = {
     defaultPrinter?: string,
     port: number,
@@ -31,6 +30,11 @@ const defaultApplicationConfig: ApplicationConfig = {
     productName: '好易标签打印',
 }
 
+const defaultConfig: Config = {
+    userConfig: defaultUserConfig,
+    applicationConfig: defaultApplicationConfig,
+}
+
 
 export function configPath() {
     let filepath = path.join(app.getAppPath(), "config.json")
@@ -39,23 +43,24 @@ export function configPath() {
 
 export async function readConfig(): Promise<Config> {
     let filepath = configPath()
+    let config: Config
     if (!fs.existsSync(filepath)) {
-        let config: Config = {
-            userConfig: defaultUserConfig,
-            applicationConfig: defaultApplicationConfig
-        }
+        config = defaultConfig
         writeConfig(config)
-        return config;
+    }
+    else {
+        config = await new Promise<Config>((resolve, reject) => {
+            fs.readFile(filepath, 'utf8', (err, data) => {
+                if (err) reject(err)
+
+                let config: Config = JSON.parse(data)
+                resolve(config)
+            })
+        })
+        config = Object.assign(defaultConfig, config)
     }
 
-    return new Promise<Config>((resolve, reject) => {
-        fs.readFile(filepath, 'utf8', (err, data) => {
-            if (err) reject(err)
-
-            let config: Config = JSON.parse(data)
-            resolve(config)
-        })
-    })
+    return config
 }
 
 export async function writeConfig(config: Config) {

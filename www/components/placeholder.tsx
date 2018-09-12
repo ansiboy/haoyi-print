@@ -1,7 +1,7 @@
 import { ControlProps, PageViewContext, PageView, PageViewEditor, Control } from 'jueying';
 import * as React from 'react';
 import 'jueying'
-import { ControlSize } from './controlSize';
+import { ControlSize } from './controls/controlSize';
 
 jueying.PageView.prototype.render = function () {
     let self = this as PageView;
@@ -9,6 +9,7 @@ jueying.PageView.prototype.render = function () {
     let elementProps = { style: {} } as ControlProps<PageView>
     if (props.width) {
         elementProps.style.width = `${props.width}${props.unit}`
+        elementProps.style.fontFamily = props.fontFamily
     }
     return this.Element(elementProps, <>
         <PageViewContext.Provider value={{ pageView: self }}>
@@ -17,11 +18,16 @@ jueying.PageView.prototype.render = function () {
     </>)
 }
 
-jueying.PageView.defaultProps = { unit: 'mm' }
+const fontFamilies = [
+    'Microsoft YaHei', 'Hiragino Sans GB', 'FangSong_GB2312', 'Microsoft Sans Serif',
+    'Helvetica, Arial', 'Lucida Grande', 'sans-serif'
+]
+
+jueying.PageView.defaultProps = { unit: 'mm', fontFamily: 'Microsoft YaHei' }
 
 jueying.PageViewEditor.prototype.render = function () {
     let self = this as PageViewEditor
-    let { name, style } = self.state
+    let { name, style, fontFamily } = self.state
     style = style || {}
 
     let { width } = style
@@ -45,6 +51,20 @@ jueying.PageViewEditor.prototype.render = function () {
                         style.width = width
                         self.setState({ style })
                     }} />
+            </div>
+        </div>
+        <div className="form-group">
+            <label>字体</label>
+            <div className="control">
+                <select className="form-control" value={fontFamily || ''}
+                    onChange={e => {
+                        fontFamily = e.target.value
+                        self.setState({ fontFamily })
+                    }}>
+                    {fontFamilies.map(o =>
+                        <option key={o} value={o}>{o}</option>
+                    )}
+                </select>
             </div>
         </div>
     </>)
