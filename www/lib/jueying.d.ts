@@ -12,12 +12,11 @@ declare namespace jueying {
     };
 }
 declare namespace jueying {
-    interface EditorProps extends React.Props<Editor<any, any>> {
+    interface EditorProps extends React.Props<ControlEditor<any, any>> {
         control: Control<any, any>;
     }
-    abstract class Editor<P extends EditorProps, S> extends React.Component<P, S> {
+    class ControlEditor<P extends EditorProps, S> extends React.Component<P, S> {
         private originalRender;
-        private validate;
         private _element;
         constructor(props: P);
         readonly designer: PageDesigner;
@@ -161,6 +160,7 @@ declare namespace jueying {
         private removeControlFrom;
         protected findControlData(controlId: string): ElementData | null;
         private onKeyDown;
+        setControlPropEditor(): void;
         render(): JSX.Element;
     }
     type DesignerContextValue = {
@@ -169,10 +169,21 @@ declare namespace jueying {
     const DesignerContext: React.Context<DesignerContextValue>;
 }
 declare namespace jueying {
-    class EditorFactory {
+    class ControlEditorFactory {
+        private static controlEditorTypes;
         static register(controlTypeName: any, editorType: React.ComponentClass<any> | string): void;
         static create(control: Control<any, any>): Promise<React.ComponentElement<any, React.Component<any, any, any>>>;
         static hasEditor(controlTypeName: any): boolean;
+    }
+    class ControlPropEditors {
+        private static controlPropEditors;
+        static getControlPropEditor(controlClassName: string): {
+            [propName: string]: {
+                text: string;
+                editorType: PropEditor<any>;
+            };
+        };
+        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, propName: K, text: string, editorType: PropEditor<T[K]>): void;
     }
 }
 declare namespace jueying {
@@ -200,7 +211,7 @@ declare namespace jueying {
     }
     interface ControlPlaceholderEditorState extends Partial<ControlPlaceholderProps> {
     }
-    class ControlPlaceholderEditor extends Editor<EditorProps, ControlPlaceholderEditorState> {
+    class ControlPlaceholderEditor extends ControlEditor<EditorProps, ControlPlaceholderEditorState> {
         render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
     }
 }
@@ -300,9 +311,18 @@ declare namespace jueying {
     }
     interface PageViewEditorState extends PageViewProps {
     }
-    class PageViewEditor extends Editor<EditorProps, PageViewEditorState> {
+    class PageViewEditor extends ControlEditor<EditorProps, PageViewEditorState> {
         render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
     }
+}
+declare namespace jueying {
+    interface PropEditor<T> {
+        (value: T, onChange: (value: T) => void): React.ReactElement<any>;
+    }
+    let textInput: PropEditor<string>;
+    function dropdown(items: {
+        [value: string]: string;
+    }): (value: string, onChange: (value: string) => void) => JSX.Element;
 }
 declare namespace jueying.extentions {
     function guid(): string;

@@ -55,6 +55,7 @@ namespace jueying {
             super(props);
 
             this.state = { pageData: this.props.pageData };
+            this.setControlPropEditor();
         }
 
         componentWillReceiveProps(props: PageDesignerProps) {
@@ -297,6 +298,17 @@ namespace jueying {
                 console.assert(element.props.id);
                 this.removeControl(element.props.id);
             }
+        }
+
+        setControlPropEditor() {
+            ControlPropEditors.setControlPropEditor<PageViewProps>(PageView, "name", "名称", textInput)
+
+            let items = {
+                flowing: '流式定位',
+                absolute: '绝对定位'
+            }
+            ControlPropEditors.setControlPropEditor<PageViewProps>(PageView, "layout", "布局", dropdown(items))
+            ControlPropEditors.setControlPropEditor<ControlPlaceholderProps>(ControlPlaceholder, "name", "名称", textInput)
         }
 
         render() {

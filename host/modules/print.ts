@@ -5,23 +5,24 @@ import { readConfig, writeConfig } from "../config";
 
 export async function print({ deviceName, html }: { deviceName: string, html: string }) {
 
-    if (!deviceName) throw argumentNull('deviceName')
     if (!html) throw argumentNull('html')
 
+    deviceName = deviceName || ''
+
     let printWindow = new BrowserWindow({
-        width: 800,
+        width: 500,
         height: 500,
         show: false,
     })
     let file = 'data:text/html;charset=UTF-8,' + encodeURIComponent(html);
     printWindow.loadURL(file);
     setTimeout(() => {
-        printWindow.webContents.print({ silent: true, deviceName })
+        printWindow.webContents.print({ silent: true, deviceName });
         //==============================
         // 发送指令后指令后关闭窗口
         setTimeout(() => {
             printWindow.close()
-        }, 1000)
+        }, 2000)
         //==============================
     }, 800)
 }

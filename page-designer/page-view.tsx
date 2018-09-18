@@ -16,6 +16,8 @@ namespace jueying {
     /**
      * 移动端页面，将 PageData 渲染为移动端页面。
      */
+
+    // @propEditor("name", "名称", "TextInput")
     export class PageView extends Control<PageViewProps, State>{
 
         static defaultProps: PageViewProps = { layout: 'flowing' }
@@ -43,10 +45,12 @@ namespace jueying {
 
     ControlFactory.register(PageView);
 
+
+
     export interface PageViewEditorState extends PageViewProps {
 
     }
-    export class PageViewEditor extends Editor<EditorProps, PageViewEditorState>{
+    export class PageViewEditor extends ControlEditor<EditorProps, PageViewEditorState>{
         render() {
             let { name, layout } = this.state;
             return this.Element(<React.Fragment>
@@ -73,6 +77,6 @@ namespace jueying {
         }
     }
 
-    EditorFactory.register("PageView", PageViewEditor);
+    ControlEditorFactory.register("PageView", PageViewEditor);
 }
 

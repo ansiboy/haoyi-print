@@ -21,10 +21,6 @@
                 exports: 'jueying',
                 deps: ['dilu', 'jquery-ui', 'react', 'react-dom']
             },
-            'jueying.extentions': {
-                exports: 'jueying.extentions',
-                deps: ['jueying']
-            },
             chitu: {
                 exports: 'chitu'
             }
@@ -39,7 +35,6 @@
             dilu: `${lib}/dilu`,
             chitu: `${lib}/chitu`,
             jueying: `${lib}/jueying`,
-
             electron: '../node_modules/electron/dist/resources/electron.asar/renderer/api/exports/electron',
             jquery: `${lib}/jquery-2.1.3`,
             'jquery-ui': `${lib}/jquery-ui`,
@@ -48,6 +43,8 @@
             'react-dom': `${lib}/react-dom.development`,
         }
     });
+
+
 
     requirejs([`less!${lib}/bootstrap-3.3.7/less/bootstrap.less`])
     requirejs(['less!index'])
@@ -58,6 +55,10 @@
         (window as any)['h'] = react.createElement;
         requirejs(['application'], function (a: any) {
             a.app.run()
+        })
+
+        define('jueying.extentions', ['jueying'], function () {
+            return jueying.extentions
         })
     });
 

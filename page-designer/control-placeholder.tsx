@@ -12,6 +12,7 @@ namespace jueying {
         emptyText?: string,
         htmlTag?: string,
     }
+
     export class ControlPlaceholder extends Control<ControlPlaceholderProps, ControlPlaceholderState> {
         private controls: (Control<any, any> & { id: string, name: string })[];
 
@@ -177,7 +178,7 @@ namespace jueying {
     export interface ControlPlaceholderEditorState extends Partial<ControlPlaceholderProps> {
 
     }
-    export class ControlPlaceholderEditor extends Editor<EditorProps, ControlPlaceholderEditorState> {
+    export class ControlPlaceholderEditor extends ControlEditor<EditorProps, ControlPlaceholderEditorState> {
         render() {
             let { name } = this.state;
             return this.Element(<React.Fragment>
@@ -195,5 +196,5 @@ namespace jueying {
         }
     }
 
-    EditorFactory.register('ControlPlaceholder', ControlPlaceholderEditor);
+    ControlEditorFactory.register('ControlPlaceholder', ControlPlaceholderEditor);
 }

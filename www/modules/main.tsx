@@ -1,18 +1,20 @@
-import { ControlFactory, EditorFactory, extentions as ext, extentions } from 'jueying';
+import { ControlFactory, ControlEditorFactory as EditorFactory, extentions as ext, extentions, ControlPropEditors, dropdown } from 'jueying';
+import { DesignerFramework } from 'jueying.extentions'
 import { components, templates } from "components/componenDefines";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import 'components/placeholder'
 import { showPrintDialog, generatePrintHTML } from 'print'
 import { ControlSize } from 'components/controls/controlSize';
-import { Service } from 'service';
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
+import { default as Label, Props as LabelProps } from '../components/Label/control';
 
-class MainPage extends ext.DesignerFramework {
+class MainPage extends DesignerFramework {
     private _storage1: extentions.DocumentStorage;
     constructor(props) {
         super(props)
+    
     }
     get storage() {
         if (this._storage1 == null)

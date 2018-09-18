@@ -32,7 +32,7 @@ namespace jueying {
                     return;
                 }
 
-                let editor = await EditorFactory.create(control);
+                let editor = await ControlEditorFactory.create(control);
                 this.setState({ editor });
             }
             this.designer.controlSelected.add(onChanged)

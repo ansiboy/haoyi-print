@@ -1,11 +1,9 @@
 namespace jueying {
 
-    let customEditorTypes: { [key: string]: React.ComponentClass<any> | string } = {}
-
-    export class EditorFactory {
-
+    export class ControlEditorFactory {
+        private static controlEditorTypes: { [key: string]: React.ComponentClass<any> | string } = {}
         static register(controlTypeName, editorType: React.ComponentClass<any> | string) {
-            customEditorTypes[controlTypeName] = editorType;
+            this.controlEditorTypes[controlTypeName] = editorType;
         }
 
         static async create(control: Control<any, any>) {
@@ -14,7 +12,7 @@ namespace jueying {
 
             let componentName = control.componentName;
 
-            let editorType = customEditorTypes[componentName];
+            let editorType = this.controlEditorTypes[componentName];
             if (!editorType) {
                 throw new Error(`${componentName} editor type is not exists.`)
             }
@@ -33,7 +31,7 @@ namespace jueying {
                         (err) => reject(err)
                     )
                 })
-                customEditorTypes[componentName] = editorType;
+                this.controlEditorTypes[componentName] = editorType;
             }
 
             let editorProps: EditorProps = { control, key: control.id };
@@ -43,8 +41,27 @@ namespace jueying {
         }
 
         static hasEditor(controlTypeName) {
-            return customEditorTypes[controlTypeName] != null;
+            return this.controlEditorTypes[controlTypeName] != null;
         }
 
     }
+
+    export class ControlPropEditors {
+        private static controlPropEditors: {
+            [controlClassName: string]: { [propName: string]: { text: string, editorType: PropEditor<any> } }
+        } = {}
+
+        static getControlPropEditor(controlClassName: string) {
+            let classEditors = this.controlPropEditors[controlClassName] || {}
+            return classEditors
+        }
+
+        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, propName: K, text: string, editorType: PropEditor<T[K]>): void {
+            let className = controlClass.name
+            let classProps = this.controlPropEditors[className] = this.controlPropEditors[className] || {}
+            classProps[propName as string] = { text, editorType }
+        }
+    }
+
+
 }

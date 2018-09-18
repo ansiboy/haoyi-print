@@ -85,7 +85,7 @@ namespace jueying {
         }
 
         get hasEditor() {
-            return EditorFactory.hasEditor(this.constructor.name);
+            return ControlEditorFactory.hasEditor(this.constructor.name);
         }
 
         static htmlDOMProps(props: any) {
@@ -202,17 +202,19 @@ namespace jueying {
         private static render() {
             let self = this as any as Control<any, any>;
             return <DesignerContext.Consumer>
-                {context => {
-                    self._designer = context.designer;
+                {
+                    context => {
+                        self._designer = context.designer;
 
-                    if (typeof self.originalRender != 'function')
-                        return null;
-                    let h = (type: string | React.ComponentClass<any>, props: ControlProps<any>, ...children: any[]) =>
-                        ControlFactory.createElement(self, type, props, ...children);
+                        if (typeof self.originalRender != 'function')
+                            return null;
+                        let h = (type: string | React.ComponentClass<any>, props: ControlProps<any>, ...children: any[]) =>
+                            ControlFactory.createElement(self, type, props, ...children);
 
-                    return (self.originalRender as Function)(h)
-                }}
-            </DesignerContext.Consumer>
+                        return (self.originalRender as Function)(h)
+                    }
+                }
+            </DesignerContext.Consumer >
         }
 
         private static getControlType(componentName: string): Promise<React.ComponentClass<any>> {

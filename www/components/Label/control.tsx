@@ -1,8 +1,8 @@
 import { Control, ControlProps } from "jueying";
 import React = require("react");
-import { BaseControl } from "../baseControl";
+import { BaseControl, BaseControlProps } from "../baseControl";
 
-export interface Props extends ControlProps<Label> {
+export interface Props extends BaseControlProps<Label> {
     text: string,
     fontSize?: string,
     fontFa?: string,

@@ -1,8 +1,5 @@
-import { BrowserWindow } from "electron";
-
+import { BrowserWindow } from "electron"
 import * as path from 'path'
-
-// let mainWindow: BrowserWindow
 
 export function createMainWindow() {
     // Create the browser window.
@@ -18,7 +15,7 @@ export function createMainWindow() {
     mainWindow.loadURL(indexFilePath + '#main')
 
     // Open the DevTools.
-    // mainWindow.webContents.openDevTools()
+    mainWindow.webContents.openDevTools()
     // Emitted when the window is closed.
     mainWindow.on('closed', function () {
         // Dereference the window object, usually you would store windows

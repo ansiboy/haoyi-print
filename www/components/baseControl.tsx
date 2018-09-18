@@ -1,4 +1,4 @@
-import { Control, EditorProps, Editor, ControlProps, PageViewContext, PageView } from "jueying";
+import { Control, EditorProps, ControlEditor as Editor, ControlProps, PageViewContext, PageView, ControlPropEditors, textInput } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
 
@@ -124,6 +124,29 @@ export abstract class BaseControlEditor<T extends BaseControlProps<any>> extends
             {this.renderControlProps()}
         </>)
     }
+}
+
+export let cssProp = function (name: keyof React.CSSProperties) {
+    let func = (style: React.CSSProperties, onChange: (value: React.CSSProperties) => void) => {
+        let ctrl = <ControlSize size={style[name]} onChange={e => {
+            style[name] = e
+            onChange(style)
+        }} />
+
+        return ctrl
+    }
+
+    return func
+}
+
+export function createBasePropEditors(controlClass: React.ComponentClass) {
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "name">(controlClass, 'name', '名称', textInput)
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "text">(controlClass, 'text', '文本', textInput)
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "field">(controlClass, 'field', '字段', textInput)
+
+
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, 'style', '左边', cssProp('left'))
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, 'style', '顶部', cssProp('top'))
 }
 
 
