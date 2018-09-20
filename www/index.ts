@@ -35,12 +35,14 @@
             dilu: `${lib}/dilu`,
             chitu: `${lib}/chitu`,
             jueying: `${lib}/jueying`,
+
             electron: '../node_modules/electron/dist/resources/electron.asar/renderer/api/exports/electron',
             jquery: `${lib}/jquery-2.1.3`,
             'jquery-ui': `${lib}/jquery-ui`,
             qrcode: `${lib}/qrcode`,
             react: `${lib}/react.development`,
             'react-dom': `${lib}/react-dom.development`,
+            rulers: `${lib}/rulers`,
         }
     });
 

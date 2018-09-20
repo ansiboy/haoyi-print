@@ -12,18 +12,21 @@ declare namespace jueying {
     };
 }
 declare namespace jueying {
-    interface EditorProps extends React.Props<ControlEditor<any, any>> {
-        control: Control<any, any>;
+    interface EditorProps extends React.Props<ControlEditor> {
     }
-    class ControlEditor<P extends EditorProps, S> extends React.Component<P, S> {
-        private originalRender;
+    interface EditorState {
+        editors: {
+            text: string;
+            editor: React.ReactElement<any>;
+        }[];
+    }
+    class ControlEditor extends React.Component<EditorProps, EditorState> {
         private _element;
-        constructor(props: P);
-        readonly designer: PageDesigner;
+        constructor(props: EditorProps);
+        setControl(control: Control<any, any>): void;
+        render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
         readonly element: HTMLElement;
-        setState<K extends keyof S>(state: (Pick<S, K> | S), callback?: () => void): void;
         Element(...children: React.ReactElement<any>[]): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-        componentWillReceiveProps(props: P): void;
     }
 }
 declare namespace jueying {
@@ -83,7 +86,6 @@ declare namespace jueying {
         readonly isDesignMode: boolean;
         readonly componentName: any;
         readonly designer: PageDesigner;
-        readonly hasEditor: boolean;
         static htmlDOMProps(props: any): {
             [key: string]: any;
         };
@@ -172,18 +174,16 @@ declare namespace jueying {
     class ControlEditorFactory {
         private static controlEditorTypes;
         static register(controlTypeName: any, editorType: React.ComponentClass<any> | string): void;
-        static create(control: Control<any, any>): Promise<React.ComponentElement<any, React.Component<any, any, any>>>;
         static hasEditor(controlTypeName: any): boolean;
     }
     class ControlPropEditors {
         private static controlPropEditors;
         static getControlPropEditor(controlClassName: string): {
-            [propName: string]: {
-                text: string;
-                editorType: PropEditor<any>;
-            };
-        };
-        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, propName: K, text: string, editorType: PropEditor<T[K]>): void;
+            propName: string;
+            text: string;
+            editorType: PropEditorConstructor;
+        }[];
+        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, propName: K, text: string, editorType: PropEditorConstructor): void;
     }
 }
 declare namespace jueying {
@@ -209,11 +209,6 @@ declare namespace jueying {
         componentDidMount(): void;
         render(h?: any): JSX.Element;
     }
-    interface ControlPlaceholderEditorState extends Partial<ControlPlaceholderProps> {
-    }
-    class ControlPlaceholderEditor extends ControlEditor<EditorProps, ControlPlaceholderEditorState> {
-        render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-    }
 }
 declare namespace jueying {
     interface ComponentToolbarProps extends React.Props<ComponentToolbar> {
@@ -233,7 +228,6 @@ declare namespace jueying {
 }
 declare namespace jueying {
     interface EditorPanelState {
-        editor: React.ReactElement<any>;
     }
     interface EditorPanelProps {
         className?: string;
@@ -243,6 +237,7 @@ declare namespace jueying {
     class EditorPanel extends React.Component<EditorPanelProps, EditorPanelState> {
         private designer;
         private element;
+        private editor;
         constructor(props: any);
         componentDidMount(): void;
         render(): JSX.Element;
@@ -309,20 +304,76 @@ declare namespace jueying {
         readonly layout: "flowing" | "absolute";
         render(h?: any): React.ReactElement<any>;
     }
-    interface PageViewEditorState extends PageViewProps {
-    }
-    class PageViewEditor extends ControlEditor<EditorProps, PageViewEditorState> {
-        render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-    }
 }
 declare namespace jueying {
-    interface PropEditor<T> {
-        (value: T, onChange: (value: T) => void): React.ReactElement<any>;
+    interface PropEditorConstructor {
+        new (props: PropEditorProps<any>): any;
     }
-    let textInput: PropEditor<string>;
+    interface PropEditorProps<T> {
+        value: T;
+        onChange: (value: T) => void;
+    }
+    interface PropEditorState<T> {
+        value: T;
+    }
+    abstract class PropEditor<S extends PropEditorState<T>, T> extends React.Component<PropEditorProps<T>, S> {
+        constructor(props: PropEditorProps<T>);
+        componentWillReceiveProps(props: PropEditorProps<T>): void;
+    }
+    class TextInput extends PropEditor<PropEditorState<string>, string> {
+        render(): JSX.Element;
+    }
     function dropdown(items: {
         [value: string]: string;
-    }): (value: string, onChange: (value: string) => void) => JSX.Element;
+    }): {
+        new (props: PropEditorProps<string>): {
+            render(): JSX.Element;
+            componentWillReceiveProps(props: PropEditorProps<string>): void;
+            setState<K extends "value">(state: {
+                value: string;
+            } | ((prevState: Readonly<{
+                value: string;
+            }>, props: Readonly<PropEditorProps<string>>) => {
+                value: string;
+            } | Pick<{
+                value: string;
+            }, K>) | Pick<{
+                value: string;
+            }, K>, callback?: () => void): void;
+            forceUpdate(callBack?: () => void): void;
+            readonly props: Readonly<{
+                children?: React.ReactNode;
+            }> & Readonly<PropEditorProps<string>>;
+            state: Readonly<{
+                value: string;
+            }>;
+            context: any;
+            refs: {
+                [key: string]: React.ReactInstance;
+            };
+            componentDidMount?(): void;
+            shouldComponentUpdate?(nextProps: Readonly<PropEditorProps<string>>, nextState: Readonly<{
+                value: string;
+            }>, nextContext: any): boolean;
+            componentWillUnmount?(): void;
+            componentDidCatch?(error: Error, errorInfo: React.ErrorInfo): void;
+            getSnapshotBeforeUpdate?(prevProps: Readonly<PropEditorProps<string>>, prevState: Readonly<{
+                value: string;
+            }>): any;
+            componentDidUpdate?(prevProps: Readonly<PropEditorProps<string>>, prevState: Readonly<{
+                value: string;
+            }>, snapshot?: any): void;
+            componentWillMount?(): void;
+            UNSAFE_componentWillMount?(): void;
+            UNSAFE_componentWillReceiveProps?(nextProps: Readonly<PropEditorProps<string>>, nextContext: any): void;
+            componentWillUpdate?(nextProps: Readonly<PropEditorProps<string>>, nextState: Readonly<{
+                value: string;
+            }>, nextContext: any): void;
+            UNSAFE_componentWillUpdate?(nextProps: Readonly<PropEditorProps<string>>, nextState: Readonly<{
+                value: string;
+            }>, nextContext: any): void;
+        };
+    };
 }
 declare namespace jueying.extentions {
     function guid(): string;
@@ -353,6 +404,7 @@ declare namespace jueying.extentions {
         protected pageDesigner: jueying.PageDesigner;
         private names;
         private _storage;
+        private ruleElement;
         constructor(props: any);
         static defaultProps: DesignerFrameworkProps;
         /** 对控件进行命名 */
@@ -373,6 +425,7 @@ declare namespace jueying.extentions {
         private activeDocument;
         setState<K extends keyof DesignerFrameworkState>(state: (Pick<DesignerFrameworkState, K> | DesignerFrameworkState)): void;
         private closeDocument;
+        componentDidMount(): void;
         render(): JSX.Element;
     }
 }

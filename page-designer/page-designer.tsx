@@ -176,10 +176,10 @@ namespace jueying {
             let selectedControlId1 = control ? control.id : null;
             this.selectedControlId = selectedControlId1;
 
-            if (!control.hasEditor) {
-                console.log(`Control ${control.constructor.name} has none editor.`);
-                return;
-            }
+            // if (!control.hasEditor) {
+            //     console.log(`Control ${control.constructor.name} has none editor.`);
+            //     return;
+            // }
 
             if (control.element == null)
                 throw new Error('Control element is null')
@@ -301,14 +301,14 @@ namespace jueying {
         }
 
         setControlPropEditor() {
-            ControlPropEditors.setControlPropEditor<PageViewProps>(PageView, "name", "名称", textInput)
+            ControlPropEditors.setControlPropEditor<PageViewProps, "name">(PageView, "name", "名称", TextInput)
 
             let items = {
                 flowing: '流式定位',
                 absolute: '绝对定位'
             }
-            ControlPropEditors.setControlPropEditor<PageViewProps>(PageView, "layout", "布局", dropdown(items))
-            ControlPropEditors.setControlPropEditor<ControlPlaceholderProps>(ControlPlaceholder, "name", "名称", textInput)
+            ControlPropEditors.setControlPropEditor<PageViewProps, "layout">(PageView, "layout", "布局", dropdown(items))
+            ControlPropEditors.setControlPropEditor<ControlPlaceholderProps, "name">(ControlPlaceholder, "name", "名称", TextInput)
         }
 
         render() {

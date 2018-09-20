@@ -8,13 +8,15 @@ import { showPrintDialog, generatePrintHTML } from 'print'
 import { ControlSize } from 'components/controls/controlSize';
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
-import { default as Label, Props as LabelProps } from '../components/Label/control';
+import '../components/Label/editor';
+import '../components/SquareCode/editor';
+import 'rulers'
 
 class MainPage extends DesignerFramework {
     private _storage1: extentions.DocumentStorage;
     constructor(props) {
         super(props)
-    
+
     }
     get storage() {
         if (this._storage1 == null)
@@ -136,6 +138,7 @@ class MainPage extends DesignerFramework {
         }
     }
     componentDidMount() {
+        super.componentDidMount()
         let setControlPosition = this.pageDesigner.setControlPosition
         this.pageDesigner.setControlPosition = function (controlId: string, left: number | string, top: number | string) {
             left = ControlSize.toDefaultUnitSize(left)

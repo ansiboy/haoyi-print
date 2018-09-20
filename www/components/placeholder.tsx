@@ -1,4 +1,4 @@
-import { ControlProps, PageViewContext, PageView, PageViewEditor, Control } from 'jueying';
+import { ControlProps, PageViewContext, PageView, Control } from 'jueying';
 import * as React from 'react';
 import 'jueying'
 import { ControlSize } from './controls/controlSize';
@@ -25,50 +25,50 @@ const fontFamilies = [
 
 jueying.PageView.defaultProps = { unit: 'mm', fontFamily: 'Microsoft YaHei' }
 
-jueying.PageViewEditor.prototype.render = function () {
-    let self = this as PageViewEditor
-    let { name, style, fontFamily } = self.state
-    style = style || {}
+// jueying.PageViewEditor.prototype.render = function () {
+//     let self = this as PageViewEditor
+//     let { name, style, fontFamily } = self.state
+//     style = style || {}
 
-    let { width } = style
+//     let { width } = style
 
-    return self.Element(<>
-        <div className="form-group">
-            <label>名称</label>
-            <div className="control">
-                <input className="form-control" value={name || ''}
-                    onChange={(e) => {
-                        name = (e.target as HTMLInputElement).value;
-                        self.setState({ name });
-                    }} />
-            </div>
-        </div>
-        <div className="form-group">
-            <label>宽</label>
-            <div className="control">
-                <ControlSize size={width}
-                    onChange={width => {
-                        style.width = width
-                        self.setState({ style })
-                    }} />
-            </div>
-        </div>
-        <div className="form-group">
-            <label>字体</label>
-            <div className="control">
-                <select className="form-control" value={fontFamily || ''}
-                    onChange={e => {
-                        fontFamily = e.target.value
-                        self.setState({ fontFamily })
-                    }}>
-                    {fontFamilies.map(o =>
-                        <option key={o} value={o}>{o}</option>
-                    )}
-                </select>
-            </div>
-        </div>
-    </>)
-}
+//     return self.Element(<>
+//         <div className="form-group">
+//             <label>名称</label>
+//             <div className="control">
+//                 <input className="form-control" value={name || ''}
+//                     onChange={(e) => {
+//                         name = (e.target as HTMLInputElement).value;
+//                         self.setState({ name });
+//                     }} />
+//             </div>
+//         </div>
+//         <div className="form-group">
+//             <label>宽</label>
+//             <div className="control">
+//                 <ControlSize size={width}
+//                     onChange={width => {
+//                         style.width = width
+//                         self.setState({ style })
+//                     }} />
+//             </div>
+//         </div>
+//         <div className="form-group">
+//             <label>字体</label>
+//             <div className="control">
+//                 <select className="form-control" value={fontFamily || ''}
+//                     onChange={e => {
+//                         fontFamily = e.target.value
+//                         self.setState({ fontFamily })
+//                     }}>
+//                     {fontFamilies.map(o =>
+//                         <option key={o} value={o}>{o}</option>
+//                     )}
+//                 </select>
+//             </div>
+//         </div>
+//     </>)
+// }
 
 jueying.ControlPlaceholder.prototype.render = function () {
     let self = this as jueying.ControlPlaceholder
@@ -86,32 +86,32 @@ jueying.ControlPlaceholder.prototype.render = function () {
     </PageViewContext.Consumer>
 }
 
-jueying.ControlPlaceholderEditor.prototype.render = function () {
-    let self = this as jueying.ControlPlaceholderEditor
-    let { name, showField, field } = self.state;
-    return this.Element(<>
-        <div className="form-group">
-            <label>名称</label>
-            <div className="control">
-                <input className="form-control" value={name || ''}
-                    onChange={(e) => {
-                        name = e.target.value;
-                        this.setState({ name });
-                    }} />
-            </div>
-        </div>
-        {showField ?
-            <div className="form-group">
-                <label>字段</label>
-                <div className="control">
-                    <input className="form-control" value={field || ''}
-                        onChange={(e) => {
-                            field = e.target.value;
-                            this.setState({ field });
-                        }} />
-                </div>
-            </div> : null
-        }
-    </>)
-}
+// jueying.ControlPlaceholderEditor.prototype.render = function () {
+//     let self = this as jueying.ControlPlaceholderEditor
+//     let { name, showField, field } = self.state;
+//     return this.Element(<>
+//         <div className="form-group">
+//             <label>名称</label>
+//             <div className="control">
+//                 <input className="form-control" value={name || ''}
+//                     onChange={(e) => {
+//                         name = e.target.value;
+//                         this.setState({ name });
+//                     }} />
+//             </div>
+//         </div>
+//         {showField ?
+//             <div className="form-group">
+//                 <label>字段</label>
+//                 <div className="control">
+//                     <input className="form-control" value={field || ''}
+//                         onChange={(e) => {
+//                             field = e.target.value;
+//                             this.setState({ field });
+//                         }} />
+//                 </div>
+//             </div> : null
+//         }
+//     </>)
+// }
 

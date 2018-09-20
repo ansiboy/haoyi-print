@@ -1,4 +1,4 @@
-import { Control, EditorProps, ControlEditor as Editor, ControlProps, PageViewContext, PageView, ControlPropEditors, textInput } from "jueying";
+import { Control, EditorProps, ControlEditor as Editor, ControlProps, PageViewContext, PageView, ControlPropEditors, PropEditor, PropEditorProps, TextInput } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
 
@@ -60,89 +60,27 @@ export abstract class BaseControl<P extends BaseControlProps<any>, S> extends Co
     }
 }
 
-
-export abstract class BaseControlEditor<T extends BaseControlProps<any>> extends Editor<EditorProps, Partial<T>> {
-    constructor(props) {
-        super(props)
-    }
-    abstract renderControlProps(): JSX.Element;
-    render() {
-        let { name, style, field, text } = this.state;
-        style = style || {};
-        let { left, top } = style;
-        return this.Element(<>
-            <div className="form-group">
-                <label>名称</label>
-                <div className="control">
-                    <input className="form-control" value={name || ''}
-                        onChange={(e) => {
-                            name = (e.target as HTMLInputElement).value;
-                            this.setState({ name });
-                        }} />
-                </div>
-            </div>
-            <div className="form-group">
-                <label>文本</label>
-                <div className="control">
-                    <input className="form-control" value={text || ''}
-                        onChange={(e) => {
-                            text = e.target.value
-                            this.setState({ text });
-                        }} />
-                </div>
-            </div>
-            <div className="form-group">
-                <label>字段</label>
-                <div className="control">
-                    <input className="form-control" value={field || ''}
-                        onChange={(e) => {
-                            field = e.target.value
-                            this.setState({ field });
-                        }} />
-                </div>
-            </div>
-            <div className="form-group">
-                <label>左边</label>
-                <div className="control">
-                    <ControlSize size={left} onChange={size => {
-                        style = JSON.parse(JSON.stringify(style))
-                        style.left = size
-                        this.setState({ style })
-                    }} />
-                </div>
-            </div>
-            <div className="form-group">
-                <label>顶部</label>
-                <div className="control">
-                    <ControlSize size={top} onChange={size => {
-                        style = JSON.parse(JSON.stringify(style))
-                        style.top = size
-                        this.setState({ style })
-                    }} />
-                </div>
-            </div>
-            {this.renderControlProps()}
-        </>)
-    }
-}
-
 export let cssProp = function (name: keyof React.CSSProperties) {
-    let func = (style: React.CSSProperties, onChange: (value: React.CSSProperties) => void) => {
-        let ctrl = <ControlSize size={style[name]} onChange={e => {
-            style[name] = e
-            onChange(style)
-        }} />
 
-        return ctrl
+    class PropEditorWraper extends PropEditor<PropEditorProps<React.CSSProperties>, React.CSSProperties>{
+        render() {
+            let style = this.state.value
+            let ctrl = <ControlSize size={style[name]} onChange={e => {
+                style[name] = e
+                this.props.onChange(style)
+            }} />
+
+            return ctrl
+        }
     }
 
-    return func
+    return PropEditorWraper
 }
 
 export function createBasePropEditors(controlClass: React.ComponentClass) {
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "name">(controlClass, 'name', '名称', textInput)
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "text">(controlClass, 'text', '文本', textInput)
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "field">(controlClass, 'field', '字段', textInput)
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "name">(controlClass, 'name', '名称', TextInput)
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "text">(controlClass, 'text', '文本', TextInput)
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "field">(controlClass, 'field', '字段', TextInput)
 
 
     ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, 'style', '左边', cssProp('left'))

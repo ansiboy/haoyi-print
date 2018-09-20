@@ -47,36 +47,36 @@ namespace jueying {
 
 
 
-    export interface PageViewEditorState extends PageViewProps {
+    // export interface PageViewEditorState extends PageViewProps {
 
-    }
-    export class PageViewEditor extends ControlEditor<EditorProps, PageViewEditorState>{
-        render() {
-            let { name, layout } = this.state;
-            return this.Element(<React.Fragment>
-                <div className="form-group">
-                    <label>名称</label>
-                    <div className="control">
-                        <input className="form-control" value={name || ''}
-                            onChange={(e) => {
-                                name = (e.target as HTMLInputElement).value;
-                                this.setState({ name });
-                            }} />
-                    </div>
-                </div>
-                <div className="form-group">
-                    <label>布局</label>
-                    <div className="control">
-                        <select className="form-control" value={layout || ''} disabled >
-                            <option value="flowing">流式定位</option>
-                            <option value="absolute">绝对定位</option>
-                        </select>
-                    </div>
-                </div>
-            </React.Fragment>)
-        }
-    }
+    // }
+    // export class PageViewEditor extends ControlEditor<EditorProps, PageViewEditorState>{
+    //     render() {
+    //         let { name, layout } = this.state;
+    //         return this.Element(<React.Fragment>
+    //             <div className="form-group">
+    //                 <label>名称</label>
+    //                 <div className="control">
+    //                     <input className="form-control" value={name || ''}
+    //                         onChange={(e) => {
+    //                             name = (e.target as HTMLInputElement).value;
+    //                             this.setState({ name });
+    //                         }} />
+    //                 </div>
+    //             </div>
+    //             <div className="form-group">
+    //                 <label>布局</label>
+    //                 <div className="control">
+    //                     <select className="form-control" value={layout || ''} disabled >
+    //                         <option value="flowing">流式定位</option>
+    //                         <option value="absolute">绝对定位</option>
+    //                     </select>
+    //                 </div>
+    //             </div>
+    //         </React.Fragment>)
+    //     }
+    // }
 
-    ControlEditorFactory.register("PageView", PageViewEditor);
+    // ControlEditorFactory.register("PageView", PageViewEditor);
 }
 

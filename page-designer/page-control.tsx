@@ -84,10 +84,6 @@ namespace jueying {
             return this._designer;
         }
 
-        get hasEditor() {
-            return ControlEditorFactory.hasEditor(this.constructor.name);
-        }
-
         static htmlDOMProps(props: any) {
             let result: { [key: string]: any } = {};
             if (!props) {

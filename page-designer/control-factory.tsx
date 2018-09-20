@@ -92,7 +92,13 @@ namespace jueying {
 
                 return React.createElement(DesignerContext.Consumer, { key: guid(), children: null as any },
                     (context: DesignerContextValue) => {
-                        let props = JSON.parse(JSON.stringify(args.props));
+                        let props = {}
+                        try {
+                            props = JSON.parse(JSON.stringify(args.props));
+                        }
+                        catch (e) {
+                            debugger;
+                        }
                         return React.createElement(type, props, children);
                     }
                 );

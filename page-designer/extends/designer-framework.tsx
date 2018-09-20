@@ -17,6 +17,8 @@ namespace jueying.extentions {
         protected pageDesigner: jueying.PageDesigner;
         private names: string[] = [];
         private _storage: DocumentStorage;
+        private ruleElement: HTMLCanvasElement;
+
         constructor(props) {
             super(props);
 
@@ -234,6 +236,22 @@ namespace jueying.extentions {
                 }
             })
         }
+        componentDidMount() {
+            debugger;
+            var canvas = this.ruleElement
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let ruler = new Ruler(canvas);
+
+            ruler.render('#aaa', 'mm', 100);
+
+            window.onresize = function () {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                ruler.render('#aaa', 'mm', 100);
+            }
+        }
         render() {
             let { activeDocumentIndex, pageDocuments } = this.state;
             let { components, title } = this.props;
@@ -246,10 +264,10 @@ namespace jueying.extentions {
                 <DesignerContext.Consumer>
                     {c => {
                         let designer = c.designer;
-                        let element: React.ReactElement<any>;
+                        let pageView: React.ReactElement<any>;
                         if (designer.pageData) {
                             this.namedControl(designer.pageData);
-                            element = Control.create(designer.pageData);
+                            pageView = Control.create(designer.pageData);
                         }
 
                         let buttons = this.createButtons(pageDocument)
@@ -275,7 +293,8 @@ namespace jueying.extentions {
                                         designer.selectControlById(pageViewId);
                                     }
                                 }}>
-                                {element ?
+                                <canvas className='ruler' ref={e => this.ruleElement = e || this.ruleElement}></canvas>
+                                {pageView ?
                                     <React.Fragment>
                                         <ul className="nav nav-tabs">
                                             {pageDocuments.map((o, i) =>
@@ -294,7 +313,7 @@ namespace jueying.extentions {
                                             )}
                                         </ul>
                                         <div className="page-container">
-                                            {element}
+                                            {pageView}
                                         </div>
                                     </React.Fragment> :
                                     <div className={classNames.emptyDocument}>

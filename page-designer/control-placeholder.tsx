@@ -175,26 +175,26 @@ namespace jueying {
     }
     ControlFactory.register(ControlPlaceholder);
 
-    export interface ControlPlaceholderEditorState extends Partial<ControlPlaceholderProps> {
+    // export interface ControlPlaceholderEditorState extends Partial<ControlPlaceholderProps> {
 
-    }
-    export class ControlPlaceholderEditor extends ControlEditor<EditorProps, ControlPlaceholderEditorState> {
-        render() {
-            let { name } = this.state;
-            return this.Element(<React.Fragment>
-                <div className="form-group">
-                    <label>名称</label>
-                    <div className="control">
-                        <input className="form-control" value={name || ''}
-                            onChange={(e) => {
-                                name = (e.target as HTMLInputElement).value;
-                                this.setState({ name });
-                            }} />
-                    </div>
-                </div>
-            </React.Fragment>)
-        }
-    }
+    // }
+    // export class ControlPlaceholderEditor extends ControlEditor<EditorProps, ControlPlaceholderEditorState> {
+    //     render() {
+    //         let { name } = this.state;
+    //         return this.Element(<React.Fragment>
+    //             <div className="form-group">
+    //                 <label>名称</label>
+    //                 <div className="control">
+    //                     <input className="form-control" value={name || ''}
+    //                         onChange={(e) => {
+    //                             name = (e.target as HTMLInputElement).value;
+    //                             this.setState({ name });
+    //                         }} />
+    //                 </div>
+    //             </div>
+    //         </React.Fragment>)
+    //     }
+    // }
 
-    ControlEditorFactory.register('ControlPlaceholder', ControlPlaceholderEditor);
+    // ControlEditorFactory.register('ControlPlaceholder', ControlPlaceholderEditor);
 }
