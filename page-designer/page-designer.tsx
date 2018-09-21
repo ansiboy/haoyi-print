@@ -45,10 +45,12 @@ namespace jueying {
 
     export class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
 
-        private selectedControlId: string | null = null;
+        private _selectedControlIds: string[] = [];
         element: HTMLElement;
 
-        controlSelected = Callback.create<Control<ControlProps<any>, any> | null>();
+        controlSelected = Callback.create<Control<ControlProps<any>, any>[]>();
+        controlUnselected = Callback.create<Control<ControlProps<any>, any>[]>();
+        controlRemoved = Callback.create<string[]>()
         controlComponentDidMount = Callback.create<Control<any, any>>();
 
         constructor(props: PageDesignerProps) {
@@ -71,21 +73,43 @@ namespace jueying {
             this.setState({ pageData: value });
         }
 
-        updateControlProps(controlId: string, props: any): any {
+        get selectedControlIds() {
+            return this._selectedControlIds
+        }
+
+        updateControlProps(controlId: string, navPropsNames: string[], value: any): any {
             let controlDescription = this.findControlData(controlId);
             if (controlDescription == null)
                 return
 
             console.assert(controlDescription != null);
-            console.assert(props != null, 'props is null');
+            console.assert(navPropsNames != null, 'props is null');
 
             controlDescription.props = controlDescription.props || {};
-            for (let key in props) {
-                controlDescription.props[key] = props[key];
+
+            let obj = controlDescription.props
+            for (let i = 0; i < navPropsNames.length - 1; i++) {
+                obj = obj[navPropsNames[i]] = obj[navPropsNames[i]] || {};
             }
 
+            obj[navPropsNames[navPropsNames.length - 1]] = value
             this.setState(this.state);
         }
+        // updateControlProps(controlId: string, props: any): any {
+        //     let controlDescription = this.findControlData(controlId);
+        //     if (controlDescription == null)
+        //         return
+
+        //     console.assert(controlDescription != null);
+        //     console.assert(props != null, 'props is null');
+
+        //     controlDescription.props = controlDescription.props || {};
+        //     for (let key in props) {
+        //         controlDescription.props[key] = props[key];
+        //     }
+
+        //     this.setState(this.state);
+        // }
 
         sortControlChildren(controlId: string, childIds: string[]): void {
             let c = this.findControlData(controlId)
@@ -143,7 +167,7 @@ namespace jueying {
             }
             let control = Control.getInstance(childControl.props.id);
             console.assert(control != null);
-            this.selectControl(control);
+            this.selectSingleControl(control);
         }
 
         /** 设置控件位置 */
@@ -160,59 +184,85 @@ namespace jueying {
             this.setState({ pageData });
         }
 
-        selectControlById(controlId: string) {
+        selectSingleControlById(controlId: string) {
             let control = Control.getInstance(controlId);
+            this.clearSelectdControls()
             this.selectControl(control);
+        }
+
+        selectSingleControl(control: Control<any, any>) {
+            this.clearSelectdControls()
+            this.selectControl(control)
         }
 
         /**
          * 选择指定的控件
-         * @param control 指定的控件，可以为空，为空表示清空选择。
+         * @param control 指定的控件
          */
-        selectControl(control: Control<any, any>): void {
-            if (!control) throw Errors.argumentNull('control');
+        selectControl(...controls: Control<any, any>[]): void {
+            if (!controls) throw Errors.argumentNull('controls');
+            for (let i = 0; i < controls.length; i++) {
+                let control = controls[i]
+                let controlIsSelected = this._selectedControlIds.indexOf(control.id) >= 0
+                if (controlIsSelected) {
+                    this.unselectControl(control)
+                    continue
+                }
 
-            this.controlSelected.fire(control)
-            let selectedControlId1 = control ? control.id : null;
-            this.selectedControlId = selectedControlId1;
+                if (control.element == null)
+                    throw new Error('Control element is null')
 
-            // if (!control.hasEditor) {
-            //     console.log(`Control ${control.constructor.name} has none editor.`);
-            //     return;
-            // }
-
-            if (control.element == null)
-                throw new Error('Control element is null')
-
-            $(`.${classNames.controlSelected}`).removeClass(classNames.controlSelected);
-            $(control.element).addClass(classNames.controlSelected);
-
-            if (selectedControlId1) {
+                let selectedControlId = control.id;
+                this._selectedControlIds.push(control.id)
+                $(control.element).addClass(classNames.controlSelected);
                 setTimeout(() => {
-                    $(`#${selectedControlId1}`).focus();
-                    console.log(`focuse ${selectedControlId1} element`);
+                    $(`#${selectedControlId}`).focus();
+                    console.log(`focuse ${selectedControlId} element`);
                 }, 100);
+
             }
+
+            this.controlSelected.fire(controls)
+        }
+
+        /**
+         * 取消选择
+         * @param control 指定的控件
+         */
+        unselectControl(...controls: Control<any, any>[]) {
+            if (!controls) throw Errors.argumentNull('controls');
+
+            controls.forEach(control => {
+                $(control.element).removeClass(classNames.controlSelected);
+                this._selectedControlIds = this._selectedControlIds.filter(o => o != control.id)
+            })
+
+            this.controlUnselected.fire(controls)
+            console.log(this._selectedControlIds)
         }
 
         /** 清除已经选择的控件 */
-        clearSelectControl() {
-
-            $(`.${classNames.controlSelected}`).removeClass(classNames.controlSelected);
-            this.selectedControlId = null;
-            this.controlSelected.fire(null);
+        clearSelectdControls() {
+            let selectControls = this._selectedControlIds.map(id => Control.getInstance(id))
+            selectControls.forEach(o => this.unselectControl(o))
+            this._selectedControlIds = [];
         }
 
         /** 移除控件 */
-        removeControl(controlId: string) {
+        removeControl(...controlIds: string[]) {
             let pageData = this.state.pageData;
             if (!pageData || !pageData.children || pageData.children.length == 0)
                 return;
 
-            let isRemoved = this.removeControlFrom(controlId, pageData.children);
-            if (isRemoved) {
-                this.setState({ pageData });
-            }
+
+            controlIds.forEach(controlId => {
+                this.removeControlFrom(controlId, pageData.children);
+            })
+
+            this._selectedControlIds = this._selectedControlIds.filter(id => controlIds.indexOf(id) >= 0)
+            this.setState({ pageData });
+
+            this.controlRemoved.fire(controlIds)
         }
 
         /** 移动控件到另外一个控件容器 */
@@ -289,26 +339,31 @@ namespace jueying {
         private onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
             const DELETE_KEY_CODE = 46;
             if (e.keyCode == DELETE_KEY_CODE) {
-                let selectedControlId = this.selectedControlId
-                let element = selectedControlId ? this.findControlData(selectedControlId) : null;
-                if (element == null) {
-                    return;
-                }
+                // let selectedControlId = this.selectedControlId
+                // let element = selectedControlId ? this.findControlData(selectedControlId) : null;
+                // if (element == null) {
+                //     return;
+                // }
 
-                console.assert(element.props.id);
-                this.removeControl(element.props.id);
+                // console.assert(element.props.id);
+                // this.removeControl(element.props.id);
+                if (this._selectedControlIds.length == 0)
+                    return
+
+                // this.selectedControlIds.forEach(id => this.removeControl(id))
+                this.removeControl(...this._selectedControlIds)
             }
         }
 
         setControlPropEditor() {
-            ControlPropEditors.setControlPropEditor<PageViewProps, "name">(PageView, "name", "名称", TextInput)
+            ControlPropEditors.setControlPropEditor<PageViewProps, "name">(PageView, "名称", TextInput, "name")
 
             let items = {
                 flowing: '流式定位',
                 absolute: '绝对定位'
             }
-            ControlPropEditors.setControlPropEditor<PageViewProps, "layout">(PageView, "layout", "布局", dropdown(items))
-            ControlPropEditors.setControlPropEditor<ControlPlaceholderProps, "name">(ControlPlaceholder, "name", "名称", TextInput)
+            ControlPropEditors.setControlPropEditor<PageViewProps, "layout">(PageView, "布局", dropdown(items), "layout")
+            ControlPropEditors.setControlPropEditor<ControlPlaceholderProps, "name">(ControlPlaceholder, "名称", TextInput, "name")
         }
 
         render() {

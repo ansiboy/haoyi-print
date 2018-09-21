@@ -34,22 +34,7 @@ namespace jueying {
         }
     }
 
-    // export function textInput(value: string, onChange: (value: string) => void) {
-    //     return <TextInput value={value} onChange={onChange} />
-    // }
-
-
-
-    export function dropdown(items: { [value: string]: string }) {
-        // return (value: T, onChange: (value: T) => void) => {
-        //     return <select className='form-control' value={value as any || ''}
-        //         onChange={e => onChange(e.target.value as any)}>
-        //         {Object.getOwnPropertyNames(items).map(o =>
-        //             <option key={o} value={o}>{items[o]}</option>
-        //         )}
-        //     </select>
-        // }
-
+    export function dropdown(items: { [value: string]: string }, emptyText?: string) {
         return class Dropdown extends PropEditor<{ value: string }, string>{
             render() {
                 let { value } = this.state
@@ -59,6 +44,7 @@ namespace jueying {
                         this.setState({ value })
                         this.props.onChange(value)
                     }}>
+                    {emptyText ? <option value="">{emptyText}</option> : null}
                     {Object.getOwnPropertyNames(items).map(o =>
                         <option key={o} value={o}>{items[o]}</option>
                     )}

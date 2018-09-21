@@ -123,11 +123,9 @@ namespace jueying {
         Element(type: string, props: ControlProps<this>, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null
         Element(type: any, props?: any, ...children: any[]): React.ReactElement<any> | null {
             if (typeof type == 'string' && typeof (props) == 'object' && !React.isValidElement(props)) {
-                //Element(type: string, props: ControlProps<this>, ...children: JSX.Element[])
             }
             else if (typeof type == 'string' && (props == null || typeof (props) == 'object' && React.isValidElement(props) ||
                 typeof (props) == 'string')) {
-                // Element(type: string, ...children: JSX.Element[])
                 children = children || [];
                 if (props)
                     children.unshift(props);
@@ -164,9 +162,14 @@ namespace jueying {
                 props.tabIndex = this.props.tabIndex;
 
             if (this.isDesignMode && typeof type == 'string') {
-                props.onClick = (e: Event) => {
+                props.onClick = (e: KeyboardEvent) => {
                     if (this.designer) {
-                        this.designer.selectControl(this);
+                        if (!e.ctrlKey) {
+                            this.designer.selectSingleControl(this)
+                        }
+                        else {
+                            this.designer.selectControl(this)
+                        }
                         e.stopPropagation();
                     }
                 }

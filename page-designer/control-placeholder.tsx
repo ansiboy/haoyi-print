@@ -29,8 +29,6 @@ namespace jueying {
         }
 
         private sortableElement(element: HTMLElement, designer: PageDesigner) {
-            type UI = { item: JQuery, placeholder: JQuery, helper: JQuery };
-            let controls = this.state.controls;
 
             $(element).sortable({
                 axis: "y",
@@ -122,7 +120,7 @@ namespace jueying {
                         let ctrlId = ui.draggable.attr('id');
                         let pos = ui.draggable.position();
                         this.designer.setControlPosition(ctrlId, pos.left, pos.top)
-                        this.designer.selectControlById(ctrlId);
+                        this.designer.selectSingleControlById(ctrlId);
                     }
                 }
             })
@@ -145,11 +143,13 @@ namespace jueying {
                 }
                 else {
                     this.droppableElement(this.element, this.designer);
-                    this.designer.controlSelected.add((ctrl) => {
-                        if ($(ctrl.element).parents(`#${this.element.id}`).length) {
-                            console.assert(ctrl.id, 'control id is null or empty.');
-                            $(ctrl.element).draggable();
-                        }
+                    this.designer.controlSelected.add((ctrls) => {
+                        ctrls.forEach(ctrl => {
+                            if ($(ctrl.element).parents(`#${this.element.id}`).length) {
+                                console.assert(ctrl.id, 'control id is null or empty.');
+                                $(ctrl.element).draggable();
+                            }
+                        })
                     })
                 }
             }

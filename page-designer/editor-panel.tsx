@@ -23,10 +23,13 @@ namespace jueying {
             if (!this.designer)
                 return;
 
-            let onChanged = async (control: Control<any, any>) => {
-                this.editor.setControl(control)
+            let onChanged = async () => {
+                let controls = this.designer.selectedControlIds.map(id => Control.getInstance(id))
+                this.editor.setControls(controls)
             }
             this.designer.controlSelected.add(onChanged)
+            this.designer.controlUnselected.add(onChanged)
+            this.designer.controlRemoved.add(onChanged)
         }
         render() {
             let { emptyText } = this.props;

@@ -1,5 +1,5 @@
 import { Props as ControlProps, default as Control } from './control';
-import { createBasePropEditors, cssProp } from "../baseControl";
+import { createBasePropEditors, controlSize } from "../baseControl";
 import React = require("react");
 import { ControlPropEditors, dropdown } from 'jueying';
 
@@ -49,7 +49,7 @@ import { ControlPropEditors, dropdown } from 'jueying';
         '11pt': '11pt', '12pt': '12pt', '13pt': '13pt',
         '14pt': '14pt'
     }
-    ControlPropEditors.setControlPropEditor<ControlProps, 'fontSize'>(Control, "fontSize", "字体大小", dropdown(fontSizes))
+    ControlPropEditors.setControlPropEditor<ControlProps, 'fontSize'>(Control, "字体大小", dropdown(fontSizes, '请选择字体大小'), "fontSize")
 
     // let func = function (style: React.CSSProperties, onChange: (value: React.CSSProperties) => void) {
     //     return <ControlSize size={style.width} onChange={e => {
@@ -57,6 +57,6 @@ import { ControlPropEditors, dropdown } from 'jueying';
     //         onChange(style)
     //     }} />
     // }
-    ControlPropEditors.setControlPropEditor<ControlProps, 'style'>(Control, "style", '宽', cssProp('width'))
+    ControlPropEditors.setControlPropEditor<ControlProps, 'style', 'width'>(Control, '宽', controlSize(), "style", 'width')
     // ControlPropEditors.setControlPropEditor<ControlProps, 'field'>(Control, "field", '字段', textInput)
 })()

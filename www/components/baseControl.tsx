@@ -1,4 +1,4 @@
-import { Control, EditorProps, ControlEditor as Editor, ControlProps, PageViewContext, PageView, ControlPropEditors, PropEditor, PropEditorProps, TextInput } from "jueying";
+import { Control, ControlProps, PageViewContext, PageView, ControlPropEditors, PropEditor, PropEditorProps, TextInput } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
 
@@ -60,14 +60,13 @@ export abstract class BaseControl<P extends BaseControlProps<any>, S> extends Co
     }
 }
 
-export let cssProp = function (name: keyof React.CSSProperties) {
+export let controlSize = function () {
 
-    class PropEditorWraper extends PropEditor<PropEditorProps<React.CSSProperties>, React.CSSProperties>{
+    class PropEditorWraper extends PropEditor<PropEditorProps<string>, string>{
         render() {
-            let style = this.state.value
-            let ctrl = <ControlSize size={style[name]} onChange={e => {
-                style[name] = e
-                this.props.onChange(style)
+            let value = this.state.value
+            let ctrl = <ControlSize size={value} onChange={(value) => {
+                this.props.onChange(value);
             }} />
 
             return ctrl
@@ -78,13 +77,13 @@ export let cssProp = function (name: keyof React.CSSProperties) {
 }
 
 export function createBasePropEditors(controlClass: React.ComponentClass) {
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "name">(controlClass, 'name', '名称', TextInput)
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "text">(controlClass, 'text', '文本', TextInput)
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "field">(controlClass, 'field', '字段', TextInput)
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "name">(controlClass, '名称', TextInput, 'name')
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "text">(controlClass, '文本', TextInput, 'text')
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "field">(controlClass, '字段', TextInput, 'field')
 
 
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, 'style', '左边', cssProp('left'))
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, 'style', '顶部', cssProp('top'))
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style", "left">(controlClass, '左边', controlSize(), 'style', 'left')
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style", "top">(controlClass, '顶部', controlSize(), 'style', 'top')
 }
 
 

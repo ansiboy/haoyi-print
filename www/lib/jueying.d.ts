@@ -23,7 +23,11 @@ declare namespace jueying {
     class ControlEditor extends React.Component<EditorProps, EditorState> {
         private _element;
         constructor(props: EditorProps);
-        setControl(control: Control<any, any>): void;
+        setControls(controls: Control<any, any>[]): void;
+        private setPropsValue;
+        private getPropsValue;
+        private flatProps;
+        private isSameEditor;
         render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
         readonly element: HTMLElement;
         Element(...children: React.ReactElement<any>[]): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
@@ -133,30 +137,39 @@ declare namespace jueying {
         static create<T>(): Callback<T>;
     }
     class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
-        private selectedControlId;
+        private _selectedControlIds;
         element: HTMLElement;
-        controlSelected: Callback<Control<ControlProps<any>, any>>;
+        controlSelected: Callback<Control<ControlProps<any>, any>[]>;
+        controlUnselected: Callback<Control<ControlProps<any>, any>[]>;
+        controlRemoved: Callback<string[]>;
         controlComponentDidMount: Callback<Control<any, any>>;
         constructor(props: PageDesignerProps);
         componentWillReceiveProps(props: PageDesignerProps): void;
         pageData: ElementData | null;
-        updateControlProps(controlId: string, props: any): any;
+        readonly selectedControlIds: string[];
+        updateControlProps(controlId: string, navPropsNames: string[], value: any): any;
         sortControlChildren(controlId: string, childIds: string[]): void;
         sortChildren(parentId: string, childIds: string[]): void;
         /** 添加控件 */
         appendControl(parentId: string, childControl: ElementData, childIds?: string[]): void;
         /** 设置控件位置 */
         setControlPosition(controlId: string, left: number | string, top: number | string): void;
-        selectControlById(controlId: string): void;
+        selectSingleControlById(controlId: string): void;
+        selectSingleControl(control: Control<any, any>): void;
         /**
          * 选择指定的控件
-         * @param control 指定的控件，可以为空，为空表示清空选择。
+         * @param control 指定的控件
          */
-        selectControl(control: Control<any, any>): void;
+        selectControl(...controls: Control<any, any>[]): void;
+        /**
+         * 取消选择
+         * @param control 指定的控件
+         */
+        unselectControl(...controls: Control<any, any>[]): void;
         /** 清除已经选择的控件 */
-        clearSelectControl(): void;
+        clearSelectdControls(): void;
         /** 移除控件 */
-        removeControl(controlId: string): void;
+        removeControl(...controlIds: string[]): void;
         /** 移动控件到另外一个控件容器 */
         moveControl(controlId: string, parentId: string, childIds: string[]): void;
         private removeControlFrom;
@@ -176,14 +189,21 @@ declare namespace jueying {
         static register(controlTypeName: any, editorType: React.ComponentClass<any> | string): void;
         static hasEditor(controlTypeName: any): boolean;
     }
+    interface PropEditorInfo {
+        propNames: string[];
+        text: string;
+        editorType: PropEditorConstructor;
+    }
     class ControlPropEditors {
         private static controlPropEditors;
-        static getControlPropEditor(controlClassName: string): {
-            propName: string;
-            text: string;
-            editorType: PropEditorConstructor;
-        }[];
-        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, propName: K, text: string, editorType: PropEditorConstructor): void;
+        static getControlPropEditors(controlClassName: string): PropEditorInfo[];
+        static getControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClassName: string, propName: K, propName1: K1): PropEditorInfo;
+        static getControlPropEditor<T, K extends keyof T>(controlClassName: string, propName: string): PropEditorInfo;
+        /** 通过属性数组获取属性的编辑器 */
+        static getControlPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
+        static setControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K, propName1: any): void;
+        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K): void;
+        static getFlatPropValue(obj: Object, flatPropName: string): void;
     }
 }
 declare namespace jueying {
@@ -325,7 +345,7 @@ declare namespace jueying {
     }
     function dropdown(items: {
         [value: string]: string;
-    }): {
+    }, emptyText?: string): {
         new (props: PropEditorProps<string>): {
             render(): JSX.Element;
             componentWillReceiveProps(props: PropEditorProps<string>): void;

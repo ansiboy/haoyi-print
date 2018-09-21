@@ -40,6 +40,6 @@ import { ControlPropEditors, PropEditor, PropEditorProps } from "jueying";
         }
     }
 
-    ControlPropEditors.setControlPropEditor<ControlProps, 'size'>(Control, "size", '尺寸', PropEditorWraper)
+    ControlPropEditors.setControlPropEditor<ControlProps, 'size'>(Control, '尺寸', PropEditorWraper, "size")
 
 })()

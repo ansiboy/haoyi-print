@@ -187,11 +187,11 @@ namespace jueying.extentions {
             this.setState({ activeDocumentIndex: index });
 
             setTimeout(() => {
-                let pageViewId = doc.pageData.props.id;
+                let pageViewId: string = doc.pageData.props.id;
                 console.assert(pageViewId != null, 'pageView id is null');
                 console.assert(doc.pageData.type == 'PageView');
 
-                this.pageDesigner.selectControlById(pageViewId);
+                this.pageDesigner.selectSingleControlById(pageViewId);
             }, 50);
         }
         setState<K extends keyof DesignerFrameworkState>(
@@ -237,20 +237,6 @@ namespace jueying.extentions {
             })
         }
         componentDidMount() {
-            debugger;
-            var canvas = this.ruleElement
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            let ruler = new Ruler(canvas);
-
-            ruler.render('#aaa', 'mm', 100);
-
-            window.onresize = function () {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-                ruler.render('#aaa', 'mm', 100);
-            }
         }
         render() {
             let { activeDocumentIndex, pageDocuments } = this.state;
@@ -290,7 +276,7 @@ namespace jueying.extentions {
                                 onClick={(e) => {
                                     if (designer.pageData) {
                                         let pageViewId = designer.pageData.props.id
-                                        designer.selectControlById(pageViewId);
+                                        designer.selectSingleControlById(pageViewId);
                                     }
                                 }}>
                                 <canvas className='ruler' ref={e => this.ruleElement = e || this.ruleElement}></canvas>

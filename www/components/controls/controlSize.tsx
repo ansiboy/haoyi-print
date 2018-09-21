@@ -25,8 +25,9 @@ export class ControlSize extends React.Component<Props, State>{
     }
     componentWillReceiveProps(props: Props) {
         let size = typeof props.size == 'number' ? `${props.size}px` : props.size
-        // let value = ControlSize.toDefaultUnitSize(size)
-        this.setState({ value: Number.parseFloat(ControlSize.toDefaultUnitSize(size)) })
+        let value = Number.parseFloat(ControlSize.toDefaultUnitSize(size))
+        let valueText = isNaN(value) ? '' : value.toFixed(1)
+        this.setState({ value, valueText })
     }
 
     /** 将尺寸转换为默认的值 */
@@ -48,7 +49,7 @@ export class ControlSize extends React.Component<Props, State>{
 
         let scale = toPix(controlUnit)
         value = value / scale
-        return `${value}${controlUnit}`
+        return `${value.toFixed(1)}${controlUnit}`
     }
 
     static toPXSize(size: string | number): number {
