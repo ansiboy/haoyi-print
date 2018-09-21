@@ -1,7 +1,8 @@
-import { ControlProps, PageViewContext, PageView, Control } from 'jueying';
+import { ControlProps, PageViewContext, PageView, Control, ControlPropEditors, PageViewProps } from 'jueying';
 import * as React from 'react';
 import 'jueying'
 import { ControlSize } from './controls/controlSize';
+import { controlSize } from './baseControl';
 
 jueying.PageView.prototype.render = function () {
     let self = this as PageView;
@@ -70,21 +71,23 @@ jueying.PageView.defaultProps = { unit: 'mm', fontFamily: 'Microsoft YaHei' }
 //     </>)
 // }
 
-jueying.ControlPlaceholder.prototype.render = function () {
-    let self = this as jueying.ControlPlaceholder
-    let { emptyText, htmlTag } = self.props;
-    let emptyElement = <div className="empty">{emptyText || ''}</div>;
-    htmlTag = htmlTag || 'div';
-    let controls = this.props.children as JSX.Element[] || [];
-    return <PageViewContext.Consumer>
-        {c => {
-            this.pageView = c.pageView;
-            return this.Element(htmlTag, <React.Fragment>
-                {controls.length == 0 ? emptyElement : controls}
-            </React.Fragment>);
-        }}
-    </PageViewContext.Consumer>
-}
+// jueying.ControlPlaceholder.prototype.render = function () {
+//     let self = this as jueying.ControlPlaceholder
+//     let { emptyText, htmlTag } = self.props;
+//     let emptyElement = <div className="empty">{emptyText || ''}</div>;
+//     htmlTag = htmlTag || 'div';
+//     let controls = this.props.children as JSX.Element[] || [];
+//     return <PageViewContext.Consumer>
+//         {c => {
+//             this.pageView = c.pageView;
+//             return this.Element(htmlTag, <React.Fragment>
+//                 {controls.length == 0 ? emptyElement : controls}
+//             </React.Fragment>);
+//         }}
+//     </PageViewContext.Consumer>
+// }
+
+
 
 // jueying.ControlPlaceholderEditor.prototype.render = function () {
 //     let self = this as jueying.ControlPlaceholderEditor

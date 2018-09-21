@@ -23,6 +23,7 @@ namespace jueying {
         tabIndex?: number,
         componentName?: string,
         designMode?: boolean,
+        selected?: boolean,
     }
 
     export interface ControlState {
@@ -155,8 +156,17 @@ namespace jueying {
                 props.style = props.style ? Object.assign(this.props.style, props.style || {}) : this.props.style;
             }
 
-            if (this.props.className)
-                props.className = this.props.className;
+            let className = ''
+            if (this.props.className) {
+                className = this.props.className
+            }
+
+            if (this.props.selected) {
+                className = className + ' ' + classNames.controlSelected
+            }
+
+            if (className)
+                props.className = className;
 
             if (this.props.tabIndex)
                 props.tabIndex = this.props.tabIndex;
@@ -164,12 +174,21 @@ namespace jueying {
             if (this.isDesignMode && typeof type == 'string') {
                 props.onClick = (e: KeyboardEvent) => {
                     if (this.designer) {
-                        if (!e.ctrlKey) {
-                            this.designer.selectSingleControl(this)
+
+                        let selectedControlIds = this.designer.selectedControlIds //[this.id]
+                        if (e.ctrlKey) {
+                            if (selectedControlIds.indexOf(this.id) >= 0) {
+                                selectedControlIds = selectedControlIds.filter(o => o != this.id)
+                            }
+                            else {
+                                selectedControlIds.push(this.id)
+                            }
                         }
                         else {
-                            this.designer.selectControl(this)
+                            selectedControlIds = [this.id]
                         }
+
+                        this.designer.selectControl(selectedControlIds)
                         e.stopPropagation();
                     }
                 }
@@ -180,7 +199,12 @@ namespace jueying {
                 if (originalRef) {
                     originalRef(e);
                 }
-                this.element = e || this.element
+
+                if (e == null)
+                    return
+
+                this.element = e
+
             };
 
             return this.createElement(type, props, ...children);

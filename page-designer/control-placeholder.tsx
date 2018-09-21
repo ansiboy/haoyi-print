@@ -28,7 +28,7 @@ namespace jueying {
             this.state = { controls: [] };
         }
 
-        private sortableElement(element: HTMLElement, designer: PageDesigner) {
+        static sortableElement(element: HTMLElement, designer: PageDesigner) {
 
             $(element).sortable({
                 axis: "y",
@@ -53,7 +53,7 @@ namespace jueying {
                             ui.item.remove();
                         })
                         //==================================================
-                        this.designer.appendControl(element.id, ctrl, childIds);
+                        designer.appendControl(element.id, ctrl, childIds);
                     }
                     else if (ui.item && ui.item[0].id) {    // 更新操作
                         console.assert(ui.item.length == 1);
@@ -62,7 +62,7 @@ namespace jueying {
                             //==================================================
                             // 需要 setTimout
                             setTimeout(() => {
-                                this.designer.moveControl(ui.item[0].id, element.id, childIds);
+                                designer.moveControl(ui.item[0].id, element.id, childIds);
                             });
                             //==================================================
                         }
@@ -79,8 +79,115 @@ namespace jueying {
             })
         }
 
-        private droppableElement(element: HTMLElement, designer: PageDesigner) {
+        private draggableElement(element: HTMLElement) {
+            let x: number, y: number;
+            let deltaX: number, deltaY: number;
+            let elementStartPositions: { left: number, top: number, id: string }[];
+
+            (element as any).is_draggable = true
+            $(element).draggable({
+                start: (event, ui) => {
+                    x = ui.position.left
+                    y = ui.position.top
+
+                    let containerSelectedElements = this.designer.selectedControlIds
+                        .map(id => {
+                            if (id == this.element.id)
+                                return null
+
+                            if ($(`#${id}`).parents(`#${this.element.id}`).length == 0) {
+                                return null
+                            }
+
+                            return document.getElementById(id)
+                        })
+                        .filter(o => o)
+
+                    elementStartPositions = containerSelectedElements.map(o => {
+                        let pos = $(o).position()
+                        return { id: o.id, left: pos.left, top: pos.top }
+                    })
+                },
+                drag: (event, ui) => {
+                    deltaX = ui.position.left - x
+                    deltaY = ui.position.top - y
+
+                    elementStartPositions.forEach(o => {
+                        let left = o.left + deltaX
+                        let top = o.top + deltaY
+                        let element = document.getElementById(o.id)
+                        element.style.left = `${left}px`
+                        element.style.top = `${top}px`
+                    })
+                },
+                stop: () => {
+                    var positions = elementStartPositions.map(o => ({ controlId: o.id, left: o.left + deltaX, top: o.top + deltaY }))
+                    positions.forEach(o => {
+                        console.log(o)
+                        let element = document.getElementById(o.controlId)
+                        element.style.left = `${o.left}px`
+                        element.style.top = `${o.top}px`
+                    })
+                    this.designer.setControlsPosition(positions)
+                    x = y = deltaX = deltaY = null
+                }
+            });
+        }
+
+        private enableDraggable() {
+            console.assert(this.element != null)
+
+            let capture = false
+            let x: number, y: number;
+            let deltaX: number;
+            let deltaY: number;
+
+            this.element.addEventListener('mousedown', (event) => {
+                if (event.target == this.element)
+                    return
+
+                capture = true
+            })
+            this.element.addEventListener('mousemove', (event) => {
+                if (!capture || this.element == event.target) {
+                    return
+                }
+                if (x != null && y != null) {
+                    deltaX = event.screenX - x
+                    deltaY = event.screenY - y
+
+                    let elements = this.designer.selectedControlIds.map(id => document.getElementById(id))
+                    elements.forEach(o => {
+                        let pos = $(o).position()
+                        let x = pos.left + deltaX
+                        let y = pos.top + deltaY
+
+                        o.style.left = `${x}px`
+                        o.style.top = `${y}px`
+                        console.assert(o.id)
+                    })
+                    // this.designer.setControlPosition()
+                }
+
+                x = event.screenX
+                y = event.screenY
+            })
+            this.element.addEventListener('mouseup', () => {
+                capture = false
+                x = null
+                y = null
+            })
+
+        }
+
+        /**
+         * 启用接收拖放操作，以便通过拖放图标添加控件
+         */
+        private enableDroppable() {
+            let element = this.element
+            console.assert(element != null)
             $(element).droppable({
+                multiple: true,
                 activate: function (event, ui) {
                     ui.helper.css({
                         'position': 'absolute',
@@ -114,18 +221,19 @@ namespace jueying {
                             }
                         };
                         this.designer.appendControl(element.id, ctrl);
-                        $(`#${ctrl.props.id}`).draggable();
+                        // $(`#${ctrl.props.id}`).draggable();
+                        this.draggableElement(document.getElementById(ctrl.props.id))
                     }
-                    else {
-                        let ctrlId = ui.draggable.attr('id');
-                        let pos = ui.draggable.position();
-                        this.designer.setControlPosition(ctrlId, pos.left, pos.top)
-                        this.designer.selectSingleControlById(ctrlId);
-                    }
+                    // else {
+                    //     let ctrlId = ui.draggable.attr('id');
+                    //     let pos = ui.draggable.position();
+                    //     this.designer.setControlPosition(ctrlId, pos.left, pos.top)
+                    //     this.designer.selectSingleControlById(ctrlId);
+                    // }
                 }
             })
         }
-        private childrenIds(element: HTMLElement) {
+        private static childrenIds(element: HTMLElement) {
             let childIds = new Array<string>();
             for (let i = 0; i < element.children.length; i++) {
                 if (!element.children.item(i).id)
@@ -139,18 +247,29 @@ namespace jueying {
         componentDidMount() {
             if (this.designer) {
                 if (this.pageView.layout == 'flowing') {
-                    this.sortableElement(this.element, this.designer);
+                    ControlPlaceholder.sortableElement(this.element, this.designer);
                 }
                 else {
-                    this.droppableElement(this.element, this.designer);
-                    this.designer.controlSelected.add((ctrls) => {
-                        ctrls.forEach(ctrl => {
-                            if ($(ctrl.element).parents(`#${this.element.id}`).length) {
-                                console.assert(ctrl.id, 'control id is null or empty.');
-                                $(ctrl.element).draggable();
+                    this.enableDroppable()
+
+
+                    this.designer.selectedControlIds
+                        .map(id => document.getElementById(id))
+                        .filter(o => o)
+                        .forEach(element => {
+                            if ($(element).parents(`#${this.element.id}`).length) {
+                                console.assert(element.id, 'control id is null or empty.');
+                                this.draggableElement(element)
                             }
                         })
-                    })
+                    // this.designer.controlSelected.add((ctrls) => {
+                    //     ctrls.forEach(ctrl => {
+                    //         if ($(ctrl.element).parents(`#${this.element.id}`).length) {
+                    //             console.assert(ctrl.id, 'control id is null or empty.');
+                    //             this.draggableElement(ctrl.element)
+                    //         }
+                    //     })
+                    // })
                 }
             }
         }

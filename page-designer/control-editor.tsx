@@ -19,90 +19,75 @@ namespace jueying {
         }
 
         setControls(controls: Control<any, any>[]) {
-            let flatProps: { [navName: string]: { value: any, control: Control<any, any> } } = {}
+            if (controls.length == 0) {
+                this.setState({ editors: [] })
+                return
+            }
+
+            // 各个控件相同的编辑器
+            let commonPropEditorInfos: PropEditorInfo[]
+
             for (let i = 0; i < controls.length; i++) {
                 let control = controls[i]
-
-                let controlProps: { [key: string]: any } = Object.assign({}, control.props);
-                delete (controlProps as any).children;
-                controlProps = this.flatProps(controlProps) 
-
+                let className = control.constructor.name
+                let propEditorInfos = ControlPropEditors.getControlPropEditors(className)
                 if (i == 0) {
-                    flatProps = controlProps
+                    commonPropEditorInfos = propEditorInfos || []
                 }
                 else {
-                    for (let key in flatProps) {
-                        if (controlProps[key] == undefined) {
-                            delete flatProps[key]
-                        } else if (controlProps[key] != flatProps[key]) {
-                            flatProps[key] = null
-                        }
-                    }
+                    let items: PropEditorInfo[] = []
+                    commonPropEditorInfos.forEach(propInfo1 => {
+                        propEditorInfos.forEach(propInfo2 => {
+                            let propName1 = propInfo1.propNames.join('.')
+                            let propName2 = propInfo2.propNames.join('.')
+                            if (propInfo1.text == propInfo2.text && propInfo1.editorType == propInfo2.editorType && propName1 == propName2) {
+                                items.push(propInfo1)
+                            }
+                        })
+                    })
+                    commonPropEditorInfos = items
                 }
             }
 
-            let editorInfos: { [navName: string]: PropEditorInfo } = {}
-            for (let navName in flatProps) {
-                let firstPropEditorInfo: PropEditorInfo
-                for (let i = 0; i < controls.length; i++) {
-                    let control = controls[i]
-                    let className = control.constructor.name
-                    let propNames = navName.split('.')
-                    let propEditorInfo = ControlPropEditors.getControlPropEditorByArray(className, propNames)
-                    if (propEditorInfo == null)
-                        break
-
-                    if (i == 0) {
-                        firstPropEditorInfo = propEditorInfo
-                        continue
-                    }
-
-                    if (!this.isSameEditor(firstPropEditorInfo, propEditorInfo)) {
-                        firstPropEditorInfo = null
-                        break
-                    }
+            // 各个控件相同的属性值
+            let commonFlatProps: { [navName: string]: any }
+            for (let i = 0; i < controls.length; i++) {
+                let control = controls[i]
+                let controlProps: { [key: string]: any } = Object.assign({}, control.props);
+                delete (controlProps as any).children;
+                controlProps = this.flatProps(controlProps)
+                if (i == 0) {
+                    commonFlatProps = controlProps
                 }
-
-                if (firstPropEditorInfo) {
-                    editorInfos[navName] = firstPropEditorInfo
+                else {
+                    let obj = {}
+                    for (let key in commonFlatProps) {
+                        if (commonFlatProps[key] == controlProps[key])
+                            obj[key] = controlProps[key]
+                    }
+                    commonFlatProps = obj
                 }
             }
 
             let editors: { text: string, editor: React.ReactElement<any> }[] = []
-            for (let navName in editorInfos) {
-                let editorInfo = editorInfos[navName]
-                let editorType = editorInfo.editorType
-
-                let editor: React.ReactElement<any> = React.createElement(editorType, {
-                    value: flatProps[navName],
+            for (let i = 0; i < commonPropEditorInfos.length; i++) {
+                let propEditorInfo = commonPropEditorInfos[i]
+                let text = propEditorInfo.text
+                let editorType = propEditorInfo.editorType
+                let propNames = propEditorInfo.propNames
+                let editor = React.createElement(editorType, {
+                    value: commonFlatProps[propNames.join('.')],
                     onChange: (value) => {
                         for (let i = 0; i < controls.length; i++) {
                             let c = controls[i]
-                            c.designer.updateControlProps(c.id, navName.split('.'), value)
+                            c.designer.updateControlProps(c.id, propNames, value)
                         }
                     }
                 })
-                editors.push({ text: editorInfo.text, editor })
+                editors.push({ text, editor })
             }
 
             this.setState({ editors })
-        }
-
-        private setPropsValue(obj: object, propNames: string[], value: any) {
-            console.assert(propNames.length > 0)
-            for (let i = 0; i < propNames.length - 1; i++) {
-                obj = obj[propNames[i]] = obj[propNames[i]] || {}
-            }
-
-            obj[propNames[propNames.length - 1]] = value
-        }
-        private getPropsValue(obj: object, propNames: string[]) {
-            console.assert(propNames.length > 0)
-            for (let i = 0; i < propNames.length; i++) {
-                obj = obj[propNames[i]]
-            }
-
-            return obj
         }
 
         private flatProps(props: object, baseName?: string): { [key: string]: object } {

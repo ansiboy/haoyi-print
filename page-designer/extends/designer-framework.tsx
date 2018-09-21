@@ -191,7 +191,7 @@ namespace jueying.extentions {
                 console.assert(pageViewId != null, 'pageView id is null');
                 console.assert(doc.pageData.type == 'PageView');
 
-                this.pageDesigner.selectSingleControlById(pageViewId);
+                this.pageDesigner.selectControl(pageViewId);
             }, 50);
         }
         setState<K extends keyof DesignerFrameworkState>(
@@ -269,14 +269,13 @@ namespace jueying.extentions {
                                     </li>
                                 )}
                             </ul>
-                            <hr style={{ margin: 0, borderWidth: 4 }} />
                             <ComponentToolbar className="component-panel" componets={components} />
                             <EditorPanel emptyText={"未选中控件，点击页面控件，可以编辑选中控件的属性"} />
                             <div className="main-panel"
                                 onClick={(e) => {
                                     if (designer.pageData) {
                                         let pageViewId = designer.pageData.props.id
-                                        designer.selectSingleControlById(pageViewId);
+                                        designer.selectControl(pageViewId);
                                     }
                                 }}>
                                 <canvas className='ruler' ref={e => this.ruleElement = e || this.ruleElement}></canvas>

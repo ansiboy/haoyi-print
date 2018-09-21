@@ -78,6 +78,15 @@ namespace jueying {
         static setControlPropEditor(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, ...propNames: string[]): void {
             let className = controlClass.name
             let classProps = this.controlPropEditors[className] = this.controlPropEditors[className] || []
+            for (let i = 0; i < classProps.length; i++) {
+                let propName1 = classProps[i].propNames.join('.')
+                let propName2 = propNames.join('.')
+                if (propName1 == propName2) {
+                    classProps[i].text = text
+                    classProps[i].editorType = editorType
+                    return
+                }
+            }
             classProps.push({ propNames: propNames, text, editorType })
         }
 

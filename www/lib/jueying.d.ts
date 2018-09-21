@@ -24,8 +24,6 @@ declare namespace jueying {
         private _element;
         constructor(props: EditorProps);
         setControls(controls: Control<any, any>[]): void;
-        private setPropsValue;
-        private getPropsValue;
         private flatProps;
         private isSameEditor;
         render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
@@ -71,6 +69,7 @@ declare namespace jueying {
         tabIndex?: number;
         componentName?: string;
         designMode?: boolean;
+        selected?: boolean;
     }
     interface ControlState {
         selected: boolean;
@@ -139,11 +138,11 @@ declare namespace jueying {
     class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
         private _selectedControlIds;
         element: HTMLElement;
-        controlSelected: Callback<Control<ControlProps<any>, any>[]>;
-        controlUnselected: Callback<Control<ControlProps<any>, any>[]>;
+        controlSelected: Callback<string[]>;
         controlRemoved: Callback<string[]>;
         controlComponentDidMount: Callback<Control<any, any>>;
         constructor(props: PageDesignerProps);
+        initSelectedIds(pageData: ElementData): void;
         componentWillReceiveProps(props: PageDesignerProps): void;
         pageData: ElementData | null;
         readonly selectedControlIds: string[];
@@ -154,20 +153,16 @@ declare namespace jueying {
         appendControl(parentId: string, childControl: ElementData, childIds?: string[]): void;
         /** 设置控件位置 */
         setControlPosition(controlId: string, left: number | string, top: number | string): void;
-        selectSingleControlById(controlId: string): void;
-        selectSingleControl(control: Control<any, any>): void;
+        setControlsPosition(positions: {
+            controlId: string;
+            left: number | string;
+            top: number | string;
+        }[]): void;
         /**
          * 选择指定的控件
          * @param control 指定的控件
          */
-        selectControl(...controls: Control<any, any>[]): void;
-        /**
-         * 取消选择
-         * @param control 指定的控件
-         */
-        unselectControl(...controls: Control<any, any>[]): void;
-        /** 清除已经选择的控件 */
-        clearSelectdControls(): void;
+        selectControl(controlIds: string[] | string): void;
         /** 移除控件 */
         removeControl(...controlIds: string[]): void;
         /** 移动控件到另外一个控件容器 */
@@ -223,9 +218,14 @@ declare namespace jueying {
         };
         pageView: PageView;
         constructor(props: any);
-        private sortableElement;
-        private droppableElement;
-        private childrenIds;
+        static sortableElement(element: HTMLElement, designer: PageDesigner): void;
+        private draggableElement;
+        private enableDraggable;
+        /**
+         * 启用接收拖放操作，以便通过拖放图标添加控件
+         */
+        private enableDroppable;
+        private static childrenIds;
         componentDidMount(): void;
         render(h?: any): JSX.Element;
     }

@@ -4,6 +4,11 @@
     let lib = 'lib'
     requirejs.config({
         shim: {
+            'drag-multiple': {
+                deps: [
+                    'jquery-ui'
+                ]
+            },
             'jquery-ui': {
                 exports: 'window["$"]',
                 deps: [

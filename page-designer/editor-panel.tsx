@@ -28,7 +28,6 @@ namespace jueying {
                 this.editor.setControls(controls)
             }
             this.designer.controlSelected.add(onChanged)
-            this.designer.controlUnselected.add(onChanged)
             this.designer.controlRemoved.add(onChanged)
         }
         render() {

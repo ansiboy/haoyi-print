@@ -48,20 +48,44 @@ namespace jueying {
         private _selectedControlIds: string[] = [];
         element: HTMLElement;
 
-        controlSelected = Callback.create<Control<ControlProps<any>, any>[]>();
-        controlUnselected = Callback.create<Control<ControlProps<any>, any>[]>();
+        controlSelected = Callback.create<string[]>();
+        // controlUnselected = Callback.create<Control<ControlProps<any>, any>[]>();
         controlRemoved = Callback.create<string[]>()
         controlComponentDidMount = Callback.create<Control<any, any>>();
 
         constructor(props: PageDesignerProps) {
             super(props);
 
-            this.state = { pageData: this.props.pageData };
+            this.state = { pageData: props.pageData };
             this.setControlPropEditor();
+
+            this.initSelectedIds(props.pageData)
+
+        }
+
+        initSelectedIds(pageData: ElementData) {
+            if (pageData == null) {
+                this._selectedControlIds = []
+                return
+            }
+            let stack = new Array<ElementData>()
+            stack.push(pageData)
+            while (stack.length > 0) {
+                let item = stack.pop()
+                let props = item.props as ControlProps<any>
+                if (props.selected) {
+                    console.assert(props.id)
+                    this._selectedControlIds.push(props.id)
+                }
+                (item.children || []).forEach(o => {
+                    stack.push(o)
+                })
+            }
         }
 
         componentWillReceiveProps(props: PageDesignerProps) {
             this.setState({ pageData: props.pageData });
+            this.initSelectedIds(props.pageData)
         }
 
         get pageData() {
@@ -95,21 +119,6 @@ namespace jueying {
             obj[navPropsNames[navPropsNames.length - 1]] = value
             this.setState(this.state);
         }
-        // updateControlProps(controlId: string, props: any): any {
-        //     let controlDescription = this.findControlData(controlId);
-        //     if (controlDescription == null)
-        //         return
-
-        //     console.assert(controlDescription != null);
-        //     console.assert(props != null, 'props is null');
-
-        //     controlDescription.props = controlDescription.props || {};
-        //     for (let key in props) {
-        //         controlDescription.props[key] = props[key];
-        //     }
-
-        //     this.setState(this.state);
-        // }
 
         sortControlChildren(controlId: string, childIds: string[]): void {
             let c = this.findControlData(controlId)
@@ -167,7 +176,7 @@ namespace jueying {
             }
             let control = Control.getInstance(childControl.props.id);
             console.assert(control != null);
-            this.selectSingleControl(control);
+            this.selectControl(control.id);
         }
 
         /** 设置控件位置 */
@@ -184,69 +193,88 @@ namespace jueying {
             this.setState({ pageData });
         }
 
-        selectSingleControlById(controlId: string) {
-            let control = Control.getInstance(controlId);
-            this.clearSelectdControls()
-            this.selectControl(control);
+        setControlsPosition(positions: { controlId: string, left: number | string, top: number | string }[]) {
+            positions.forEach(o => {
+                let { controlId, left, top } = o
+                let controlData = this.findControlData(controlId);
+                if (!controlData)
+                    throw new Error(`Control ${controlId} is not exits.`);
+
+                let style = controlData.props.style = (controlData.props.style || {});
+                style.left = left;
+                style.top = top;
+
+                let { pageData } = this.state;
+                this.setState({ pageData });
+            })
+
         }
 
-        selectSingleControl(control: Control<any, any>) {
-            this.clearSelectdControls()
-            this.selectControl(control)
-        }
+        // selectSingleControlById(controlId: string) {
+        //     // let control = Control.getInstance(controlId);
+        //     // this.clearSelectdControls()
+        //     // this.selectControl(control);
+        //     debugger
+        //     let controlData = this.findControlData(controlId)
+        //     console.assert(controlData != null)
+        //     controlData.props.selected = true
+        //     this.setState({ pageData: this.pageData })
+        // }
+
+        // selectSingleControl(control: Control<any, any>) {
+        //     // this.clearSelectdControls()
+        //     // this.selectControl(control)
+        //     this.selectSingleControlById(control.id)
+        // }
 
         /**
          * 选择指定的控件
          * @param control 指定的控件
          */
-        selectControl(...controls: Control<any, any>[]): void {
-            if (!controls) throw Errors.argumentNull('controls');
-            for (let i = 0; i < controls.length; i++) {
-                let control = controls[i]
-                let controlIsSelected = this._selectedControlIds.indexOf(control.id) >= 0
-                if (controlIsSelected) {
-                    this.unselectControl(control)
-                    continue
-                }
+        selectControl(controlIds: string[] | string): void {
 
-                if (control.element == null)
-                    throw new Error('Control element is null')
+            if (typeof controlIds == 'string')
+                controlIds = [controlIds]
 
-                let selectedControlId = control.id;
-                this._selectedControlIds.push(control.id)
-                $(control.element).addClass(classNames.controlSelected);
-                setTimeout(() => {
-                    $(`#${selectedControlId}`).focus();
-                    console.log(`focuse ${selectedControlId} element`);
-                }, 100);
+            this._selectedControlIds
+                .map(o => this.findControlData(o))
+                .forEach(o => {
+                    (o.props as ControlProps<any>).selected = false
+                })
 
-            }
-
-            this.controlSelected.fire(controls)
-        }
-
-        /**
-         * 取消选择
-         * @param control 指定的控件
-         */
-        unselectControl(...controls: Control<any, any>[]) {
-            if (!controls) throw Errors.argumentNull('controls');
-
-            controls.forEach(control => {
-                $(control.element).removeClass(classNames.controlSelected);
-                this._selectedControlIds = this._selectedControlIds.filter(o => o != control.id)
+            this._selectedControlIds = controlIds
+            controlIds.map(id => this.findControlData(id)).forEach(o => {
+                let props = o.props as ControlProps<any>
+                props.selected = true
             })
-
-            this.controlUnselected.fire(controls)
-            console.log(this._selectedControlIds)
+            this.setState({ pageData: this.pageData })
+            this.controlSelected.fire(this.selectedControlIds)
         }
 
-        /** 清除已经选择的控件 */
-        clearSelectdControls() {
-            let selectControls = this._selectedControlIds.map(id => Control.getInstance(id))
-            selectControls.forEach(o => this.unselectControl(o))
-            this._selectedControlIds = [];
-        }
+
+
+        // /**
+        //  * 取消选择
+        //  * @param control 指定的控件
+        //  */
+        // unselectControl(...controls: Control<any, any>[]) {
+        //     if (!controls) throw Errors.argumentNull('controls');
+
+        //     controls.forEach(control => {
+        //         $(control.element).removeClass(classNames.controlSelected);
+        //         this._selectedControlIds = this._selectedControlIds.filter(o => o != control.id)
+        //     })
+
+        //     this.controlUnselected.fire(controls)
+        //     console.log(this._selectedControlIds)
+        // }
+
+        // /** 清除已经选择的控件 */
+        // clearSelectdControls() {
+        //     let selectControls = this._selectedControlIds.map(id => Control.getInstance(id))
+        //     selectControls.forEach(o => this.unselectControl(o))
+        //     this._selectedControlIds = [];
+        // }
 
         /** 移除控件 */
         removeControl(...controlIds: string[]) {
@@ -339,18 +367,9 @@ namespace jueying {
         private onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
             const DELETE_KEY_CODE = 46;
             if (e.keyCode == DELETE_KEY_CODE) {
-                // let selectedControlId = this.selectedControlId
-                // let element = selectedControlId ? this.findControlData(selectedControlId) : null;
-                // if (element == null) {
-                //     return;
-                // }
-
-                // console.assert(element.props.id);
-                // this.removeControl(element.props.id);
                 if (this._selectedControlIds.length == 0)
                     return
 
-                // this.selectedControlIds.forEach(id => this.removeControl(id))
                 this.removeControl(...this._selectedControlIds)
             }
         }
