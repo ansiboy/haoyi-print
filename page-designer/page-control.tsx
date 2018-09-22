@@ -171,28 +171,41 @@ namespace jueying {
 
             if (this.props.tabIndex)
                 props.tabIndex = this.props.tabIndex;
+            else
+                props.tabIndex = Control.tabIndex++
 
             if (this.isDesignMode && typeof type == 'string') {
-                (props as React.DOMAttributes<any>).onMouseDown = (e) => {
-                    if (this.designer) {
+                let func = (e: React.MouseEvent<any>) => {
+                    console.log(`event type:${event.type}`)
+                    let selectedControlIds = this.designer.selectedControlIds //[this.id]
 
-                        let selectedControlIds = this.designer.selectedControlIds //[this.id]
-                        if (e.ctrlKey) {
-                            if (selectedControlIds.indexOf(this.id) >= 0) {
-                                selectedControlIds = selectedControlIds.filter(o => o != this.id)
-                            }
-                            else {
-                                selectedControlIds.push(this.id)
-                            }
+                    //========================================================================
+                    // 如果是多个 click 事件选中
+                    if (selectedControlIds.length > 1 && event.type == 'react-mousedown') {
+                        return
+                    }
+                    //========================================================================
+
+                    if (e.ctrlKey) {
+                        if (selectedControlIds.indexOf(this.id) >= 0) {
+                            selectedControlIds = selectedControlIds.filter(o => o != this.id)
                         }
                         else {
-                            selectedControlIds = [this.id]
+                            selectedControlIds.push(this.id)
                         }
-
-                        this.designer.selectControl(selectedControlIds)
-                        e.stopPropagation();
                     }
+                    else {
+                        selectedControlIds = [this.id]
+                    }
+
+                    console.assert(this.designer != null)
+                    this.designer.selectControl(selectedControlIds)
+
+                    e.stopPropagation();
                 }
+
+                (props as React.DOMAttributes<any>).onMouseDown = func;
+                (props as React.DOMAttributes<any>).onClick = func;
             }
 
             let originalRef = props.ref;
