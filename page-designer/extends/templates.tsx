@@ -123,18 +123,18 @@ namespace jueying.extentions {
                 style,
                 componentName: "PageView",
                 layout: 'absolute'
-            },
-            children: [
-                {
-                    type: "ControlPlaceholder",
-                    props: {
-                        id: guid(),
-                        emptyText: "页面中部，可以从工具栏拖拉控件到这里",
-                        htmlTag: 'section',
-                        style: { height: '100%', margin: 0 }
-                    } as any
-                }
-            ]
+            }
+            // children: [
+            //     {
+            //         type: "ControlPlaceholder",
+            //         props: {
+            //             id: guid(),
+            //             emptyText: "页面中部，可以从工具栏拖拉控件到这里",
+            //             htmlTag: 'section',
+            //             style: { height: '100%', margin: 0 }
+            //         } as any
+            //     }
+            // ]
         },
         name: '空白模板(绝对定位)'
     }

@@ -14,38 +14,40 @@ namespace jueying {
 
 
         componentDidMount() {
-            if (!this.designer)
-                return;
+            // if (!this.designer)
+            //     return;
 
-            this.draggable($(`.${Control.connectorElementClassName}`));
-            this.designer.controlComponentDidMount.add((control) => {
-                console.assert(control.element != null);
-                this.draggable($(control.element));
-            })
+            // this.draggable($(`.${Control.connectorElementClassName}`));
+            // this.designer.controlComponentDidMount.add((control) => {
+            //     console.assert(control.element != null);
+            //     this.draggable($(control.element));
+            // })
         }
 
-        draggable(selector: JQuery) {
-            $(this.toolbarElement).find('li').draggable({
-                connectToSortable: $(`section, .${Control.connectorElementClassName}`),
-                helper: "clone",
-                revert: "invalid",
-            })
+        // draggable(selector: JQuery) {
+        //     $(this.toolbarElement).find('li').draggable({
+        //         connectToSortable: $(`section, .${Control.connectorElementClassName}`),
+        //         helper: "clone",
+        //         revert: "invalid",
+        //     })
 
-            // this.props.componets.forEach(o => this.designer.addComponentDefine(o));
+        //     // this.props.componets.forEach(o => this.designer.addComponentDefine(o));
+        // }
+
+        private enableDraggable(element: HTMLElement, controlTypeName: string) {
+            console.assert(element != null)
+            element.draggable = true
+            element.addEventListener('dragstart', function (ev) {
+                ev.dataTransfer.setData(Control.controlTypeName, controlTypeName)
+            })
         }
 
 
 
         render() {
-            let props = {};
+            let props = Object.assign({}, this.props) as any;
+            delete props.componets;
 
-            for (let k in this.props) {
-                if (k == 'componets')
-                    continue;
-
-                props[k] = this.props[k];
-            }
-            //key={i} data-control-name={c.name}
             let componets = this.props.componets;
             return <DesignerContext.Consumer>
                 {context => {
@@ -58,7 +60,11 @@ namespace jueying {
                                     let props = { key: i };
                                     props[Control.controlTypeName] = c.name;
 
-                                    return <li {...props} >
+                                    return <li {...props}
+                                        ref={e => {
+                                            if (!e) return
+                                            this.enableDraggable(e, props[Control.controlTypeName])
+                                        }}>
                                         <div className="btn-link">
                                             <i className={c.icon} style={{ fontSize: 44, color: 'black' }} />
                                         </div>

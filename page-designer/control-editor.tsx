@@ -105,17 +105,6 @@ namespace jueying {
             return obj
         }
 
-        private isSameEditor(editorInfo1: PropEditorInfo, editorInfo2: PropEditorInfo) {
-            if (editorInfo1.text != editorInfo2.text)
-                return false
-
-            let propName1 = editorInfo1.propNames.join('.')
-            let propName2 = editorInfo2.propNames.join('.')
-            if (propName1 != propName2)
-                return false
-
-            return editorInfo1.editorType.name == editorInfo2.editorType.name
-        }
 
         render() {
             let editors = this.state.editors

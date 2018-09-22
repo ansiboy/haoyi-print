@@ -145,12 +145,12 @@ namespace jueying {
         static createElement(control: Control<any, any>, type: string | React.ComponentClass<any>,
             props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
             if (control != null && control.isDesignMode != null)
-                return ControlFactory.createDesignTimeElement(control, type, props, ...children);
+                return ControlFactory.createDesignTimeElement(type, props, ...children);
 
-            return ControlFactory.createRuntimeElement(control, type, props, ...children);
+            return ControlFactory.createRuntimeElement(type, props, ...children);
         }
 
-        static createDesignTimeElement(control: Control<any, any>, type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
+        static createDesignTimeElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
             props = props || {};
 
             if (props.id != null)
@@ -166,7 +166,7 @@ namespace jueying {
             return React.createElement(type, props, ...children)
         }
 
-        private static createRuntimeElement(instance: Control<any, any>, type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
+        private static createRuntimeElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
             if (props != null && props.id != null)
                 props.key = props.id;
 

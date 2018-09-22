@@ -1,6 +1,4 @@
 /// <reference types="react" />
-/// <reference types="jquery" />
-/// <reference types="jqueryui" />
 declare namespace jueying {
     function guid(): string;
     let classNames: {
@@ -25,7 +23,6 @@ declare namespace jueying {
         constructor(props: EditorProps);
         setControls(controls: Control<any, any>[]): void;
         private flatProps;
-        private isSameEditor;
         render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
         readonly element: HTMLElement;
         Element(...children: React.ReactElement<any>[]): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
@@ -43,7 +40,7 @@ declare namespace jueying {
         static register(controlName: string, controlPath: string): void;
         static loadAllTypes(): Promise<any[]>;
         static createElement(control: Control<any, any>, type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]): React.ReactElement<any>;
-        static createDesignTimeElement(control: Control<any, any>, type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]): React.ReactElement<any>;
+        static createDesignTimeElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]): React.ReactElement<any>;
         private static createRuntimeElement;
     }
 }
@@ -83,6 +80,7 @@ declare namespace jueying {
         static connectorElementClassName: string;
         static controlTypeName: string;
         protected hasCSS: boolean;
+        pageView: PageView;
         element: HTMLElement;
         constructor(props: P);
         readonly id: string;
@@ -98,7 +96,6 @@ declare namespace jueying {
         Element(props: any, element: React.ReactElement<any>): React.ReactElement<any> | null;
         Element(type: string, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null;
         Element(type: string, props: ControlProps<this>, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null;
-        protected createElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]): React.ReactElement<any>;
         private static render;
         private static getControlType;
         static loadTypes(elementData: ElementData): Promise<any[]>;
@@ -205,29 +202,24 @@ declare namespace jueying {
     interface ControlPlaceholderState {
         controls: ElementData[];
     }
-    interface ControlPlaceholderProps extends ControlProps<ControlPlaceholder> {
+    interface ControlPlaceholderProps extends ControlProps<any> {
         style?: React.CSSProperties;
         emptyText?: string;
         htmlTag?: string;
+        layout?: 'flowing' | 'absolute';
     }
-    class ControlPlaceholder extends Control<ControlPlaceholderProps, ControlPlaceholderState> {
-        private controls;
-        static defaultProps: {
-            className: string;
-            layout: string;
-        };
-        pageView: PageView;
+    class ControlPlaceholder<P extends ControlPlaceholderProps, S extends ControlPlaceholderState> extends Control<P, S> {
+        static defaultProps: ControlPlaceholderProps;
         constructor(props: any);
         static sortableElement(element: HTMLElement, designer: PageDesigner): void;
         private draggableElement;
-        private enableDraggable;
         /**
-         * 启用接收拖放操作，以便通过拖放图标添加控件
+         * 启用拖放操作，以便通过拖放图标添加控件
          */
         private enableDroppable;
         private static childrenIds;
         componentDidMount(): void;
-        render(h?: any): JSX.Element;
+        render(h?: any): React.ReactElement<any>;
     }
 }
 declare namespace jueying {
@@ -242,7 +234,7 @@ declare namespace jueying {
         designer: PageDesigner;
         private toolbarElement;
         componentDidMount(): void;
-        draggable(selector: JQuery): void;
+        private enableDraggable;
         render(): JSX.Element;
     }
 }
@@ -302,10 +294,7 @@ declare namespace jueying {
     }
 }
 declare namespace jueying {
-    interface PageViewProps extends ControlProps<any> {
-        style?: React.CSSProperties;
-        className?: string;
-        layout?: 'flowing' | 'absolute';
+    interface PageViewProps extends ControlPlaceholderProps {
     }
     const PageViewContext: React.Context<{
         pageView: PageView;
@@ -314,14 +303,14 @@ declare namespace jueying {
         control: Control<any, any>;
         controlType: React.ComponentClass<any>;
     };
-    type State = {};
+    interface State extends ControlPlaceholderState {
+    }
     /**
      * 移动端页面，将 PageData 渲染为移动端页面。
      */
-    class PageView extends Control<PageViewProps, State> {
+    class PageView extends ControlPlaceholder<PageViewProps, State> {
         static defaultProps: PageViewProps;
         constructor(props: PageViewProps);
-        readonly layout: "flowing" | "absolute";
         render(h?: any): React.ReactElement<any>;
     }
 }

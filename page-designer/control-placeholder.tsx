@@ -4,28 +4,30 @@
 /// <reference path="editor-factory.tsx"/>
 
 namespace jueying {
+
+    const defaultEmptyText = '可以从工具栏拖拉控件到这里'
+
     export interface ControlPlaceholderState {
         controls: ElementData[]
     }
-    export interface ControlPlaceholderProps extends ControlProps<ControlPlaceholder> {
+    export interface ControlPlaceholderProps extends ControlProps<any> {
         style?: React.CSSProperties,
         emptyText?: string,
         htmlTag?: string,
+        layout?: 'flowing' | 'absolute',
     }
 
-    export class ControlPlaceholder extends Control<ControlPlaceholderProps, ControlPlaceholderState> {
-        private controls: (Control<any, any> & { id: string, name: string })[];
+    export class ControlPlaceholder<P extends ControlPlaceholderProps, S extends ControlPlaceholderState> extends Control<P, S> {
 
-        static defaultProps = {
+        static defaultProps: ControlPlaceholderProps = {
             className: `place-holder ${Control.connectorElementClassName}`,
             layout: 'flowing'
         };
-        pageView: PageView;
 
         constructor(props) {
             super(props)
 
-            this.state = { controls: [] };
+            this.state = { controls: [] } as ControlPlaceholderState as any;
         }
 
         static sortableElement(element: HTMLElement, designer: PageDesigner) {
@@ -39,7 +41,7 @@ namespace jueying {
                     let element = event.target as HTMLElement;
                     if (ui.item && !ui.item[0].id) {    // 添加操作
                         console.assert(ui.item.length == 1);
-                        let componentName = ui.item.attr('data-control-name');
+                        let componentName = ui.item.attr(Control.controlTypeName);
                         console.assert(componentName);
 
                         let ctrl: ElementData = { type: componentName, props: { id: guid() } };
@@ -80,158 +82,113 @@ namespace jueying {
         }
 
         private draggableElement(element: HTMLElement) {
+
             let x: number, y: number;
             let deltaX: number, deltaY: number;
             let elementStartPositions: { left: number, top: number, id: string }[];
+            element.draggable = true
+            element.ondragstart = (ev) => {
+                x = ev.layerX
+                y = ev.layerY
 
-            (element as any).is_draggable = true
-            $(element).draggable({
-                start: (event, ui) => {
-                    x = ui.position.left
-                    y = ui.position.top
+                let containerSelectedElements = this.designer.selectedControlIds.map(id => {
+                    if (id == this.element.id)
+                        return null
 
-                    let containerSelectedElements = this.designer.selectedControlIds
-                        .map(id => {
-                            if (id == this.element.id)
-                                return null
+                    if ($(`#${id}`).parents(`#${this.element.id}`).length == 0) {
+                        return null
+                    }
 
-                            if ($(`#${id}`).parents(`#${this.element.id}`).length == 0) {
-                                return null
-                            }
+                    return document.getElementById(id)
 
-                            return document.getElementById(id)
-                        })
-                        .filter(o => o)
+                }).filter(o => o)
 
-                    elementStartPositions = containerSelectedElements.map(o => {
-                        let pos = $(o).position()
-                        return { id: o.id, left: pos.left, top: pos.top }
-                    })
-                },
-                drag: (event, ui) => {
-                    deltaX = ui.position.left - x
-                    deltaY = ui.position.top - y
+                elementStartPositions = containerSelectedElements.map(o => {
+                    let pos = $(o).position()
+                    return { id: o.id, left: pos.left, top: pos.top }
+                })
+            }
+            element.ondrag = (ev) => {
+                deltaX = ev.layerX - x
+                deltaY = ev.layerY - y
 
-                    elementStartPositions.forEach(o => {
-                        let left = o.left + deltaX
-                        let top = o.top + deltaY
-                        let element = document.getElementById(o.id)
-                        element.style.left = `${left}px`
-                        element.style.top = `${top}px`
-                    })
-                },
-                stop: () => {
-                    var positions = elementStartPositions.map(o => ({ controlId: o.id, left: o.left + deltaX, top: o.top + deltaY }))
-                    positions.forEach(o => {
-                        console.log(o)
-                        let element = document.getElementById(o.controlId)
-                        element.style.left = `${o.left}px`
-                        element.style.top = `${o.top}px`
-                    })
-                    this.designer.setControlsPosition(positions)
-                    x = y = deltaX = deltaY = null
-                }
-            });
-        }
+                elementStartPositions.forEach(o => {
+                    let item = document.getElementById(o.id)
+                    if (item.id == element.id) {
+                        item.style.visibility = "hidden"
+                        return
+                    }
 
-        private enableDraggable() {
-            console.assert(this.element != null)
+                    let left = o.left + deltaX
+                    let top = o.top + deltaY
+                    console.log(`left:${left} top:${top}`)
+                    item.style.left = `${left}px`
+                    item.style.top = `${top}px`
+                })
+            }
+            element.ondragend = (ev) => {
+                var positions = elementStartPositions.map(o => ({ controlId: o.id, left: o.left + deltaX, top: o.top + deltaY }))
+                positions.forEach(o => {
+                    console.log(o)
+                    let item = document.getElementById(o.controlId)
+                    if (item.id == element.id) {
+                        item.style.removeProperty('visibility')
+                        return
+                    }
+                    item.style.left = `${o.left}px`
+                    item.style.top = `${o.top}px`
+                })
+                this.designer.setControlsPosition(positions)
+                x = y = deltaX = deltaY = null
+            }
 
-            let capture = false
-            let x: number, y: number;
-            let deltaX: number;
-            let deltaY: number;
-
-            this.element.addEventListener('mousedown', (event) => {
-                if (event.target == this.element)
-                    return
-
-                capture = true
-            })
-            this.element.addEventListener('mousemove', (event) => {
-                if (!capture || this.element == event.target) {
-                    return
-                }
-                if (x != null && y != null) {
-                    deltaX = event.screenX - x
-                    deltaY = event.screenY - y
-
-                    let elements = this.designer.selectedControlIds.map(id => document.getElementById(id))
-                    elements.forEach(o => {
-                        let pos = $(o).position()
-                        let x = pos.left + deltaX
-                        let y = pos.top + deltaY
-
-                        o.style.left = `${x}px`
-                        o.style.top = `${y}px`
-                        console.assert(o.id)
-                    })
-                    // this.designer.setControlPosition()
-                }
-
-                x = event.screenX
-                y = event.screenY
-            })
-            this.element.addEventListener('mouseup', () => {
-                capture = false
-                x = null
-                y = null
-            })
 
         }
+
 
         /**
-         * 启用接收拖放操作，以便通过拖放图标添加控件
+         * 启用拖放操作，以便通过拖放图标添加控件
          */
         private enableDroppable() {
             let element = this.element
             console.assert(element != null)
-            $(element).droppable({
-                multiple: true,
-                activate: function (event, ui) {
-                    ui.helper.css({
-                        'position': 'absolute',
-                        'z-index': 1000,
-                    });
-                },
-                drop: (event, ui) => {
-                    let element = event.target as HTMLElement;
-                    console.assert(ui.draggable != null);
-                    if (ui.draggable.attr(Control.controlTypeName)) {    // 添加操作 //&& !ui.draggable[0].id
-                        console.assert(ui.draggable.length == 1);
-                        let componentName = ui.draggable.attr('data-control-name');
-                        console.assert(componentName);
+            element.addEventListener('dragover', function (event) {
+                event.preventDefault()
+                event.stopPropagation()
 
-                        let baseRect = this.element.getClientRects()[0]
-                        let iconRect = ui.helper[0].getClientRects()[0];
-                        if (!iconRect)
-                            return;
+                let componentName = event.dataTransfer.getData(Control.controlTypeName)
+                if (componentName)
+                    event.dataTransfer.dropEffect = "copy"
+                else
+                    event.dataTransfer.dropEffect = "move"
 
-                        let left = iconRect.left - baseRect.left;
-                        let top = iconRect.top - baseRect.top;
-                        let ctrl: ElementData = {
-                            type: componentName,
-                            props: {
-                                id: guid(),
-                                style: {
-                                    position: 'absolute',
-                                    left,
-                                    top,
-                                }
-                            }
-                        };
-                        this.designer.appendControl(element.id, ctrl);
-                        // $(`#${ctrl.props.id}`).draggable();
-                        this.draggableElement(document.getElementById(ctrl.props.id))
-                    }
-                    // else {
-                    //     let ctrlId = ui.draggable.attr('id');
-                    //     let pos = ui.draggable.position();
-                    //     this.designer.setControlPosition(ctrlId, pos.left, pos.top)
-                    //     this.designer.selectSingleControlById(ctrlId);
-                    // }
-                }
+                console.log(`dragover: left:${event.layerX} top:${event.layerX}`)
             })
+            element.ondrop = (event) => {
+                event.preventDefault()
+                event.stopPropagation()
+
+                let componentName = event.dataTransfer.getData(Control.controlTypeName)
+                if (!componentName) {
+                    return
+                }
+
+                let left = event.layerX;
+                let top = event.layerY;
+                let ctrl: ElementData = {
+                    type: componentName,
+                    props: {
+                        id: guid(),
+                        style: {
+                            position: 'absolute',
+                            left,
+                            top,
+                        }
+                    }
+                };
+                this.designer.appendControl(element.id, ctrl);
+            }
+
         }
         private static childrenIds(element: HTMLElement) {
             let childIds = new Array<string>();
@@ -246,13 +203,11 @@ namespace jueying {
 
         componentDidMount() {
             if (this.designer) {
-                if (this.pageView.layout == 'flowing') {
+                if (this.props.layout == 'flowing') {
                     ControlPlaceholder.sortableElement(this.element, this.designer);
                 }
                 else {
                     this.enableDroppable()
-
-
                     this.designer.selectedControlIds
                         .map(id => document.getElementById(id))
                         .filter(o => o)
@@ -262,58 +217,23 @@ namespace jueying {
                                 this.draggableElement(element)
                             }
                         })
-                    // this.designer.controlSelected.add((ctrls) => {
-                    //     ctrls.forEach(ctrl => {
-                    //         if ($(ctrl.element).parents(`#${this.element.id}`).length) {
-                    //             console.assert(ctrl.id, 'control id is null or empty.');
-                    //             this.draggableElement(ctrl.element)
-                    //         }
-                    //     })
-                    // })
                 }
             }
         }
         render(h?: any) {
             let { emptyText, htmlTag } = this.props;
-            let emptyElement = <div className="empty">{emptyText || ''}</div>;
+
+            let emptyElement = <div className="empty">{emptyText || defaultEmptyText}</div>;
             htmlTag = htmlTag || 'div';
             let controls = this.props.children as JSX.Element[] || [];
-            let self = this;
-
-            return <PageViewContext.Consumer>
-                {c => {
-                    this.pageView = c.pageView;
-                    return this.Element(htmlTag,
-                        <React.Fragment>
-                            {controls.length == 0 ? emptyElement : controls}
-                        </React.Fragment>
-                    );
-                }}
-            </PageViewContext.Consumer>
+            return this.Element(htmlTag,
+                <React.Fragment>
+                    {controls.length == 0 ? emptyElement : controls}
+                </React.Fragment>
+            );
         }
     }
     ControlFactory.register(ControlPlaceholder);
 
-    // export interface ControlPlaceholderEditorState extends Partial<ControlPlaceholderProps> {
 
-    // }
-    // export class ControlPlaceholderEditor extends ControlEditor<EditorProps, ControlPlaceholderEditorState> {
-    //     render() {
-    //         let { name } = this.state;
-    //         return this.Element(<React.Fragment>
-    //             <div className="form-group">
-    //                 <label>名称</label>
-    //                 <div className="control">
-    //                     <input className="form-control" value={name || ''}
-    //                         onChange={(e) => {
-    //                             name = (e.target as HTMLInputElement).value;
-    //                             this.setState({ name });
-    //                         }} />
-    //                 </div>
-    //             </div>
-    //         </React.Fragment>)
-    //     }
-    // }
-
-    // ControlEditorFactory.register('ControlPlaceholder', ControlPlaceholderEditor);
 }

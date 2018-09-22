@@ -4,20 +4,20 @@ import 'jueying'
 import { ControlSize } from './controls/controlSize';
 import { controlSize } from './baseControl';
 
-jueying.PageView.prototype.render = function () {
-    let self = this as PageView;
-    let props = self.props
-    let elementProps = { style: {} } as ControlProps<PageView>
-    if (props.width) {
-        elementProps.style.width = `${props.width}${props.unit}`
-        elementProps.style.fontFamily = props.fontFamily
-    }
-    return this.Element(elementProps, <>
-        <PageViewContext.Provider value={{ pageView: self }}>
-            {this.props.children}
-        </PageViewContext.Provider>
-    </>)
-}
+// jueying.PageView.prototype.render = function () {
+//     let self = this as PageView;
+//     let props = self.props
+//     let elementProps = { style: {} } as ControlProps<PageView>
+//     if (props.width) {
+//         elementProps.style.width = `${props.width}${props.unit}`
+//         elementProps.style.fontFamily = props.fontFamily
+//     }
+//     return this.Element(elementProps, <>
+//         <PageViewContext.Provider value={{ pageView: self }}>
+//             {this.props.children}
+//         </PageViewContext.Provider>
+//     </>)
+// }
 
 const fontFamilies = [
     'Microsoft YaHei', 'Hiragino Sans GB', 'FangSong_GB2312', 'Microsoft Sans Serif',

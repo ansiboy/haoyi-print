@@ -1,9 +1,11 @@
 import React = require("react");
+import { PropEditor, PropEditorProps } from "jueying";
 
-interface Props {
-    size: string | number,
-    onChange: (size: string) => void
-}
+// interface Props extends PropEditorProps<string | number> {
+//     // size: string | number,
+//     onChange: (size: string) => void
+// }
+type Props = PropEditorProps<string | number>
 interface State {
     value: number,
     valueText: string,
@@ -12,11 +14,11 @@ interface State {
 export const controlUnit = 'mm'
 
 /** 将长度转换为 mm */
-export class ControlSize extends React.Component<Props, State>{
+export class ControlSize extends PropEditor<State, string | number>{
     constructor(props: Props) {
         super(props)
 
-        let size = typeof this.props.size == 'number' ? `${this.props.size}px` : this.props.size
+        let size = typeof this.props.value == 'number' ? `${this.props.value}px` : this.props.value
         let value = Number.parseFloat(ControlSize.toDefaultUnitSize(size))
         this.state = {
             value,
@@ -24,7 +26,7 @@ export class ControlSize extends React.Component<Props, State>{
         }
     }
     componentWillReceiveProps(props: Props) {
-        let size = typeof props.size == 'number' ? `${props.size}px` : props.size
+        let size = typeof props.value == 'number' ? `${props.value}px` : props.value
         let value = Number.parseFloat(ControlSize.toDefaultUnitSize(size))
         let valueText = isNaN(value) ? '' : value.toFixed(1)
         this.setState({ value, valueText })

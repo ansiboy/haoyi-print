@@ -278,7 +278,6 @@ namespace jueying.extentions {
                                         designer.selectControl(pageViewId);
                                     }
                                 }}>
-                                <canvas className='ruler' ref={e => this.ruleElement = e || this.ruleElement}></canvas>
                                 {pageView ?
                                     <React.Fragment>
                                         <ul className="nav nav-tabs">

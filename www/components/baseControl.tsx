@@ -9,8 +9,6 @@ export interface BaseControlProps<T> extends ControlProps<T> {
 
 export abstract class BaseControl<P extends BaseControlProps<any>, S> extends Control<P, S> {
     private _render: (h?: any) => React.ReactNode
-    protected pageView: PageView
-
     constructor(props: P) {
         super(props);
 
@@ -45,35 +43,10 @@ export abstract class BaseControl<P extends BaseControlProps<any>, S> extends Co
 
         return this.props.name
     }
-
-    protected createElement(type: string | React.ComponentClass<any>,
-        props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
-
-        if (props != null && props.style != null) {
-            if (props.style.left && typeof props.style.left == 'number') {
-                // let num = toUnit(props.style.left, this.pageView.props.unit)
-                // props.style.left = `${props.style.left / num}${this.pageView.props.unit}`
-            }
-        }
-
-        return super.createElement(type, props, ...children)
-    }
 }
 
 export let controlSize = function () {
-
-    class PropEditorWraper extends PropEditor<PropEditorProps<string>, string>{
-        render() {
-            let value = this.state.value
-            let ctrl = <ControlSize size={value} onChange={(value) => {
-                this.props.onChange(value);
-            }} />
-
-            return ctrl
-        }
-    }
-
-    return PropEditorWraper
+    return ControlSize
 }
 
 export function createBasePropEditors(controlClass: React.ComponentClass) {
@@ -82,8 +55,8 @@ export function createBasePropEditors(controlClass: React.ComponentClass) {
     ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "field">(controlClass, '字段', TextInput, 'field')
 
 
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style", "left">(controlClass, '左边', controlSize(), 'style', 'left')
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style", "top">(controlClass, '顶部', controlSize(), 'style', 'top')
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style", "left">(controlClass, '左边', ControlSize, 'style', 'left')
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style", "top">(controlClass, '顶部', ControlSize, 'style', 'top')
 }
 
 

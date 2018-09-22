@@ -1,5 +1,4 @@
 import React = require("react");
-import { Dialog } from "./dialog";
 import { SettingsView } from "../modules/settings";
 import ReactDOM = require("react-dom");
 

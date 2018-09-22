@@ -1,13 +1,12 @@
-import { ControlFactory, ControlEditorFactory as EditorFactory, extentions as ext, extentions, ControlPropEditors, dropdown, PageViewProps, PageView } from 'jueying';
+import { ControlFactory, ControlEditorFactory as EditorFactory, extentions as ext, extentions, ControlPropEditors, PageViewProps, PageView } from 'jueying';
 import { DesignerFramework } from 'jueying.extentions'
 import { components, templates } from "components/componenDefines";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import 'components/placeholder'
 import { showPrintDialog, generatePrintHTML } from 'print'
-import { ControlSize } from 'components/controls/controlSize';
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
+import '../components/placeholder'
 import '../components/Label/editor';
 import '../components/SquareCode/editor';
 import 'rulers'
@@ -140,20 +139,11 @@ class MainPage extends DesignerFramework {
     }
     componentDidMount() {
         super.componentDidMount()
-        // let setControlPosition = this.pageDesigner.setControlPosition
-        // this.pageDesigner.setControlPosition = function (controlId: string, left: number | string, top: number | string) {
-        //     left = ControlSize.toDefaultUnitSize(left)
-        //     top = ControlSize.toDefaultUnitSize(top)
-        //     setControlPosition.apply(this, [controlId, left, top])
-        // }
-
         let toolbarElement = this.pageDesigner.element.querySelector('.toolbar') as HTMLElement
         if (toolbarElement) {
             this.enableMove(toolbarElement, this.window)
         }
 
-        // ControlPropEditors.setControlPropEditor<PageViewProps, "style", "left">(PageView, "左边", controlSize(), "style", "left")
-        // ControlPropEditors.setControlPropEditor<PageViewProps, "style", "top">(PageView, "顶部", controlSize(), "style", "top")
         ControlPropEditors.setControlPropEditor<PageViewProps, "style", "width">(PageView, "宽", controlSize(), "style", "width")
     }
 }

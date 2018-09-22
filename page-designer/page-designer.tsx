@@ -210,23 +210,6 @@ namespace jueying {
 
         }
 
-        // selectSingleControlById(controlId: string) {
-        //     // let control = Control.getInstance(controlId);
-        //     // this.clearSelectdControls()
-        //     // this.selectControl(control);
-        //     debugger
-        //     let controlData = this.findControlData(controlId)
-        //     console.assert(controlData != null)
-        //     controlData.props.selected = true
-        //     this.setState({ pageData: this.pageData })
-        // }
-
-        // selectSingleControl(control: Control<any, any>) {
-        //     // this.clearSelectdControls()
-        //     // this.selectControl(control)
-        //     this.selectSingleControlById(control.id)
-        // }
-
         /**
          * 选择指定的控件
          * @param control 指定的控件
@@ -238,6 +221,7 @@ namespace jueying {
 
             this._selectedControlIds
                 .map(o => this.findControlData(o))
+                .filter(o => o)
                 .forEach(o => {
                     (o.props as ControlProps<any>).selected = false
                 })
@@ -308,6 +292,7 @@ namespace jueying {
         }
 
         private removeControlFrom(controlId: string, collection: ElementData[]): boolean {
+            debugger
             let controlIndex: number | null = null;
             for (let i = 0; i < collection.length; i++) {
                 if (controlId == collection[i].props.id) {

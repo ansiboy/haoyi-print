@@ -45,6 +45,7 @@ namespace jueying {
 
         protected hasCSS = false;
 
+        pageView: PageView
         element: HTMLElement;
 
         constructor(props: P) {
@@ -172,7 +173,7 @@ namespace jueying {
                 props.tabIndex = this.props.tabIndex;
 
             if (this.isDesignMode && typeof type == 'string') {
-                props.onClick = (e: KeyboardEvent) => {
+                (props as React.DOMAttributes<any>).onMouseDown = (e) => {
                     if (this.designer) {
 
                         let selectedControlIds = this.designer.selectedControlIds //[this.id]
@@ -207,20 +208,9 @@ namespace jueying {
 
             };
 
-            return this.createElement(type, props, ...children);
+            return ControlFactory.createElement(this, type, props, ...children);
         }
 
-        protected createElement(type: string | React.ComponentClass<any>,
-            props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
-
-            try {
-                return ControlFactory.createElement(this, type, props, ...children);
-            }
-            catch (e) {
-                console.error(e);
-                return null;
-            }
-        }
 
         private static render() {
             let self = this as any as Control<any, any>;
@@ -229,12 +219,19 @@ namespace jueying {
                     context => {
                         self._designer = context.designer;
 
-                        if (typeof self.originalRender != 'function')
-                            return null;
-                        let h = (type: string | React.ComponentClass<any>, props: ControlProps<any>, ...children: any[]) =>
-                            ControlFactory.createElement(self, type, props, ...children);
+                        return <PageViewContext.Consumer>
+                            {pageViewContext => {
 
-                        return (self.originalRender as Function)(h)
+                                self.pageView = pageViewContext.pageView
+                                if (typeof self.originalRender != 'function')
+                                    return null;
+                                let h = (type: string | React.ComponentClass<any>, props: ControlProps<any>, ...children: any[]) =>
+                                    ControlFactory.createElement(self, type, props, ...children);
+
+                                return (self.originalRender as Function)(h)
+
+                            }}
+                        </PageViewContext.Consumer>
                     }
                 }
             </DesignerContext.Consumer >
