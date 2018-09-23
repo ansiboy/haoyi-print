@@ -69,9 +69,6 @@ namespace jueying {
                     console.assert(this.id != null)
                     let style = (this.props.style || {}) as React.CSSProperties
                     let { left, top, position } = style
-                    // delete style.left
-                    // delete style.top
-                    // delete style.position
                     return <div id={this.id} ref={e => this.wrapperElement = e || this.wrapperElement} className={this.props.selected ? classNames.controlSelected : ''}
                         style={{ left, top, position }}
                         onClick={e => this.mouseDownOrClick(e)}
