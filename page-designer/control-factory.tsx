@@ -4,6 +4,7 @@ namespace jueying {
     let allInstance: { [key: string]: Control<any, any> } = {};
 
     export class ControlFactory {
+        static originalCreateElement = React.createElement
 
         private static getControlType(componentName: string): Promise<React.ComponentClass<any>> {
             return new Promise<React.ComponentClass<any>>((resolve, reject) => {
@@ -90,7 +91,7 @@ namespace jueying {
 
                 let children = args.children ? args.children.map(o => this.create(o)) : null;
 
-                return React.createElement(DesignerContext.Consumer, { key: guid(), children: null as any },
+                return this.originalCreateElement(DesignerContext.Consumer, { key: guid(), children: null as any },
                     (context: DesignerContextValue) => {
                         let props = {}
                         try {
@@ -99,9 +100,9 @@ namespace jueying {
                         catch (e) {
                             debugger;
                         }
-             
+
                         let types = customControlTypes
-                        return React.createElement(type, props, children);
+                        return this.originalCreateElement(type, props, children);
                     }
                 );
             }
@@ -153,7 +154,11 @@ namespace jueying {
         }
 
         static createDesignTimeElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
-            props = props || {};
+
+            //====================================================
+            // 将 props copy 出来，以便于可以修改
+            props = Object.assign({}, props || {});
+            //====================================================
 
             if (props.id != null)
                 props.key = props.id;
@@ -165,14 +170,22 @@ namespace jueying {
                 delete props.onClick;
                 (props as any).readOnly = true;
             }
-            return React.createElement(type, props, ...children)
+
+            if (props.style) {
+                let style = Object.assign({}, props.style)
+                delete style.left
+                delete style.top
+                props.style = style
+            }
+
+            return ControlFactory.originalCreateElement(type, props, ...children)
         }
 
         private static createRuntimeElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
             if (props != null && props.id != null)
                 props.key = props.id;
 
-            return React.createElement(type, props, ...children);
+            return ControlFactory.originalCreateElement(type, props, ...children);
         }
     }
 

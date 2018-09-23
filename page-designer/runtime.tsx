@@ -69,12 +69,26 @@ namespace jueying {
                     console.assert(this.id != null)
                     let style = (this.props.style || {}) as React.CSSProperties
                     let { left, top, position } = style
+
                     return <div id={this.id} ref={e => this.wrapperElement = e || this.wrapperElement} className={this.props.selected ? classNames.controlSelected : ''}
                         style={{ left, top, position }}
                         onClick={e => this.mouseDownOrClick(e)}
                         onMouseDown={e => this.mouseDownOrClick(e)}>
-                        {super.render()}
+                        {(() => {
+
+                            let createElement = React.createElement
+                            React.createElement = ControlFactory.createDesignTimeElement as any
+
+                            let s = super.render()
+                            React.createElement = createElement
+
+                            return s
+                        })()}
                     </div>
+
+
+
+                    return result
                 }
 
                 mouseDownOrClick(e: React.MouseEvent<any>) {

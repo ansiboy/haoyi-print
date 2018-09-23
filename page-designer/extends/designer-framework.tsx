@@ -244,6 +244,7 @@ namespace jueying.extentions {
             this.pageDesigner.componentUpdated.add((sender) => {
                 console.assert(this.toolbarElement)
                 this.renderToolbar(this.toolbarElement)
+                this.editorPanel.setControls(sender.selectedControlIds)
             })
         }
         renderToolbar(element: HTMLElement) {

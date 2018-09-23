@@ -1,6 +1,7 @@
 import { component, ControlPlaceholderProps, ControlPlaceholderState, ControlPropEditors, TextInput, ControlPlaceholder, dropdown } from "jueying";
 import React = require("react");
 import { BaseControlProps } from "./baseControl";
+import { ControlSize } from "./controls/controlSize";
 
 export interface PageViewProps extends BaseControlProps<PageView> {
     // style?: React.CSSProperties,
@@ -28,12 +29,7 @@ export class PageView extends React.Component<PageViewProps, State>{
         super(props);
     }
     render() {
-        // return this.Element(<React.Fragment>
-        //     <PageViewContext.Provider value={{ pageView: this }}>
-        //         {super.render(h)}
-        //     </PageViewContext.Provider>
-        // </React.Fragment>)
-        return <div className={this.props.className}>
+        return <div className={this.props.className} style={this.props.style}>
             <PageViewContext.Provider value={{ pageView: this }}>
                 {this.props.children}
             </PageViewContext.Provider>
@@ -41,13 +37,16 @@ export class PageView extends React.Component<PageViewProps, State>{
     }
 }
 
-ControlPropEditors.setControlPropEditor<PageViewProps, "name">(PageView, "名称", TextInput, "name")
+if (jueying.PageDesigner) {
+    ControlPropEditors.setControlPropEditor<PageViewProps, "name">(PageView, "名称", TextInput, "name")
 
-let items = {
-    flowing: '流式定位',
-    absolute: '绝对定位'
+    let items = {
+        flowing: '流式定位',
+        absolute: '绝对定位'
+    }
+    ControlPropEditors.setControlPropEditor<PageViewProps, "layout">(PageView, "布局", dropdown(items), "layout")
+    ControlPropEditors.setControlPropEditor<PageViewProps, "name">(ControlPlaceholder, "名称", TextInput, "name")
+    ControlPropEditors.setControlPropEditor<PageViewProps, "style", "width">(PageView, "宽", ControlSize, "style", 'width')
 }
-ControlPropEditors.setControlPropEditor<PageViewProps, "layout">(PageView, "布局", dropdown(items), "layout")
-ControlPropEditors.setControlPropEditor<ControlPlaceholderProps, "name">(ControlPlaceholder, "名称", TextInput, "name")
 
 
