@@ -7,7 +7,7 @@ export function createMainWindow() {
         width: 1024, height: 800,
         webPreferences: { nativeWindowOpen: true },
         frame: false,
-        show: false,
+        show: true,
     })
 
     // and load the index.html of the app.

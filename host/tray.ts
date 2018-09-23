@@ -18,17 +18,17 @@ export function createTray(win: Electron.BrowserWindow, menus: { [key: string]: 
     let clicktimes = 0
     tray.on('click', function () {
         clicktimes = clicktimes + 1
-        if (clicktimes == 5) {
-            win.show()
-        }
+        // if (clicktimes == 5) {
+        win.show()
+        // }
         // if (win.isVisible()) {
         //     win.hide()
         // } else {
         //     win.show()
         // }
-        setTimeout(() => {
-            clicktimes = 0
-        }, 3000)
+        // setTimeout(() => {
+        //     clicktimes = 0
+        // }, 3000)
     })
 
     win.on('close', () => tray.destroy())
