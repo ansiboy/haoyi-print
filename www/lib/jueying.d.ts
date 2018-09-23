@@ -30,6 +30,7 @@ declare namespace jueying {
 }
 declare namespace jueying {
     class ControlFactory {
+        static originalCreateElement: typeof React.createElement;
         private static getControlType;
         private static exportElement;
         private static getComponentNameByType;
@@ -382,46 +383,7 @@ declare namespace jueying {
     }
     function component(args?: {
         container: boolean;
-    }): (constructor: new (arg: any) => {}) => {
-        new (props: any): {
-            wrapperElement: HTMLElement;
-            designer: PageDesigner;
-            readonly typename: string;
-            readonly id: string;
-            componentDidMount(): void;
-            designtimeComponentDidMount(): void;
-            render(): JSX.Element;
-            renderDesigntime(): JSX.Element;
-            mouseDownOrClick(e: React.MouseEvent<any>): void;
-            setState<K extends string | number | symbol>(state: any, callback?: () => void): void;
-            forceUpdate(callBack?: () => void): void;
-            readonly props: Readonly<{
-                children?: React.ReactNode;
-            }> & Readonly<ControlProps<any>>;
-            state: Readonly<any>;
-            context: any;
-            refs: {
-                [key: string]: React.ReactInstance;
-            };
-            shouldComponentUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): boolean;
-            componentWillUnmount?(): void;
-            componentDidCatch?(error: Error, errorInfo: React.ErrorInfo): void;
-            getSnapshotBeforeUpdate?(prevProps: Readonly<ControlProps<any>>, prevState: Readonly<any>): any;
-            componentDidUpdate?(prevProps: Readonly<ControlProps<any>>, prevState: Readonly<any>, snapshot?: any): void;
-            componentWillMount?(): void;
-            UNSAFE_componentWillMount?(): void;
-            componentWillReceiveProps?(nextProps: Readonly<ControlProps<any>>, nextContext: any): void;
-            UNSAFE_componentWillReceiveProps?(nextProps: Readonly<ControlProps<any>>, nextContext: any): void;
-            componentWillUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): void;
-            UNSAFE_componentWillUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): void;
-        };
-        propTypes?: import("prop-types").ValidationMap<ControlProps<any>>;
-        contextTypes?: import("prop-types").ValidationMap<any>;
-        childContextTypes?: import("prop-types").ValidationMap<any>;
-        defaultProps?: Partial<ControlProps<any>>;
-        displayName?: string;
-        getDerivedStateFromProps?: React.GetDerivedStateFromProps<ControlProps<any>, any>;
-    };
+    }): (constructor: new (arg: any) => {}) => any;
 }
 declare namespace jueying.extentions {
     function guid(): string;

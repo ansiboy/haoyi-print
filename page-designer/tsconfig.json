@@ -7,7 +7,6 @@
         "outFile": "../www/lib/jueying.js",
         "rootDir": ".",
         "jsx": "react",
-        "jsxFactory": "h",
         "strict": false,
         "experimentalDecorators": true
     }

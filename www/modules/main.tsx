@@ -30,7 +30,7 @@ class MainPage extends DesignerFramework {
         return win
     }
     print() {
-        let { pageDocuments, activeDocument } = this.state
+        let { activeDocument } = this.state
         console.assert(activeDocument != null)
 
         let doc = activeDocument
