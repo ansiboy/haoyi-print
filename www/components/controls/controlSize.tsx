@@ -74,18 +74,21 @@ export class ControlSize extends PropEditor<State, string | number>{
     render() {
         let { value, valueText } = this.state
         return <div className="input-group">
-            <input className="form-control" value={valueText}
-                onChange={(e) => {
-                    valueText = e.target.value
-                    value = Number.parseFloat(valueText)
-                    if (isNaN(value)) {
-                        this.setState({ valueText })
+            <input className="form-control"
+                ref={e => {
+                    if (!e) return
+                    e.value = valueText
+                    e.onchange = (e) => {
+                        valueText = (e.target as HTMLInputElement).value
+                        value = Number.parseFloat(valueText)
+                        if (isNaN(value)) {
+                            this.setState({ valueText })
+                        }
+                        else {
+                            this.setState({ value, valueText });
+                            this.props.onChange(`${value.toFixed(1)}${controlUnit}`)
+                        }
                     }
-                    else {
-                        this.setState({ value, valueText });
-                        this.props.onChange(`${value.toFixed(1)}${controlUnit}`)
-                    }
-
                 }} />
             <div className="input-group-addon">{controlUnit}</div>
         </div>
