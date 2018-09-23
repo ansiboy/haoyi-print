@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { PageViewProps, ControlFactory, guid } from "jueying";
+import { ControlFactory, guid } from "jueying";
 import { Service } from "./service";
 import { ServiceDocumentStorage } from "./designer/serviceDocumentStorage";
 
@@ -106,7 +106,7 @@ async function createTemplateElement(templateName: string, data?: object): Promi
         throw new Error(`Can not get template '${templateName}'`);
 
 
-    (r.props as PageViewProps).data = data;
+    (r.props as any).data = data;
     let reactElement = ControlFactory.create(r)
     if (reactElement == null)
         throw new Error('create element fail')

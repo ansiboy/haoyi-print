@@ -8,13 +8,13 @@ declare module 'jueying.extentions' {
 }
 
 declare namespace jueying {
-	export interface PageViewProps {
-		width?: number,
-		// height?: number,
-		data?: { [key: string]: any },
-		unit: string,
-		fontFamily?: string,
-	}
+	// export interface PageViewProps {
+	// 	width?: number,
+	// 	// height?: number,
+	// 	data?: { [key: string]: any },
+	// 	unit: string,
+	// 	fontFamily?: string,
+	// }
 	export interface ControlPlaceholderProps {
 		showField?: boolean,
 		field?: string,

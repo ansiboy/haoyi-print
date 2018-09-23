@@ -45,7 +45,7 @@ namespace jueying {
 
         protected hasCSS = false;
 
-        pageView: PageView
+        // pageView: PageView
         element: HTMLElement;
 
         constructor(props: P) {
@@ -53,8 +53,8 @@ namespace jueying {
 
             console.assert((this.props as any).id != null);
 
-            this.originalRender = this.render;
-            this.render = Control.render;
+            // this.originalRender = this.render;
+            // this.render = Control.render;
 
             this.originalComponentDidMount = this.componentDidMount;
             this.componentDidMount = this.myComponentDidMount;
@@ -225,30 +225,30 @@ namespace jueying {
         }
 
 
-        private static render() {
-            let self = this as any as Control<any, any>;
-            return <DesignerContext.Consumer>
-                {
-                    context => {
-                        self._designer = context.designer;
+        // private static render() {
+        //     let self = this as any as Control<any, any>;
+        //     return <DesignerContext.Consumer>
+        //         {
+        //             context => {
+        //                 self._designer = context.designer;
 
-                        return <PageViewContext.Consumer>
-                            {pageViewContext => {
+        //                 return <PageViewContext.Consumer>
+        //                     {pageViewContext => {
 
-                                self.pageView = pageViewContext.pageView
-                                if (typeof self.originalRender != 'function')
-                                    return null;
-                                let h = (type: string | React.ComponentClass<any>, props: ControlProps<any>, ...children: any[]) =>
-                                    ControlFactory.createElement(self, type, props, ...children);
+        //                         self.pageView = pageViewContext.pageView
+        //                         if (typeof self.originalRender != 'function')
+        //                             return null;
+        //                         let h = (type: string | React.ComponentClass<any>, props: ControlProps<any>, ...children: any[]) =>
+        //                             ControlFactory.createElement(self, type, props, ...children);
 
-                                return (self.originalRender as Function)(h)
+        //                         return (self.originalRender as Function)(h)
 
-                            }}
-                        </PageViewContext.Consumer>
-                    }
-                }
-            </DesignerContext.Consumer >
-        }
+        //                     }}
+        //                 </PageViewContext.Consumer>
+        //             }
+        //         }
+        //     </DesignerContext.Consumer >
+        // }
 
         private static getControlType(componentName: string): Promise<React.ComponentClass<any>> {
             return new Promise<React.ComponentClass<any>>((resolve, reject) => {
@@ -303,6 +303,10 @@ namespace jueying {
             if (!id) throw Errors.argumentNull('id');
 
             return allInstance[id];
+        }
+
+        static addInstance(id: string, instance: React.Component) {
+            allInstance[id] = instance as any
         }
 
         static create(args: ElementData): React.ReactElement<any> | null {

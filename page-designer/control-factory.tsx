@@ -77,9 +77,9 @@ namespace jueying {
             return data;
         }
 
-        static create(args: ElementData, designer?: PageDesigner): React.ReactElement<any> | null {
+        static create(args: ElementData): React.ReactElement<any> | null {
             try {
-                let c = customControlTypes[args.type];
+
 
                 let type: string | React.ComponentClass = args.type;
                 let componentName = args.type;
@@ -88,7 +88,7 @@ namespace jueying {
                     type = controlType;
                 }
 
-                let children = args.children ? args.children.map(o => this.create(o, designer)) : null;
+                let children = args.children ? args.children.map(o => this.create(o)) : null;
 
                 return React.createElement(DesignerContext.Consumer, { key: guid(), children: null as any },
                     (context: DesignerContextValue) => {
@@ -99,6 +99,8 @@ namespace jueying {
                         catch (e) {
                             debugger;
                         }
+             
+                        let types = customControlTypes
                         return React.createElement(type, props, children);
                     }
                 );

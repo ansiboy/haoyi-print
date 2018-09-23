@@ -29,7 +29,7 @@ namespace jueying {
 
             for (let i = 0; i < controls.length; i++) {
                 let control = controls[i]
-                let className = control.constructor.name
+                let className = (control as any as DesigntimeComponent).typename || control.constructor.name
                 let propEditorInfos = ControlPropEditors.getControlPropEditors(className)
                 if (i == 0) {
                     commonPropEditorInfos = propEditorInfos || []

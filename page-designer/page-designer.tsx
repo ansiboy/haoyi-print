@@ -52,6 +52,8 @@ namespace jueying {
         // controlUnselected = Callback.create<Control<ControlProps<any>, any>[]>();
         controlRemoved = Callback.create<string[]>()
         controlComponentDidMount = Callback.create<Control<any, any>>();
+        componentUpdated = Callback.create<PageDesigner>()
+        names = new Array<string>();
 
         constructor(props: PageDesignerProps) {
             super(props);
@@ -88,6 +90,11 @@ namespace jueying {
             this.initSelectedIds(props.pageData)
         }
 
+        componentDidUpdate() {
+            this.componentUpdated.fire(this)
+        }
+
+
         get pageData() {
             return this.state.pageData;
         }
@@ -118,6 +125,124 @@ namespace jueying {
 
             obj[navPropsNames[navPropsNames.length - 1]] = value
             this.setState(this.state);
+        }
+
+        /**
+        * 启用拖放操作，以便通过拖放图标添加控件
+        */
+        static enableDroppable(element: HTMLElement, designer: PageDesigner) {
+            // let element = this.element
+            console.assert(element != null)
+            element.addEventListener('dragover', function (event) {
+                event.preventDefault()
+                event.stopPropagation()
+
+                let componentName = event.dataTransfer.getData(Control.controlTypeName)
+                if (componentName)
+                    event.dataTransfer.dropEffect = "copy"
+                else
+                    event.dataTransfer.dropEffect = "move"
+
+                console.log(`dragover: left:${event.layerX} top:${event.layerX}`)
+            })
+            element.ondrop = (event) => {
+                event.preventDefault()
+                event.stopPropagation()
+
+                let componentName = event.dataTransfer.getData(Control.controlTypeName)
+                if (!componentName) {
+                    return
+                }
+
+                let left = event.layerX;
+                let top = event.layerY;
+                let ctrl: ElementData = {
+                    type: componentName,
+                    props: {
+                        id: guid(),
+                        style: {
+                            position: 'absolute',
+                            left,
+                            top,
+                        }
+                    }
+                };
+                designer.appendControl(element.id, ctrl);
+            }
+        }
+
+
+        /**
+         * 允许拖动指定的元素的子元素，移到子元素
+         * @param element 指定元素
+         * @param designer 指定元素所在设计器
+         */
+        static draggableElement(element: HTMLElement, designer: PageDesigner, container: HTMLElement) {
+
+            let x: number, y: number;
+            let deltaX: number, deltaY: number;
+            let elementStartPositions: { left: number, top: number, id: string }[];
+            element.draggable = true
+            element.ondragstart = (ev) => {
+                x = ev.layerX
+                y = ev.layerY
+
+                let containerSelectedElements = designer.selectedControlIds.map(id => {
+                    //========================================
+                    // 自身是不需要拖动的
+                    if (id == container.id)
+                        return null
+                    //========================================
+                    // 非这个元素的子元素不需要拖动
+                    if ($(`#${id}`).parents(`#${container.id}`).length == 0) {
+                        return null
+                    }
+                    //========================================
+
+                    return document.getElementById(id)
+
+                }).filter(o => o)
+
+                elementStartPositions = containerSelectedElements.map(o => {
+                    let pos = $(o).position()
+                    return { id: o.id, left: pos.left, top: pos.top }
+                })
+            }
+            element.ondrag = (ev) => {
+                deltaX = ev.layerX - x
+                deltaY = ev.layerY - y
+
+                elementStartPositions.forEach(o => {
+                    let item = document.getElementById(o.id)
+                    if (item.id == element.id) {
+                        item.style.visibility = "hidden"
+                        return
+                    }
+
+                    let left = o.left + deltaX
+                    let top = o.top + deltaY
+                    console.log(`left:${left} top:${top}`)
+                    item.style.left = `${left}px`
+                    item.style.top = `${top}px`
+                })
+            }
+            element.ondragend = (ev) => {
+                var positions = elementStartPositions.map(o => ({ controlId: o.id, left: o.left + deltaX, top: o.top + deltaY }))
+                positions.forEach(o => {
+                    console.log(o)
+                    let item = document.getElementById(o.controlId)
+                    if (item.id == element.id) {
+                        item.style.removeProperty('visibility')
+                        return
+                    }
+                    item.style.left = `${o.left}px`
+                    item.style.top = `${o.top}px`
+                })
+                designer.setControlsPosition(positions)
+                x = y = deltaX = deltaY = null
+            }
+
+
         }
 
         sortControlChildren(controlId: string, childIds: string[]): void {
@@ -155,6 +280,31 @@ namespace jueying {
             this.setState({ pageData });
         }
 
+        private namedControl(control: jueying.ElementData) {
+            let props = control.props;
+            if (!props.name) {
+                let num = 0;
+                let name: string;
+                do {
+                    num = num + 1;
+                    name = `${control.type}${num}`;
+                } while (this.names.indexOf(name) >= 0);
+
+                this.names.push(name);
+                props.name = name;
+            }
+
+            if (!props.id)
+                props.id = guid();
+
+            if (!control.children || control.children.length == 0) {
+                return;
+            }
+            for (let i = 0; i < control.children.length; i++) {
+                this.namedControl(control.children[i]);
+            }
+        }
+
         /** 添加控件 */
         appendControl(parentId: string, childControl: ElementData, childIds?: string[]) {
             if (!parentId) throw Errors.argumentNull('parentId');
@@ -168,15 +318,18 @@ namespace jueying {
             parentControl.children = parentControl.children || [];
             parentControl.children.push(childControl);
 
+            this.namedControl(childControl)
+
             if (childIds)
                 this.sortChildren(parentId, childIds);
             else {
                 let { pageData } = this.state;
                 this.setState({ pageData });
             }
-            let control = Control.getInstance(childControl.props.id);
-            console.assert(control != null);
-            this.selectControl(control.id);
+            // let control = Control.getInstance(childControl.props.id);
+            // console.assert(control != null);
+            this.selectControl(childControl.props.id);
+
         }
 
         /** 设置控件位置 */
@@ -234,31 +387,6 @@ namespace jueying {
             this.setState({ pageData: this.pageData })
             this.controlSelected.fire(this.selectedControlIds)
         }
-
-
-
-        // /**
-        //  * 取消选择
-        //  * @param control 指定的控件
-        //  */
-        // unselectControl(...controls: Control<any, any>[]) {
-        //     if (!controls) throw Errors.argumentNull('controls');
-
-        //     controls.forEach(control => {
-        //         $(control.element).removeClass(classNames.controlSelected);
-        //         this._selectedControlIds = this._selectedControlIds.filter(o => o != control.id)
-        //     })
-
-        //     this.controlUnselected.fire(controls)
-        //     console.log(this._selectedControlIds)
-        // }
-
-        // /** 清除已经选择的控件 */
-        // clearSelectdControls() {
-        //     let selectControls = this._selectedControlIds.map(id => Control.getInstance(id))
-        //     selectControls.forEach(o => this.unselectControl(o))
-        //     this._selectedControlIds = [];
-        // }
 
         /** 移除控件 */
         removeControl(...controlIds: string[]) {
@@ -360,28 +488,21 @@ namespace jueying {
         }
 
         setControlPropEditor() {
-            ControlPropEditors.setControlPropEditor<PageViewProps, "name">(PageView, "名称", TextInput, "name")
 
-            let items = {
-                flowing: '流式定位',
-                absolute: '绝对定位'
-            }
-            ControlPropEditors.setControlPropEditor<PageViewProps, "layout">(PageView, "布局", dropdown(items), "layout")
-            ControlPropEditors.setControlPropEditor<ControlPlaceholderProps, "name">(ControlPlaceholder, "名称", TextInput, "name")
         }
 
         render() {
             let designer = this;
+            let { pageData } = this.state
+            let pageView = pageData ? Control.create(pageData) : null
             return <div className="designer" tabIndex={1} ref={e => this.element = e || this.element}
                 onKeyDown={(e) => this.onKeyDown(e)}>
                 <DesignerContext.Provider value={{ designer }}>
-                    {this.props.children}
+                    {pageView}
                 </DesignerContext.Provider>
             </div >;
         }
     }
 
-    export type DesignerContextValue = { designer: PageDesigner | null };
-    let value: DesignerContextValue = { designer: null };
-    export const DesignerContext = React.createContext(value);
+
 }

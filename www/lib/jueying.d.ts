@@ -34,7 +34,7 @@ declare namespace jueying {
         private static exportElement;
         private static getComponentNameByType;
         private static trimProps;
-        static create(args: ElementData, designer?: PageDesigner): React.ReactElement<any> | null;
+        static create(args: ElementData): React.ReactElement<any> | null;
         static register(controlType: React.ComponentClass<any>): void;
         static register(controlName: string, controlType: React.ComponentClass<any>): void;
         static register(controlName: string, controlPath: string): void;
@@ -80,7 +80,6 @@ declare namespace jueying {
         static connectorElementClassName: string;
         static controlTypeName: string;
         protected hasCSS: boolean;
-        pageView: PageView;
         element: HTMLElement;
         constructor(props: P);
         readonly id: string;
@@ -96,11 +95,11 @@ declare namespace jueying {
         Element(props: any, element: React.ReactElement<any>): React.ReactElement<any> | null;
         Element(type: string, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null;
         Element(type: string, props: ControlProps<this>, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null;
-        private static render;
         private static getControlType;
         static loadTypes(elementData: ElementData): Promise<any[]>;
         static loadAllTypes(): Promise<any[]>;
         static getInstance(id: string): Control<any, any>;
+        static addInstance(id: string, instance: React.Component): void;
         static create(args: ElementData): React.ReactElement<any> | null;
     }
 }
@@ -138,14 +137,28 @@ declare namespace jueying {
         controlSelected: Callback<string[]>;
         controlRemoved: Callback<string[]>;
         controlComponentDidMount: Callback<Control<any, any>>;
+        componentUpdated: Callback<PageDesigner>;
+        names: string[];
         constructor(props: PageDesignerProps);
         initSelectedIds(pageData: ElementData): void;
         componentWillReceiveProps(props: PageDesignerProps): void;
+        componentDidUpdate(): void;
         pageData: ElementData | null;
         readonly selectedControlIds: string[];
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any;
+        /**
+        * 启用拖放操作，以便通过拖放图标添加控件
+        */
+        static enableDroppable(element: HTMLElement, designer: PageDesigner): void;
+        /**
+         * 允许拖动指定的元素的子元素，移到子元素
+         * @param element 指定元素
+         * @param designer 指定元素所在设计器
+         */
+        static draggableElement(element: HTMLElement, designer: PageDesigner, container: HTMLElement): void;
         sortControlChildren(controlId: string, childIds: string[]): void;
         sortChildren(parentId: string, childIds: string[]): void;
+        private namedControl;
         /** 添加控件 */
         appendControl(parentId: string, childControl: ElementData, childIds?: string[]): void;
         /** 设置控件位置 */
@@ -170,10 +183,6 @@ declare namespace jueying {
         setControlPropEditor(): void;
         render(): JSX.Element;
     }
-    type DesignerContextValue = {
-        designer: PageDesigner | null;
-    };
-    const DesignerContext: React.Context<DesignerContextValue>;
 }
 declare namespace jueying {
     class ControlEditorFactory {
@@ -247,11 +256,10 @@ declare namespace jueying {
         emptyText?: string;
     }
     class EditorPanel extends React.Component<EditorPanelProps, EditorPanelState> {
-        private designer;
         private element;
         private editor;
         constructor(props: any);
-        componentDidMount(): void;
+        setControls(controlIds: string[]): any;
         render(): JSX.Element;
     }
 }
@@ -291,27 +299,6 @@ declare namespace jueying {
         visible?: boolean;
         controlPath: string;
         editorPath: string;
-    }
-}
-declare namespace jueying {
-    interface PageViewProps extends ControlPlaceholderProps {
-    }
-    const PageViewContext: React.Context<{
-        pageView: PageView;
-    }>;
-    type ControlPair = {
-        control: Control<any, any>;
-        controlType: React.ComponentClass<any>;
-    };
-    interface State extends ControlPlaceholderState {
-    }
-    /**
-     * 移动端页面，将 PageData 渲染为移动端页面。
-     */
-    class PageView extends ControlPlaceholder<PageViewProps, State> {
-        static defaultProps: PageViewProps;
-        constructor(props: PageViewProps);
-        render(h?: any): React.ReactElement<any>;
     }
 }
 declare namespace jueying {
@@ -384,6 +371,58 @@ declare namespace jueying {
         };
     };
 }
+declare namespace jueying {
+    type DesignerContextValue = {
+        designer: PageDesigner | null;
+    };
+    const DesignerContext: React.Context<DesignerContextValue>;
+    interface DesigntimeComponent {
+        /** 运行时控件的类型名称 */
+        typename: string;
+    }
+    function component(args?: {
+        container: boolean;
+    }): (constructor: new (arg: any) => {}) => {
+        new (props: any): {
+            wrapperElement: HTMLElement;
+            designer: PageDesigner;
+            readonly typename: string;
+            readonly id: string;
+            componentDidMount(): void;
+            designtimeComponentDidMount(): void;
+            render(): JSX.Element;
+            renderDesigntime(): JSX.Element;
+            mouseDownOrClick(e: React.MouseEvent<any>): void;
+            setState<K extends string | number | symbol>(state: any, callback?: () => void): void;
+            forceUpdate(callBack?: () => void): void;
+            readonly props: Readonly<{
+                children?: React.ReactNode;
+            }> & Readonly<ControlProps<any>>;
+            state: Readonly<any>;
+            context: any;
+            refs: {
+                [key: string]: React.ReactInstance;
+            };
+            shouldComponentUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): boolean;
+            componentWillUnmount?(): void;
+            componentDidCatch?(error: Error, errorInfo: React.ErrorInfo): void;
+            getSnapshotBeforeUpdate?(prevProps: Readonly<ControlProps<any>>, prevState: Readonly<any>): any;
+            componentDidUpdate?(prevProps: Readonly<ControlProps<any>>, prevState: Readonly<any>, snapshot?: any): void;
+            componentWillMount?(): void;
+            UNSAFE_componentWillMount?(): void;
+            componentWillReceiveProps?(nextProps: Readonly<ControlProps<any>>, nextContext: any): void;
+            UNSAFE_componentWillReceiveProps?(nextProps: Readonly<ControlProps<any>>, nextContext: any): void;
+            componentWillUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): void;
+            UNSAFE_componentWillUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): void;
+        };
+        propTypes?: import("prop-types").ValidationMap<ControlProps<any>>;
+        contextTypes?: import("prop-types").ValidationMap<any>;
+        childContextTypes?: import("prop-types").ValidationMap<any>;
+        defaultProps?: Partial<ControlProps<any>>;
+        displayName?: string;
+        getDerivedStateFromProps?: React.GetDerivedStateFromProps<ControlProps<any>, any>;
+    };
+}
 declare namespace jueying.extentions {
     function guid(): string;
     function isEquals(obj1: object, obj2: object): boolean;
@@ -406,14 +445,16 @@ declare namespace jueying.extentions {
         changed: boolean;
         canUndo: boolean;
         canRedo: boolean;
-        activeDocumentIndex?: number;
         pageDocuments?: PageDocument[];
+        activeDocument?: PageDocument;
     }
     class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState> {
         protected pageDesigner: jueying.PageDesigner;
         private names;
         private _storage;
         private ruleElement;
+        private editorPanel;
+        private toolbarElement;
         constructor(props: any);
         static defaultProps: DesignerFrameworkProps;
         /** 对控件进行命名 */
@@ -435,6 +476,8 @@ declare namespace jueying.extentions {
         setState<K extends keyof DesignerFrameworkState>(state: (Pick<DesignerFrameworkState, K> | DesignerFrameworkState)): void;
         private closeDocument;
         componentDidMount(): void;
+        designerRef(e: PageDesigner): void;
+        renderToolbar(element: HTMLElement): void;
         render(): JSX.Element;
     }
 }

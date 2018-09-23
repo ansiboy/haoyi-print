@@ -1,4 +1,3 @@
-import { ControlProps, PageViewContext, PageView, Control, ControlPropEditors, PageViewProps } from 'jueying';
 import * as React from 'react';
 import 'jueying'
 import { ControlSize } from './controls/controlSize';
@@ -24,7 +23,7 @@ const fontFamilies = [
     'Helvetica, Arial', 'Lucida Grande', 'sans-serif'
 ]
 
-jueying.PageView.defaultProps = { unit: 'mm', fontFamily: 'Microsoft YaHei' }
+// jueying.PageView.defaultProps = { unit: 'mm', fontFamily: 'Microsoft YaHei' }
 
 // jueying.PageViewEditor.prototype.render = function () {
 //     let self = this as PageViewEditor
@@ -117,4 +116,6 @@ jueying.PageView.defaultProps = { unit: 'mm', fontFamily: 'Microsoft YaHei' }
 //         }
 //     </>)
 // }
+
+
 

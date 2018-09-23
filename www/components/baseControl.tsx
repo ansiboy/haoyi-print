@@ -1,14 +1,16 @@
-import { Control, ControlProps, PageViewContext, PageView, ControlPropEditors, PropEditor, PropEditorProps, TextInput } from "jueying";
+import { Control, ControlProps, ControlPropEditors, PropEditor, PropEditorProps, TextInput } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
+import { PageViewContext, PageView } from "./page-view";
 
 export interface BaseControlProps<T> extends ControlProps<T> {
     text?: string,
     field?: string,
 }
 
-export abstract class BaseControl<P extends BaseControlProps<any>, S> extends Control<P, S> {
+export abstract class BaseControl<P extends BaseControlProps<any>, S> extends React.Component<P, S> {
     private _render: (h?: any) => React.ReactNode
+    pageView: PageView
     constructor(props: P) {
         super(props);
 

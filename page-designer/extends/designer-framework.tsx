@@ -10,14 +10,16 @@ namespace jueying.extentions {
         changed: boolean,
         canUndo: boolean,
         canRedo: boolean,
-        activeDocumentIndex?: number,
         pageDocuments?: PageDocument[]
+        activeDocument?: PageDocument
     }
     export class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState>{
         protected pageDesigner: jueying.PageDesigner;
         private names: string[] = [];
         private _storage: DocumentStorage;
         private ruleElement: HTMLCanvasElement;
+        private editorPanel: EditorPanel;
+        private toolbarElement: HTMLElement;
 
         constructor(props) {
             super(props);
@@ -123,8 +125,8 @@ namespace jueying.extentions {
             // this.pageDesigner.redo();
         }
         async save() {
-            let { activeDocumentIndex, pageDocuments } = this.state;
-            let pageDocument = pageDocuments[activeDocumentIndex];
+            let { activeDocument, pageDocuments } = this.state;
+            let pageDocument = activeDocument //pageDocuments[activeDocumentIndex];
             console.assert(pageDocument != null);
             pageDocument.save();
             this.setState({ pageDocuments });
@@ -140,7 +142,7 @@ namespace jueying.extentions {
             pageDocuments.push(pageDocument);
             this.setState({
                 pageDocuments,
-                activeDocumentIndex: pageDocuments.length - 1
+                activeDocument: pageDocuments[pageDocuments.length - 1]
             })
         }
         async fetchTemplates() {
@@ -184,7 +186,7 @@ namespace jueying.extentions {
             let doc = pageDocuments[index];
             console.assert(doc != null);
 
-            this.setState({ activeDocumentIndex: index });
+            this.setState({ activeDocument: doc });
 
             setTimeout(() => {
                 let pageViewId: string = doc.pageData.props.id;
@@ -200,7 +202,7 @@ namespace jueying.extentions {
             super.setState(state);
         }
         private closeDocument(index: number) {
-            let { pageDocuments, activeDocumentIndex } = this.state;
+            let { pageDocuments, activeDocument } = this.state;
             console.assert(pageDocuments != null);
 
             let doc = pageDocuments[index];
@@ -209,14 +211,9 @@ namespace jueying.extentions {
             let close = () => {
                 pageDocuments.splice(index, 1);
 
-                if (pageDocuments.length == 0) {
-                    activeDocumentIndex = null;
-                }
-                else if (activeDocumentIndex > pageDocuments.length - 1) {
-                    activeDocumentIndex = 0;
-                }
-
-                this.setState({ pageDocuments, activeDocumentIndex });
+                let activeDocumentIndex = index > 0 ? index - 1 : 0
+                let activeDocument = pageDocuments[activeDocumentIndex]
+                this.setState({ pageDocuments, activeDocument });
             }
 
             if (!doc.isChanged) {
@@ -238,77 +235,72 @@ namespace jueying.extentions {
         }
         componentDidMount() {
         }
+        designerRef(e: PageDesigner) {
+            if (!e) return
+            this.pageDesigner = e || this.pageDesigner
+            this.pageDesigner.controlSelected.add((controlIds) => {
+                this.editorPanel.setControls(controlIds)
+            })
+            this.pageDesigner.componentUpdated.add((sender) => {
+                console.assert(this.toolbarElement)
+                this.renderToolbar(this.toolbarElement)
+            })
+        }
+        renderToolbar(element: HTMLElement) {
+            let pageDocument = this.state.activeDocument
+            let buttons = this.createButtons(pageDocument)
+            let { title } = this.props
+            ReactDOM.render(<React.Fragment>
+                <li className="pull-left">
+                    <h3>{title || ''}</h3>
+                </li>
+                {buttons.map((o, i) =>
+                    <li key={i} className="pull-right">
+                        {o}
+                    </li>
+                )}
+            </React.Fragment>, element)
+        }
         render() {
-            let { activeDocumentIndex, pageDocuments } = this.state;
-            let { components, title } = this.props;
+            let { activeDocument, pageDocuments } = this.state;
+            let { components } = this.props;
 
             pageDocuments = pageDocuments || [];
-            console.assert(pageDocuments != null);
-            let pageDocument = activeDocumentIndex != null ? pageDocuments[activeDocumentIndex] : null;
-            return <PageDesigner pageData={pageDocument ? pageDocument.pageData : null}
-                ref={(e) => this.pageDesigner = e || this.pageDesigner} >
-                <DesignerContext.Consumer>
-                    {c => {
-                        let designer = c.designer;
-                        let pageView: React.ReactElement<any>;
-                        if (designer.pageData) {
-                            this.namedControl(designer.pageData);
-                            pageView = Control.create(designer.pageData);
-                        }
+            let pageDocument = activeDocument
+            return <div className="designer-form">
+                <ul className="toolbar clearfix"
+                    ref={e => {
+                        if (!e) return
+                        this.toolbarElement = e
+                        this.renderToolbar(this.toolbarElement)
+                    }}>
+                </ul>
+                <div className="main-panel">
+                    <ul className="nav nav-tabs" style={{ display: pageDocuments.length == 0 ? 'none' : null }}>
+                        {pageDocuments.map((o, i) =>
+                            <li key={i} role="presentation" className={o == activeDocument ? 'active' : null}
+                                onClick={() => this.activeDocument(i)}>
+                                <a href="javascript:">
+                                    {o.name}
+                                    <i className="pull-right icon-remove" style={{ cursor: 'pointer' }}
+                                        onClick={(e) => {
+                                            e.cancelable = true;
+                                            e.stopPropagation();
+                                            this.closeDocument(i);
+                                        }} />
+                                </a>
+                            </li>
+                        )}
+                    </ul>
+                    {pageDocument ?
+                        <PageDesigner pageData={pageDocument.pageData} ref={e => this.designerRef(e)}>
+                        </PageDesigner> : null}
+                </div>
+                <ComponentToolbar className="component-panel" componets={components} />
+                <EditorPanel emptyText={"未选中控件，点击页面控件，可以编辑选中控件的属性"}
+                    ref={e => this.editorPanel = e || this.editorPanel} />
 
-                        let buttons = this.createButtons(pageDocument)
-
-                        return <React.Fragment>
-                            <ul className="toolbar clearfix">
-                                <li className="pull-left">
-                                    <h3>{title || ''}</h3>
-                                </li>
-                                {buttons.map((o, i) =>
-                                    <li key={i} className="pull-right">
-                                        {o}
-                                    </li>
-                                )}
-                            </ul>
-                            <ComponentToolbar className="component-panel" componets={components} />
-                            <EditorPanel emptyText={"未选中控件，点击页面控件，可以编辑选中控件的属性"} />
-                            <div className="main-panel"
-                                onClick={(e) => {
-                                    if (designer.pageData) {
-                                        let pageViewId = designer.pageData.props.id
-                                        designer.selectControl(pageViewId);
-                                    }
-                                }}>
-                                {pageView ?
-                                    <React.Fragment>
-                                        <ul className="nav nav-tabs">
-                                            {pageDocuments.map((o, i) =>
-                                                <li key={i} role="presentation" className={i == activeDocumentIndex ? 'active' : null}
-                                                    onClick={() => this.activeDocument(i)}>
-                                                    <a href="javascript:">
-                                                        {o.name}
-                                                        <i className="pull-right icon-remove" style={{ cursor: 'pointer' }}
-                                                            onClick={(e) => {
-                                                                e.cancelable = true;
-                                                                e.stopPropagation();
-                                                                this.closeDocument(i);
-                                                            }} />
-                                                    </a>
-                                                </li>
-                                            )}
-                                        </ul>
-                                        <div className="page-container">
-                                            {pageView}
-                                        </div>
-                                    </React.Fragment> :
-                                    <div className={classNames.emptyDocument}>
-                                        暂无打开的文档
-                                    </div>
-                                }
-                            </div>
-                        </React.Fragment>
-                    }}
-                </DesignerContext.Consumer>
-            </PageDesigner>
+            </div>
         }
     }
 }

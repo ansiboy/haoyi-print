@@ -42,7 +42,8 @@ namespace jueying {
         static setControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K, propName1): void
         static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K): void
         static setControlPropEditor(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, ...propNames: string[]): void {
-            let className = controlClass.name
+
+            let className = controlClass.prototype.typename || controlClass.name
             let classProps = this.controlPropEditors[className] = this.controlPropEditors[className] || []
             for (let i = 0; i < classProps.length; i++) {
                 let propName1 = classProps[i].propNames.join('.')

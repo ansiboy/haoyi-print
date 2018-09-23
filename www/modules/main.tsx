@@ -1,4 +1,4 @@
-import { ControlFactory, ControlEditorFactory as EditorFactory, extentions as ext, extentions, ControlPropEditors, PageViewProps, PageView } from 'jueying';
+import { ControlFactory, ControlEditorFactory as EditorFactory, extentions as ext, extentions, ControlPropEditors } from 'jueying';
 import { DesignerFramework } from 'jueying.extentions'
 import { components, templates } from "components/componenDefines";
 import * as ReactDOM from 'react-dom';
@@ -30,11 +30,10 @@ class MainPage extends DesignerFramework {
         return win
     }
     print() {
-        let { pageDocuments, activeDocumentIndex } = this.state
-        console.assert(pageDocuments != null)
-        console.assert(activeDocumentIndex >= 0 && activeDocumentIndex <= pageDocuments.length - 1)
+        let { pageDocuments, activeDocument } = this.state
+        console.assert(activeDocument != null)
 
-        let doc = pageDocuments[activeDocumentIndex]
+        let doc = activeDocument
         let name = doc.name
 
         showPrintDialog(name)
@@ -58,13 +57,12 @@ class MainPage extends DesignerFramework {
     createButtons(pageDocument: ext.PageDocument) {
         let buttonClassName = 'btn btn-default btn-sm'
         let buttons = super.createButtons(pageDocument, buttonClassName)
-        let { activeDocumentIndex, pageDocuments } = this.state
+        let { activeDocument, pageDocuments } = this.state
 
-        activeDocumentIndex = activeDocumentIndex == null ? -1 : activeDocumentIndex;
         pageDocuments = pageDocuments || [];
         buttons.push(
             <button className={buttonClassName}
-                disabled={activeDocumentIndex < 0 || activeDocumentIndex > pageDocuments.length - 1}
+                disabled={!activeDocument}
                 onClick={() => this.print()}>
                 <i className="icon-print" />
                 <span>打印</span>
@@ -139,12 +137,12 @@ class MainPage extends DesignerFramework {
     }
     componentDidMount() {
         super.componentDidMount()
-        let toolbarElement = this.pageDesigner.element.querySelector('.toolbar') as HTMLElement
+        let toolbarElement = document.querySelector('.toolbar') as HTMLElement
         if (toolbarElement) {
             this.enableMove(toolbarElement, this.window)
         }
 
-        ControlPropEditors.setControlPropEditor<PageViewProps, "style", "width">(PageView, "宽", controlSize(), "style", "width")
+        // ControlPropEditors.setControlPropEditor<PageViewProps, "style", "width">(PageView, "宽", controlSize(), "style", "width")
     }
 }
 

@@ -2,6 +2,13 @@
 
 @body-border-width: 1px;
 @title-font-size: 14px;
+@dark-text-color:black;
+@toolbar-height: 42px;
+@panel-top: @toolbar-height + 4px;
+@panel-bottom: 40px;
+@component-panel-width: 90px;
+@editor-panel-width: 300px;
+
 body {
     border: solid 1px @brand-primary;
     position: absolute;
@@ -10,18 +17,23 @@ body {
     height: 100%;
 }
 
-@panel-height: ~'calc(100% - 80px)';
-@component-panel-width:90px;
+.modal {
+    color: @dark-text-color;
+}
+
+// @panel-height: ~'calc(100% - 80px)';
+
 .component-panel {
     position: absolute;
     background: white;
-    color: black;
+    color: @dark-text-color;
     margin-right: 10px;
-    height: @panel-height;
+    top: @panel-top;
+    bottom: @panel-bottom;
     width: @component-panel-width;
     margin-bottom: 0;
     font-size: @title-font-size;
-
+    z-index: 100;
     .panel-heading {
         text-align: center;
     }
@@ -34,14 +46,14 @@ body {
     }
 }
 
-@editor-panel-width: 300px;
 .editor-panel {
     position: absolute;
     right: 0;
+    top: @panel-top;
+    bottom: @panel-bottom;
     width: @editor-panel-width;
-    height: @panel-height;
     background: white;
-    color: black;
+    color: @dark-text-color;
     margin: 0;
     font-size: @title-font-size;
     z-index: 100;
@@ -61,12 +73,31 @@ body {
 }
 
 .main-panel {
-    @margin-left :@component-panel-width + 6px;
-    @margin-right: @editor-panel-width + 6px;
+    top: @panel-top;
+    bottom: @panel-bottom;
+    left: @component-panel-width + 4px;
+    right: @editor-panel-width + 4px;
     position: absolute;
-    left: @margin-left;
-    height: @panel-height;
-    width: ~"calc(100% -  @{margin-left} - @{margin-right})";
+    overflow: auto;
+
+    @nav-height:42px;
+    .nav-tabs {
+        height: @nav-height;
+        li.active > a,
+        li.active > a:hover, 
+        li.active > a:focus{
+            background-color: @brand-primary;
+            color: white;
+            border-color: @brand-primary;
+        }
+    }
+    .designer {
+        position: absolute;
+        top: @nav-height;
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
 }
 
 .page-container {
@@ -77,11 +108,13 @@ body {
     top: @nav-height;
 }
 
-.designer {
+.designer-form {
     position: absolute;
     width: 100%;
     height: 100%;
     background:  rgb(41,58,68);
+
+    
 }
 
 .toolbar {
@@ -89,6 +122,11 @@ body {
     background-color: @brand-primary;
     color: white;
     padding: 4px 0 4px 0px;
+    top: 0;
+    height: @toolbar-height;
+    width: 100%;
+    position: absolute;
+    z-index: 100;
     h3 {
         margin: 0;
         padding: 8px 0 0 10px;   
@@ -103,7 +141,7 @@ body {
 
 .page-view {
     background: white;
-    color: black;
+    color: @dark-text-color;
     list-style: none;
     font-size: 10pt;
     top: 0;
@@ -136,13 +174,7 @@ body {
     outline:none;
 }
 
-.nav-tabs > li.active > a,
-.nav-tabs > li.active > a:hover, 
-.nav-tabs > li.active > a:focus{
-    background-color: @brand-primary;
-    color: white;
-    border-color: @brand-primary;
-}
+
 
 
 

@@ -2,6 +2,7 @@ import * as React from 'react';
 import 'qrcode'
 import { BaseControlProps, BaseControl } from "../baseControl";
 import { ControlSize } from "../controls/controlSize";
+import { component } from 'jueying';
 
 export interface Props extends BaseControlProps<SquareCode> {
     // value: string,
@@ -9,19 +10,24 @@ export interface Props extends BaseControlProps<SquareCode> {
     // field?: string,
 }
 
+@(component() as any)
 export default class SquareCode extends BaseControl<Props, {}>{
     private img: HTMLImageElement
+    element: HTMLElement;
 
     constructor(props) {
         super(props)
     }
     static defaultProps: Props = { size: '12mm' }
-    render(h?) {
-        console.assert(h != null)
+    render() {
         let { size } = this.props
-        return this.Element({ style: { height: size, width: size } },
+        let style = this.props.style
+        style.height = size
+        style.width = size
+        return <div {...{ style }}
+            ref={e => this.element = e || this.element}>
             <img ref={e => this.img = e || this.img} style={{ width: '100%' }} />
-        )
+        </div>
     }
 
     componentDidMount() {
