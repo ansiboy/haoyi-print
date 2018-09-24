@@ -123,7 +123,7 @@ namespace jueying.extentions {
                 style,
                 componentName: "PageView",
                 layout: 'absolute'
-            }
+            } as any
             // children: [
             //     {
             //         type: "ControlPlaceholder",

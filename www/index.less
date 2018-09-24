@@ -167,6 +167,11 @@ body {
             padding-top: 1cm;
         }
     }
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select:none;
+    user-select:none;
+    -o-user-select:none;
 }
 
 :focus {
@@ -195,4 +200,13 @@ button {
 	z-index: -1;
 }
 
+.html-tag {
+    border: 1px dotted;
 
+}
+
+.control-selected {
+    :first-child {
+        border-color: blue;
+    }
+}

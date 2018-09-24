@@ -8,7 +8,7 @@ export interface Props extends BaseControlProps<Label> {
     fontFa?: string,
 }
 
-@(component() as any)
+@(component({ container: false, movable: true }) as any)
 export default class Label extends BaseControl<Props, {}>{
     static defaultProps: Props = { text: '', fontSize: '10pt' }
     render() {

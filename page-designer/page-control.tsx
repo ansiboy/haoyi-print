@@ -31,12 +31,13 @@ namespace jueying {
     }
 
     let customControlTypes: { [key: string]: React.ComponentClass<any> | string } = {}
-    let allInstance: { [key: string]: Control<any, any> } = {};
 
     export abstract class Control<P extends ControlProps<any>, S> extends React.Component<P, S> {
         private _designer: PageDesigner | null = null;
         private originalComponentDidMount: (() => void) | undefined;
         private originalRender: () => React.ReactNode;
+        // private static allInstance: { [key: string]: Control<any, any> } = {};
+
         static tabIndex = 1;
 
         static componentsDir = 'components';
@@ -52,15 +53,10 @@ namespace jueying {
             super(props);
 
             console.assert((this.props as any).id != null);
-
-            // this.originalRender = this.render;
-            // this.render = Control.render;
-
             this.originalComponentDidMount = this.componentDidMount;
             this.componentDidMount = this.myComponentDidMount;
 
             console.assert(this.props.id, 'id is null or empty')
-            allInstance[this.props.id as string] = this;
         }
 
         get id(): string {
@@ -111,118 +107,115 @@ namespace jueying {
             if (this.originalComponentDidMount)
                 this.originalComponentDidMount();
 
-            if (this.designer)
-                this.designer.controlComponentDidMount.fire(this);
-
             if (this.hasCSS) {
                 this.loadControlCSS();
             }
         }
 
-        Element(child: React.ReactElement<any>): React.ReactElement<any> | null
-        Element(props: any, element: React.ReactElement<any>): React.ReactElement<any> | null
-        Element(type: string, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null
-        Element(type: string, props: ControlProps<this>, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null
-        Element(type: any, props?: any, ...children: any[]): React.ReactElement<any> | null {
-            if (typeof type == 'string' && typeof (props) == 'object' && !React.isValidElement(props)) {
-            }
-            else if (typeof type == 'string' && (props == null || typeof (props) == 'object' && React.isValidElement(props) ||
-                typeof (props) == 'string')) {
-                children = children || [];
-                if (props)
-                    children.unshift(props);
+        // Element(child: React.ReactElement<any>): React.ReactElement<any> | null
+        // Element(props: any, element: React.ReactElement<any>): React.ReactElement<any> | null
+        // Element(type: string, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null
+        // Element(type: string, props: ControlProps<this>, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null
+        // Element(type: any, props?: any, ...children: any[]): React.ReactElement<any> | null {
+        //     if (typeof type == 'string' && typeof (props) == 'object' && !React.isValidElement(props)) {
+        //     }
+        //     else if (typeof type == 'string' && (props == null || typeof (props) == 'object' && React.isValidElement(props) ||
+        //         typeof (props) == 'string')) {
+        //         children = children || [];
+        //         if (props)
+        //             children.unshift(props);
 
-                props = {};
-                if (children.length == 0)
-                    children = null as any;
-            }
-            else if (typeof type == 'object' && React.isValidElement(type) && props == null) {
-                children = [type];
-                type = 'div';
-                props = {};
-            }
-            else if (typeof type == 'object' && !React.isValidElement(type) && React.isValidElement(props)) {
-                children = [props];
-                props = type;
-                type = 'div';
-            }
-            else {
-                throw new Error('not implement');
-            }
+        //         props = {};
+        //         if (children.length == 0)
+        //             children = null as any;
+        //     }
+        //     else if (typeof type == 'object' && React.isValidElement(type) && props == null) {
+        //         children = [type];
+        //         type = 'div';
+        //         props = {};
+        //     }
+        //     else if (typeof type == 'object' && !React.isValidElement(type) && React.isValidElement(props)) {
+        //         children = [props];
+        //         props = type;
+        //         type = 'div';
+        //     }
+        //     else {
+        //         throw new Error('not implement');
+        //     }
 
-            if (this.props.id)
-                props.id = this.props.id;
+        //     if (this.props.id)
+        //         props.id = this.props.id;
 
-            if (this.props.style) {
-                props.style = props.style ? Object.assign(this.props.style, props.style || {}) : this.props.style;
-            }
+        //     if (this.props.style) {
+        //         props.style = props.style ? Object.assign(this.props.style, props.style || {}) : this.props.style;
+        //     }
 
-            let className = ''
-            if (this.props.className) {
-                className = this.props.className
-            }
+        //     let className = ''
+        //     if (this.props.className) {
+        //         className = this.props.className
+        //     }
 
-            if (this.props.selected) {
-                className = className + ' ' + classNames.controlSelected
-            }
+        //     if (this.props.selected) {
+        //         className = className + ' ' + classNames.controlSelected
+        //     }
 
-            if (className)
-                props.className = className;
+        //     if (className)
+        //         props.className = className;
 
-            if (this.props.tabIndex)
-                props.tabIndex = this.props.tabIndex;
-            else
-                props.tabIndex = Control.tabIndex++
+        //     if (this.props.tabIndex)
+        //         props.tabIndex = this.props.tabIndex;
+        //     else
+        //         props.tabIndex = Control.tabIndex++
 
-            if (this.isDesignMode && typeof type == 'string') {
-                let func = (e: React.MouseEvent<any>) => {
-                    console.log(`event type:${event.type}`)
-                    let selectedControlIds = this.designer.selectedControlIds //[this.id]
+        //     if (this.isDesignMode && typeof type == 'string') {
+        //         let func = (e: React.MouseEvent<any>) => {
+        //             console.log(`event type:${event.type}`)
+        //             let selectedControlIds = this.designer.selectedControlIds //[this.id]
 
-                    //========================================================================
-                    // 如果是多个 click 事件选中
-                    if (selectedControlIds.length > 1 && event.type == 'react-mousedown') {
-                        return
-                    }
-                    //========================================================================
+        //             //========================================================================
+        //             // 如果是多个 click 事件选中
+        //             if (selectedControlIds.length > 1 && event.type == 'react-mousedown') {
+        //                 return
+        //             }
+        //             //========================================================================
 
-                    if (e.ctrlKey) {
-                        if (selectedControlIds.indexOf(this.id) >= 0) {
-                            selectedControlIds = selectedControlIds.filter(o => o != this.id)
-                        }
-                        else {
-                            selectedControlIds.push(this.id)
-                        }
-                    }
-                    else {
-                        selectedControlIds = [this.id]
-                    }
+        //             if (e.ctrlKey) {
+        //                 if (selectedControlIds.indexOf(this.id) >= 0) {
+        //                     selectedControlIds = selectedControlIds.filter(o => o != this.id)
+        //                 }
+        //                 else {
+        //                     selectedControlIds.push(this.id)
+        //                 }
+        //             }
+        //             else {
+        //                 selectedControlIds = [this.id]
+        //             }
 
-                    console.assert(this.designer != null)
-                    this.designer.selectControl(selectedControlIds)
+        //             console.assert(this.designer != null)
+        //             this.designer.selectControl(selectedControlIds)
 
-                    e.stopPropagation();
-                }
+        //             e.stopPropagation();
+        //         }
 
-                (props as React.DOMAttributes<any>).onMouseDown = func;
-                (props as React.DOMAttributes<any>).onClick = func;
-            }
+        //         (props as React.DOMAttributes<any>).onMouseDown = func;
+        //         (props as React.DOMAttributes<any>).onClick = func;
+        //     }
 
-            let originalRef = props.ref;
-            props.ref = (e: any) => {
-                if (originalRef) {
-                    originalRef(e);
-                }
+        //     let originalRef = props.ref;
+        //     props.ref = (e: any) => {
+        //         if (originalRef) {
+        //             originalRef(e);
+        //         }
 
-                if (e == null)
-                    return
+        //         if (e == null)
+        //             return
 
-                this.element = e
+        //         this.element = e
 
-            };
+        //     };
 
-            return ControlFactory.createElement(this, type, props, ...children);
-        }
+        //     return ControlFactory.createElement(this, type, props, ...children);
+        // }
 
 
         // private static render() {
@@ -295,23 +288,20 @@ namespace jueying {
             return Promise.all(ps);
         }
 
-        static loadAllTypes() {
-            return ControlFactory.loadAllTypes();
-        }
 
-        static getInstance(id: string) {
-            if (!id) throw Errors.argumentNull('id');
+        // static getInstance(id: string) {
+        //     if (!id) throw Errors.argumentNull('id');
 
-            return allInstance[id];
-        }
+        //     return this.allInstance[id];
+        // }
 
-        static addInstance(id: string, instance: React.Component) {
-            allInstance[id] = instance as any
-        }
+        // static addInstance(id: string, instance: React.Component) {
+        //     this.allInstance[id] = instance as any
+        // }
 
-        static create(args: ElementData): React.ReactElement<any> | null {
-            return ControlFactory.create(args);
-        }
+        // static create(args: ElementData): React.ReactElement<any> | null {
+        //     return ControlFactory.toReactElement(args);
+        // }
 
     }
 

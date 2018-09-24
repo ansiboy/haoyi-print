@@ -57,6 +57,6 @@ import { ControlPropEditors, dropdown } from 'jueying';
     //         onChange(style)
     //     }} />
     // }
-    ControlPropEditors.setControlPropEditor<ControlProps, 'style', 'width'>(Control, '宽', controlSize(), "style", 'width')
+    ControlPropEditors.setControlPropEditor<ControlProps, 'style'>(Control, '宽', controlSize(), "style", 'width')
     // ControlPropEditors.setControlPropEditor<ControlProps, 'field'>(Control, "field", '字段', textInput)
 })()

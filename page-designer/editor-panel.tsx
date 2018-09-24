@@ -16,11 +16,11 @@ namespace jueying {
 
         constructor(props) {
             super(props);
-            this.state = { };
+            this.state = {};
         }
-        setControls(controlIds: string[]): any {
-            let controls = controlIds.map(id => Control.getInstance(id))
-            this.editor.setControls(controls)
+        setControls(controlDatas: ElementData[], designer: PageDesigner): any {
+            // let controls = controlIds.map(id => Control.getInstance(id))
+            this.editor.setControls(controlDatas, designer)
         }
         render() {
             let { emptyText } = this.props;

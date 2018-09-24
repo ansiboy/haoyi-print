@@ -57,8 +57,8 @@ export function createBasePropEditors(controlClass: React.ComponentClass) {
     ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "field">(controlClass, '字段', TextInput, 'field')
 
 
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style", "left">(controlClass, '左边', ControlSize, 'style', 'left')
-    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style", "top">(controlClass, '顶部', ControlSize, 'style', 'top')
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, '左边', ControlSize, 'style', 'left')
+    ControlPropEditors.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, '顶部', ControlSize, 'style', 'top')
 }
 
 

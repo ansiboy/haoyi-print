@@ -18,7 +18,7 @@ namespace jueying {
             this.state = { editors: [] }
         }
 
-        setControls(controls: Control<any, any>[]) {
+        setControls(controls: ElementData[], designer: PageDesigner) {
             if (controls.length == 0) {
                 this.setState({ editors: [] })
                 return
@@ -29,7 +29,7 @@ namespace jueying {
 
             for (let i = 0; i < controls.length; i++) {
                 let control = controls[i]
-                let className = (control as any as DesigntimeComponent).typename || control.constructor.name
+                let className = control.type
                 let propEditorInfos = ControlPropEditors.getControlPropEditors(className)
                 if (i == 0) {
                     commonPropEditorInfos = propEditorInfos || []
@@ -80,7 +80,8 @@ namespace jueying {
                     onChange: (value) => {
                         for (let i = 0; i < controls.length; i++) {
                             let c = controls[i]
-                            c.designer.updateControlProps(c.id, propNames, value)
+                            console.assert(c.props.id)
+                            designer.updateControlProps(c.props.id, propNames, value)
                         }
                     }
                 })

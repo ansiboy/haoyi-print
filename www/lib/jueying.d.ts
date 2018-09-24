@@ -21,7 +21,7 @@ declare namespace jueying {
     class ControlEditor extends React.Component<EditorProps, EditorState> {
         private _element;
         constructor(props: EditorProps);
-        setControls(controls: Control<any, any>[]): void;
+        setControls(controls: ElementData[], designer: PageDesigner): void;
         private flatProps;
         render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
         readonly element: HTMLElement;
@@ -29,20 +29,169 @@ declare namespace jueying {
     }
 }
 declare namespace jueying {
-    class ControlFactory {
-        static originalCreateElement: typeof React.createElement;
-        private static getControlType;
-        private static exportElement;
-        private static getComponentNameByType;
-        private static trimProps;
-        static create(args: ElementData): React.ReactElement<any> | null;
-        static register(controlType: React.ComponentClass<any>): void;
-        static register(controlName: string, controlType: React.ComponentClass<any>): void;
-        static register(controlName: string, controlPath: string): void;
-        static loadAllTypes(): Promise<any[]>;
-        static createElement(control: Control<any, any>, type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]): React.ReactElement<any>;
-        static createDesignTimeElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]): React.ReactElement<any>;
-        private static createRuntimeElement;
+    interface ComponentToolbarProps extends React.Props<ComponentToolbar> {
+        componets: ComponentDefine[];
+        style?: React.CSSProperties;
+        className?: string;
+    }
+    interface ComponentToolbarState {
+    }
+    class ComponentToolbar extends React.Component<ComponentToolbarProps, ComponentToolbarState> {
+        designer: PageDesigner;
+        private toolbarElement;
+        componentDidMount(): void;
+        private componentDraggable;
+        render(): JSX.Element;
+    }
+}
+declare namespace jueying {
+    /**
+     * 说明：
+     * core 文件用于运行时加载，所以要控制此文件的大小，用于在运行时创建页面
+     *
+     */
+    type DesignerContextValue = {
+        designer: PageDesigner | null;
+    };
+    const DesignerContext: React.Context<DesignerContextValue>;
+    interface DesigntimeComponent {
+        /** 运行时控件的类型名称 */
+        typename: string;
+    }
+    function component<T extends React.Component>(args?: {
+        container?: boolean;
+        movable?: boolean;
+    }): (constructor: new (...args: any[]) => T) => {
+        new (props: any, context: any): {
+            wrapperElement: HTMLElement;
+            designer: PageDesigner;
+            id: string;
+            readonly typename: string;
+            componentDidMount(): void;
+            designtimeComponentDidMount(): void;
+            render(): JSX.Element;
+            renderDesigntime(): JSX.Element;
+            setState<K extends string | number | symbol>(state: any, callback?: () => void): void;
+            forceUpdate(callBack?: () => void): void;
+            readonly props: Readonly<{
+                children?: React.ReactNode;
+            }> & Readonly<ControlProps<any>>;
+            state: Readonly<any>;
+            context: any;
+            refs: {
+                [key: string]: React.ReactInstance;
+            };
+            shouldComponentUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): boolean;
+            componentWillUnmount?(): void;
+            componentDidCatch?(error: Error, errorInfo: React.ErrorInfo): void;
+            getSnapshotBeforeUpdate?(prevProps: Readonly<ControlProps<any>>, prevState: Readonly<any>): any;
+            componentDidUpdate?(prevProps: Readonly<ControlProps<any>>, prevState: Readonly<any>, snapshot?: any): void;
+            componentWillMount?(): void;
+            UNSAFE_componentWillMount?(): void;
+            componentWillReceiveProps?(nextProps: Readonly<ControlProps<any>>, nextContext: any): void;
+            UNSAFE_componentWillReceiveProps?(nextProps: Readonly<ControlProps<any>>, nextContext: any): void;
+            componentWillUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): void;
+            UNSAFE_componentWillUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): void;
+        };
+        propTypes?: import("prop-types").ValidationMap<ControlProps<any>>;
+        contextTypes?: import("prop-types").ValidationMap<any>;
+        childContextTypes?: import("prop-types").ValidationMap<any>;
+        defaultProps?: Partial<ControlProps<any>>;
+        displayName?: string;
+        getDerivedStateFromProps?: React.GetDerivedStateFromProps<ControlProps<any>, any>;
+    };
+    let core: {
+        originalCreateElement: typeof React.createElement;
+        toReactElement: typeof toReactElement;
+        customControlTypes: {
+            [key: string]: string | React.ComponentClass<any, any>;
+        };
+        register: typeof register;
+        loadAllTypes: typeof loadAllTypes;
+        componentType(name: string): string | React.ComponentClass<any, any>;
+    };
+    /**
+     * 将持久化的元素数据转换为 ReactElement
+     * @param args 元素数据
+     */
+    function toReactElement(args: ElementData, async?: boolean): React.ReactElement<any> | null;
+    function register(controlName: string, controlType: React.ComponentClass<any>): void;
+    function loadAllTypes(): Promise<any[]>;
+}
+declare namespace jueying {
+    class ControlEditorFactory {
+        private static controlEditorTypes;
+        static register(controlTypeName: any, editorType: React.ComponentClass<any> | string): void;
+        static hasEditor(controlTypeName: any): boolean;
+    }
+    interface PropEditorInfo {
+        propNames: string[];
+        text: string;
+        editorType: PropEditorConstructor;
+    }
+    class ControlPropEditors {
+        private static controlPropEditors;
+        static getControlPropEditors(controlClassName: string): PropEditorInfo[];
+        static getControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClassName: string, propName: K, propName1: K1): PropEditorInfo;
+        static getControlPropEditor<T, K extends keyof T>(controlClassName: string, propName: string): PropEditorInfo;
+        /** 通过属性数组获取属性的编辑器 */
+        static getControlPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
+        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
+        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K): void;
+        static getFlatPropValue(obj: Object, flatPropName: string): void;
+    }
+}
+declare namespace jueying {
+    interface EditorPanelState {
+    }
+    interface EditorPanelProps {
+        className?: string;
+        style?: React.CSSProperties;
+        emptyText?: string;
+    }
+    class EditorPanel extends React.Component<EditorPanelProps, EditorPanelState> {
+        private element;
+        private editor;
+        constructor(props: any);
+        setControls(controlDatas: ElementData[], designer: PageDesigner): any;
+        render(): JSX.Element;
+    }
+}
+declare namespace jueying {
+    class Errors {
+        static fileNotExists(fileName: string): any;
+        static argumentNull(argumentName: string): Error;
+        static pageDataIsNull(): Error;
+    }
+}
+declare namespace jueying {
+    interface Document {
+        name?: string;
+        createDateTime?: Date;
+        version?: number;
+        /**
+         * 页面的类型，默认为 page
+         * snapshoot 为页面快照
+         * productTemplate 为商品模板
+         * page 为普通页面
+         * system 为系统页面
+         */
+        type?: 'snapshoot' | 'productTemplate' | 'page' | 'system';
+        data: ElementData;
+    }
+    interface ElementData {
+        type: string;
+        props: ControlProps<any>;
+        children?: ElementData[];
+    }
+    interface ComponentDefine {
+        name: string;
+        displayName: string;
+        icon: string;
+        introduce: string;
+        target?: 'view' | 'footer' | 'header';
+        visible?: boolean;
+        controlPath: string;
     }
 }
 /*******************************************************************************
@@ -92,16 +241,8 @@ declare namespace jueying {
         };
         protected loadControlCSS(): Promise<void>;
         private myComponentDidMount;
-        Element(child: React.ReactElement<any>): React.ReactElement<any> | null;
-        Element(props: any, element: React.ReactElement<any>): React.ReactElement<any> | null;
-        Element(type: string, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null;
-        Element(type: string, props: ControlProps<this>, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null;
         private static getControlType;
         static loadTypes(elementData: ElementData): Promise<any[]>;
-        static loadAllTypes(): Promise<any[]>;
-        static getInstance(id: string): Control<any, any>;
-        static addInstance(id: string, instance: React.Component): void;
-        static create(args: ElementData): React.ReactElement<any> | null;
     }
 }
 /*******************************************************************************
@@ -137,8 +278,12 @@ declare namespace jueying {
         element: HTMLElement;
         controlSelected: Callback<string[]>;
         controlRemoved: Callback<string[]>;
-        controlComponentDidMount: Callback<Control<any, any>>;
+        designtimeComponentDidMount: Callback<{
+            component: React.ReactElement<any>;
+            element: HTMLElement;
+        }>;
         componentUpdated: Callback<PageDesigner>;
+        private draggableElementIds;
         names: string[];
         constructor(props: PageDesignerProps);
         initSelectedIds(pageData: ElementData): void;
@@ -150,13 +295,15 @@ declare namespace jueying {
         /**
         * 启用拖放操作，以便通过拖放图标添加控件
         */
-        static enableDroppable(element: HTMLElement, designer: PageDesigner): void;
+        enableDroppable(element: HTMLElement): void;
+        findContainerControlId(element: HTMLElement): ElementData;
+        mouseEvent(): void;
         /**
          * 允许拖动指定的元素的子元素，移到子元素
          * @param element 指定元素
          * @param designer 指定元素所在设计器
          */
-        static draggableElement(element: HTMLElement, designer: PageDesigner, container: HTMLElement): void;
+        draggableControl(controlId: string): void;
         sortControlChildren(controlId: string, childIds: string[]): void;
         sortChildren(parentId: string, childIds: string[]): void;
         private namedControl;
@@ -179,127 +326,10 @@ declare namespace jueying {
         /** 移动控件到另外一个控件容器 */
         moveControl(controlId: string, parentId: string, childIds: string[]): void;
         private removeControlFrom;
-        protected findControlData(controlId: string): ElementData | null;
+        findControlData(controlId: string): ElementData | null;
         private onKeyDown;
-        setControlPropEditor(): void;
-        render(): JSX.Element;
-    }
-}
-declare namespace jueying {
-    class ControlEditorFactory {
-        private static controlEditorTypes;
-        static register(controlTypeName: any, editorType: React.ComponentClass<any> | string): void;
-        static hasEditor(controlTypeName: any): boolean;
-    }
-    interface PropEditorInfo {
-        propNames: string[];
-        text: string;
-        editorType: PropEditorConstructor;
-    }
-    class ControlPropEditors {
-        private static controlPropEditors;
-        static getControlPropEditors(controlClassName: string): PropEditorInfo[];
-        static getControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClassName: string, propName: K, propName1: K1): PropEditorInfo;
-        static getControlPropEditor<T, K extends keyof T>(controlClassName: string, propName: string): PropEditorInfo;
-        /** 通过属性数组获取属性的编辑器 */
-        static getControlPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
-        static setControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K, propName1: any): void;
-        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K): void;
-        static getFlatPropValue(obj: Object, flatPropName: string): void;
-    }
-}
-declare namespace jueying {
-    interface ControlPlaceholderState {
-        controls: ElementData[];
-    }
-    interface ControlPlaceholderProps extends ControlProps<any> {
-        style?: React.CSSProperties;
-        emptyText?: string;
-        htmlTag?: string;
-        layout?: 'flowing' | 'absolute';
-    }
-    class ControlPlaceholder<P extends ControlPlaceholderProps, S extends ControlPlaceholderState> extends Control<P, S> {
-        static defaultProps: ControlPlaceholderProps;
-        constructor(props: any);
-        static sortableElement(element: HTMLElement, designer: PageDesigner): void;
-        private draggableElement;
-        /**
-         * 启用拖放操作，以便通过拖放图标添加控件
-         */
-        private enableDroppable;
-        private static childrenIds;
         componentDidMount(): void;
-        render(h?: any): React.ReactElement<any>;
-    }
-}
-declare namespace jueying {
-    interface ComponentToolbarProps extends React.Props<ComponentToolbar> {
-        componets: ComponentDefine[];
-        style?: React.CSSProperties;
-        className?: string;
-    }
-    interface ComponentToolbarState {
-    }
-    class ComponentToolbar extends React.Component<ComponentToolbarProps, ComponentToolbarState> {
-        designer: PageDesigner;
-        private toolbarElement;
-        componentDidMount(): void;
-        private enableDraggable;
         render(): JSX.Element;
-    }
-}
-declare namespace jueying {
-    interface EditorPanelState {
-    }
-    interface EditorPanelProps {
-        className?: string;
-        style?: React.CSSProperties;
-        emptyText?: string;
-    }
-    class EditorPanel extends React.Component<EditorPanelProps, EditorPanelState> {
-        private element;
-        private editor;
-        constructor(props: any);
-        setControls(controlIds: string[]): any;
-        render(): JSX.Element;
-    }
-}
-declare namespace jueying {
-    class Errors {
-        static fileNotExists(fileName: string): any;
-        static argumentNull(argumentName: string): Error;
-        static pageDataIsNull(): Error;
-    }
-}
-declare namespace jueying {
-    interface Document {
-        name?: string;
-        createDateTime?: Date;
-        version?: number;
-        /**
-         * 页面的类型，默认为 page
-         * snapshoot 为页面快照
-         * productTemplate 为商品模板
-         * page 为普通页面
-         * system 为系统页面
-         */
-        type?: 'snapshoot' | 'productTemplate' | 'page' | 'system';
-        data: ElementData;
-    }
-    interface ElementData {
-        type: string;
-        props: any;
-        children?: ElementData[];
-    }
-    interface ComponentDefine {
-        name: string;
-        displayName: string;
-        icon: string;
-        introduce: string;
-        target?: 'view' | 'footer' | 'header';
-        visible?: boolean;
-        controlPath: string;
-        editorPath: string;
     }
 }
 declare namespace jueying {
@@ -371,19 +401,6 @@ declare namespace jueying {
             }>, nextContext: any): void;
         };
     };
-}
-declare namespace jueying {
-    type DesignerContextValue = {
-        designer: PageDesigner | null;
-    };
-    const DesignerContext: React.Context<DesignerContextValue>;
-    interface DesigntimeComponent {
-        /** 运行时控件的类型名称 */
-        typename: string;
-    }
-    function component(args?: {
-        container: boolean;
-    }): (constructor: new (arg: any) => {}) => any;
 }
 declare namespace jueying.extentions {
     function guid(): string;

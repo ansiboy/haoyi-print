@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { ControlFactory, guid } from "jueying";
 import { Service } from "./service";
 import { ServiceDocumentStorage } from "./designer/serviceDocumentStorage";
 
@@ -107,7 +106,7 @@ async function createTemplateElement(templateName: string, data?: object): Promi
 
 
     (r.props as any).data = data;
-    let reactElement = ControlFactory.create(r)
+    let reactElement = jueying.toReactElement(r)
     if (reactElement == null)
         throw new Error('create element fail')
 

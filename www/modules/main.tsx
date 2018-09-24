@@ -1,5 +1,4 @@
-import { ControlFactory, ControlEditorFactory as EditorFactory, extentions as ext, extentions, ControlPropEditors } from 'jueying';
-import { DesignerFramework } from 'jueying.extentions'
+import { DesignerFramework, DocumentStorage, PageDocument } from 'jueying.extentions'
 import { components, templates } from "components/componenDefines";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
@@ -9,11 +8,12 @@ import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
 import '../components/placeholder'
 import '../components/Label/editor';
 import '../components/SquareCode/editor';
-import 'rulers'
-import { controlSize } from '../components/baseControl';
+import '../components/control-placeholder'
+import '../components/list'
+import '../components/htmlTag'
 
 class MainPage extends DesignerFramework {
-    private _storage1: extentions.DocumentStorage;
+    private _storage1: DocumentStorage;
     constructor(props) {
         super(props)
 
@@ -54,7 +54,7 @@ class MainPage extends DesignerFramework {
     windowMin() {
         this.window.minimize()
     }
-    createButtons(pageDocument: ext.PageDocument) {
+    createButtons(pageDocument: PageDocument) {
         let buttonClassName = 'btn btn-default btn-sm'
         let buttons = super.createButtons(pageDocument, buttonClassName)
         let { activeDocument, pageDocuments } = this.state
@@ -146,15 +146,15 @@ class MainPage extends DesignerFramework {
     }
 }
 
-components.forEach(o => {
-    ControlFactory.register(o.name, o.controlPath);
-    EditorFactory.register(o.name, o.editorPath);
-})
+// components.forEach(o => {
+//     ControlFactory.register(o.name, o.controlPath);
+//     EditorFactory.register(o.name, o.editorPath);
+// })
 
 
 
 export default function (page: chitu.Page) {
-    ControlFactory.loadAllTypes().then(o => {
+    jueying.core.loadAllTypes().then(o => {
         ReactDOM.render(<MainPage {...{
             components, templates, title: '好易标签打印'
         }} />, page.element)

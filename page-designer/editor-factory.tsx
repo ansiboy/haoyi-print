@@ -39,7 +39,7 @@ namespace jueying {
             return editor
         }
 
-        static setControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K, propName1): void
+        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
         static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K): void
         static setControlPropEditor(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, ...propNames: string[]): void {
 

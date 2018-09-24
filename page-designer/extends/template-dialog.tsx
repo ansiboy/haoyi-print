@@ -122,7 +122,7 @@ namespace jueying.extentions {
                                                 onClick={() => this.selectTemplate(i)}
                                                 className={i == selectedTemplateIndex ? classNames.templateSelected : null}>
                                                 <PageViewContainer>
-                                                    {ControlFactory.create(o.pageData)}
+                                                    {core.toReactElement(o.pageData)}
                                                     <div className="name">
                                                         <span>{o.name}</span>
                                                     </div>
@@ -151,7 +151,7 @@ namespace jueying.extentions {
                         <div className="pull-right">
                             <button className="btn btn-primary"
                                 onClick={() => this.confirm()}>
-                                <i className="icon-ok"/>
+                                <i className="icon-ok" />
                                 <span>确定</span>
                             </button>
                         </div>

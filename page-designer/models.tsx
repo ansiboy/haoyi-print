@@ -16,7 +16,7 @@ namespace jueying {
 
     export interface ElementData {
         type: string;
-        props: any;
+        props:  ControlProps<any>;
         children?: ElementData[],
     }
 
@@ -25,6 +25,5 @@ namespace jueying {
         target?: 'view' | 'footer' | 'header',
         visible?: boolean,
         controlPath: string,
-        editorPath: string,
     }
 }
