@@ -43,6 +43,18 @@ namespace jueying {
         }
     }
 
+    export interface ControlProps<T> extends React.Props<T> {
+        id?: string,
+        name?: string,
+        className?: string,
+        style?: React.CSSProperties,
+        tabIndex?: number,
+        componentName?: string,
+        designMode?: boolean,
+        selected?: boolean,
+    }
+
+
     export class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
 
         private _selectedControlIds: string[] = [];
@@ -107,12 +119,12 @@ namespace jueying {
             this.setState({ pageData: value });
         }
 
-        get selectedControlIds() {
+        get selectedComponentIds() {
             return this._selectedControlIds
         }
 
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any {
-            let controlDescription = this.findControlData(controlId);
+            let controlDescription = this.findComponentData(controlId);
             if (controlDescription == null)
                 return
 
@@ -141,7 +153,7 @@ namespace jueying {
                 event.preventDefault()
                 event.stopPropagation()
 
-                let componentName = event.dataTransfer.getData(Control.controlTypeName)
+                let componentName = event.dataTransfer.getData(constants.componentTypeName)
                 if (componentName)
                     event.dataTransfer.dropEffect = "copy"
                 else
@@ -153,7 +165,7 @@ namespace jueying {
                 event.preventDefault()
                 event.stopPropagation()
 
-                let componentName = event.dataTransfer.getData(Control.controlTypeName)
+                let componentName = event.dataTransfer.getData(constants.componentTypeName)
                 if (!componentName) {
                     return
                 }
@@ -183,16 +195,16 @@ namespace jueying {
             }
         }
 
-        findContainerControlId(element: HTMLElement): ElementData {
+        findContainerComponentId(element: HTMLElement): ElementData {
             if (element.id) {
-                let controlData = this.findControlData(element.id)
+                let controlData = this.findComponentData(element.id)
                 if (controlData != null)
                     return controlData
             }
 
             let parent = element.parentElement
             if (parent != null && parent != this.element) {
-                return this.findContainerControlId(parent)
+                return this.findContainerComponentId(parent)
             }
 
             return null
@@ -202,8 +214,65 @@ namespace jueying {
         // 事件
         mouseEvent() {
 
-            let dragExecuted: boolean
             //=====================================================
+            // 组件的选取
+
+            /**
+             * 将鼠标点中的组件设置为选中状态 
+             * 如果已选择的组件数量为 0 或者 1，mousedown 事件为选择当前组件  
+             * */
+            this.element.addEventListener('mousedown', (e) => {
+                if (e.ctrlKey || this.selectedComponentIds.length > 1) {
+                    return
+                }
+
+                let target = e.target as HTMLElement
+                let componentData = this.findContainerComponentId(target)
+                let componentId = componentData.props.id
+                this._selectedControlIds = [componentId]
+                this.selectComponent(this.selectedComponentIds)
+            })
+
+            /**
+             * 将鼠标点中的组件设置为选中状态 
+             * 如果已选择的组件数量为 0 或者 1，mousedown 事件为选择当前组件  
+             * */
+            this.element.onclick = (e: MouseEvent) => {
+
+                // 由于拖放会产生 onclick 事件，所有需要判断如果是拖放操作
+                // 则取消当前的 onclick 操作
+                if (dragExecuted) {
+                    dragExecuted = false
+                    return
+                }
+
+                if (!e.ctrlKey && this.selectedComponentIds.length <= 1) {
+                    return
+                }
+
+                let target = e.target as HTMLElement
+                let componentData = this.findContainerComponentId(target)
+                console.assert(componentData != null)
+                console.log(`designer event:${e.type} target:${target.tagName}`)
+
+                let componentId = componentData.props.id
+                let selectedComponentIds = this.selectedComponentIds
+                if (selectedComponentIds.indexOf(componentId) >= 0) {
+                    selectedComponentIds = selectedComponentIds.filter(o => o != componentId)
+                }
+                else {
+                    selectedComponentIds.push(componentId)
+                }
+
+                console.assert(this != null)
+                this.selectComponent(selectedComponentIds)
+
+            }
+
+
+            //=====================================================
+            // 以下代码为实现拖放操作
+            let dragExecuted: boolean
             let isDragOperation = false
             let x: number, y: number;
             let deltaX: number, deltaY: number;
@@ -218,7 +287,7 @@ namespace jueying {
                 x = ev.clientX
                 y = ev.clientY
 
-                startPositions = this.selectedControlIds
+                startPositions = this.selectedComponentIds
                     .filter(o => this.draggableElementIds.indexOf(o) >= 0)
                     .map(o => document.getElementById(o))
                     .map(o => {
@@ -237,7 +306,6 @@ namespace jueying {
 
             })
 
-            //=====================================================
             // 采用定时更新位置，以提高性能
             setInterval(() => {
                 if (deltaX == null || deltaY == null || startPositions.length == 0)
@@ -250,7 +318,6 @@ namespace jueying {
                     element.style.top = `${top + deltaY}px`
                 })
             }, 30)
-            //=====================================================
 
             this.element.addEventListener('mouseup', (ev: MouseEvent) => {
                 if (isDragOperation == false || ev.shiftKey || ev.ctrlKey || ev.metaKey) {
@@ -277,53 +344,11 @@ namespace jueying {
                 x = y = deltaX = deltaY = null
                 startPositions = []
             })
-            //=====================================================
 
+            // 拖放代码结束
+            //======================================================================================
 
-            this.element.onclick = (e: MouseEvent) => {
-                if (dragExecuted) {
-                    dragExecuted = false
-                    return
-                }
-
-                let target = e.target as HTMLElement
-                let controlData = this.findContainerControlId(target)
-                console.assert(controlData != null)
-                console.log(`designer event:${e.type} target:${target.tagName}`)
-
-                let controlId = controlData.props.id
-                let selectedControlIds = this.selectedControlIds //[this.id]
-                if (!selectedControlIds)
-                    return
-
-                //========================================================================
-                // 如果是多个 click 事件选中
-                // if (selectedControlIds.length > 1 && event.type != 'click') {
-                //     return
-                // }
-                // else(selectedControlIds.length<=1&&event.type) {
-
-                // }
-                //========================================================================
-
-                if (e.ctrlKey) {
-                    if (selectedControlIds.indexOf(controlId) >= 0) {
-                        selectedControlIds = selectedControlIds.filter(o => o != controlId)
-                    }
-                    else {
-                        selectedControlIds.push(controlId)
-                    }
-                }
-                else {
-                    selectedControlIds = [controlId]
-                }
-
-                console.assert(this != null)
-                this.selectControl(selectedControlIds)
-
-            }
         }
-        //======================================================================================
 
 
         /**
@@ -336,7 +361,7 @@ namespace jueying {
         }
 
         sortControlChildren(controlId: string, childIds: string[]): void {
-            let c = this.findControlData(controlId)
+            let c = this.findComponentData(controlId)
             if (c == null)
                 return
 
@@ -352,7 +377,7 @@ namespace jueying {
             if (!childIds) throw Errors.argumentNull('childIds');
 
             let pageData = this.state.pageData;
-            let parentControl = this.findControlData(parentId);
+            let parentControl = this.findComponentData(parentId);
             if (parentControl == null)
                 throw new Error('Parent is not exists')
 
@@ -400,7 +425,7 @@ namespace jueying {
             if (!parentId) throw Errors.argumentNull('parentId');
             if (!childControl) throw Errors.argumentNull('childControl');
 
-            let parentControl = this.findControlData(parentId);
+            let parentControl = this.findComponentData(parentId);
             if (parentControl == null)
                 throw new Error('Parent is not exists')
 
@@ -417,13 +442,13 @@ namespace jueying {
                 this.setState({ pageData });
             }
 
-            this.selectControl(childControl.props.id);
+            this.selectComponent(childControl.props.id);
 
         }
 
         /** 设置控件位置 */
         setControlPosition(controlId: string, left: number | string, top: number | string) {
-            let controlData = this.findControlData(controlId);
+            let controlData = this.findComponentData(controlId);
             if (!controlData)
                 throw new Error(`Control ${controlId} is not exits.`);
 
@@ -438,7 +463,7 @@ namespace jueying {
         setControlsPosition(positions: { controlId: string, left: number | string, top: number | string }[]) {
             positions.forEach(o => {
                 let { controlId, left, top } = o
-                let controlData = this.findControlData(controlId);
+                let controlData = this.findComponentData(controlId);
                 if (!controlData)
                     throw new Error(`Control ${controlId} is not exits.`);
 
@@ -456,7 +481,7 @@ namespace jueying {
          * 选择指定的控件
          * @param control 指定的控件
          */
-        selectControl(controlIds: string[] | string): void {
+        selectComponent(controlIds: string[] | string): void {
 
             if (typeof controlIds == 'string')
                 controlIds = [controlIds]
@@ -475,12 +500,12 @@ namespace jueying {
             }
 
             this._selectedControlIds = controlIds
-            controlIds.map(id => this.findControlData(id)).forEach(o => {
+            controlIds.map(id => this.findComponentData(id)).forEach(o => {
                 let props = o.props as ControlProps<any>
                 props.selected = true
             })
             this.setState({ pageData: this.pageData })
-            this.controlSelected.fire(this.selectedControlIds)
+            this.controlSelected.fire(this.selectedComponentIds)
         }
 
         /** 移除控件 */
@@ -502,7 +527,7 @@ namespace jueying {
 
         /** 移动控件到另外一个控件容器 */
         moveControl(controlId: string, parentId: string, childIds: string[]) {
-            let control = this.findControlData(controlId);
+            let control = this.findComponentData(controlId);
             if (control == null)
                 throw new Error(`Cannt find control by id ${controlId}`)
 
@@ -551,7 +576,7 @@ namespace jueying {
             return true;
         }
 
-        findControlData(controlId: string): ElementData | null {
+        findComponentData(controlId: string): ElementData | null {
             let pageData = this.state.pageData;
             if (!pageData)
                 throw Errors.pageDataIsNull();
