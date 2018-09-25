@@ -217,21 +217,21 @@ namespace jueying {
             //=====================================================
             // 组件的选取
 
-            /**
-             * 将鼠标点中的组件设置为选中状态 
-             * 如果已选择的组件数量为 0 或者 1，mousedown 事件为选择当前组件  
-             * */
-            this.element.addEventListener('mousedown', (e) => {
-                if (e.ctrlKey || this.selectedComponentIds.length > 1) {
-                    return
-                }
+            // /**
+            //  * 将鼠标点中的组件设置为选中状态 
+            //  * 如果已选择的组件数量为 0 或者 1，mousedown 事件为选择当前组件  
+            //  * */
+            // this.element.addEventListener('mousedown', (e) => {
+            //     if (e.ctrlKey) {
+            //         return
+            //     }
 
-                let target = e.target as HTMLElement
-                let componentData = this.findContainerComponentId(target)
-                let componentId = componentData.props.id
-                this._selectedControlIds = [componentId]
-                this.selectComponent(this.selectedComponentIds)
-            })
+            //     let target = e.target as HTMLElement
+            //     let componentData = this.findContainerComponentId(target)
+            //     let componentId = componentData.props.id
+            //     this._selectedControlIds = [componentId]
+            //     this.selectComponent(this.selectedComponentIds)
+            // })
 
             /**
              * 将鼠标点中的组件设置为选中状态 
@@ -243,10 +243,7 @@ namespace jueying {
                 // 则取消当前的 onclick 操作
                 if (dragExecuted) {
                     dragExecuted = false
-                    return
-                }
-
-                if (!e.ctrlKey && this.selectedComponentIds.length <= 1) {
+                    console.log(`component select implement, onclick dragExecuted = false`)
                     return
                 }
 
@@ -254,19 +251,26 @@ namespace jueying {
                 let componentData = this.findContainerComponentId(target)
                 console.assert(componentData != null)
                 console.log(`designer event:${e.type} target:${target.tagName}`)
-
                 let componentId = componentData.props.id
-                let selectedComponentIds = this.selectedComponentIds
-                if (selectedComponentIds.indexOf(componentId) >= 0) {
-                    selectedComponentIds = selectedComponentIds.filter(o => o != componentId)
+
+                // 按下 CTRL 为多选，以及反选操作
+                if (e.ctrlKey) {
+
+
+                    let selectedComponentIds = this.selectedComponentIds
+                    if (selectedComponentIds.indexOf(componentId) >= 0) {
+                        selectedComponentIds = selectedComponentIds.filter(o => o != componentId)
+                    }
+                    else {
+                        selectedComponentIds.push(componentId)
+                    }
+
+                    console.assert(this != null)
+                    this.selectComponent(selectedComponentIds)
                 }
                 else {
-                    selectedComponentIds.push(componentId)
+                    this.selectComponent([componentId])
                 }
-
-                console.assert(this != null)
-                this.selectComponent(selectedComponentIds)
-
             }
 
 
@@ -287,6 +291,13 @@ namespace jueying {
                 x = ev.clientX
                 y = ev.clientY
 
+                let target = ev.target as HTMLElement
+                let componentData = this.findContainerComponentId(target)
+                if (!componentData.props.selected) {
+                    // this._selectedControlIds = [componentData.props.id]
+                    this.selectComponent([componentData.props.id])
+                }
+
                 startPositions = this.selectedComponentIds
                     .filter(o => this.draggableElementIds.indexOf(o) >= 0)
                     .map(o => document.getElementById(o))
@@ -301,8 +312,8 @@ namespace jueying {
 
                 deltaX = ev.clientX - x
                 deltaY = ev.clientY - y
-                if (deltaX < MIN_DELTA && deltaY < MIN_DELTA)
-                    return
+                // if (deltaX < MIN_DELTA && deltaY < MIN_DELTA)
+                //     return
 
             })
 
@@ -320,11 +331,15 @@ namespace jueying {
             }, 30)
 
             this.element.addEventListener('mouseup', (ev: MouseEvent) => {
-                if (isDragOperation == false || ev.shiftKey || ev.ctrlKey || ev.metaKey) {
+                if (ev.shiftKey || ev.ctrlKey || ev.metaKey) {
                     return
                 }
 
-                if (deltaX >= MIN_DELTA || deltaY >= MIN_DELTA) {
+                ev.stopPropagation()
+                ev.preventDefault()
+
+                console.log(`mouseup deltaX:${deltaX} deltaY:${deltaY}`)
+                if (Math.abs(deltaX) >= MIN_DELTA || Math.abs(deltaY) >= MIN_DELTA) {
                     let positions = startPositions.map(pos => ({
                         controlId: pos.element.id,
                         left: pos.left + deltaX,
@@ -337,6 +352,7 @@ namespace jueying {
 
                     this.setControlsPosition(positions)
                     dragExecuted = true
+                    console.log(`drag implement, mouseup dragExecuted = true`)
                 }
 
                 // init data
