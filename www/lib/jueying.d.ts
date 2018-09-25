@@ -1,5 +1,10 @@
 /// <reference types="react" />
 declare namespace jueying {
+    let constants: {
+        componentsDir: string;
+        connectorElementClassName: string;
+        componentTypeName: string;
+    };
     function guid(): string;
     let classNames: {
         controlSelected: string;
@@ -208,57 +213,6 @@ declare namespace jueying {
  *
  ********************************************************************************/
 declare namespace jueying {
-    interface ControlProps<T> extends React.Props<T> {
-        id?: string;
-        name?: string;
-        className?: string;
-        style?: React.CSSProperties;
-        tabIndex?: number;
-        componentName?: string;
-        designMode?: boolean;
-        selected?: boolean;
-    }
-    interface ControlState {
-        selected: boolean;
-    }
-    abstract class Control<P extends ControlProps<any>, S> extends React.Component<P, S> {
-        private _designer;
-        private originalComponentDidMount;
-        private originalRender;
-        static tabIndex: number;
-        static componentsDir: string;
-        static connectorElementClassName: string;
-        static controlTypeName: string;
-        protected hasCSS: boolean;
-        element: HTMLElement;
-        constructor(props: P);
-        readonly id: string;
-        readonly isDesignMode: boolean;
-        readonly componentName: any;
-        readonly designer: PageDesigner;
-        static htmlDOMProps(props: any): {
-            [key: string]: any;
-        };
-        protected loadControlCSS(): Promise<void>;
-        private myComponentDidMount;
-        private static getControlType;
-        static loadTypes(elementData: ElementData): Promise<any[]>;
-    }
-}
-/*******************************************************************************
- * Copyright (C) maishu All rights reserved.
- *
- * HTML 页面设计器
- *
- * 作者: 寒烟
- * 日期: 2018/5/30
- *
- * 个人博客：   http://www.cnblogs.com/ansiboy/
- * GITHUB:     http://github.com/ansiboy
- * QQ 讨论组：  119038574
- *
- ********************************************************************************/
-declare namespace jueying {
     interface PageDesignerProps extends React.Props<PageDesigner> {
         pageData: ElementData | null;
     }
@@ -272,6 +226,16 @@ declare namespace jueying {
         remove(func: (args: T) => any): void;
         fire(args: T): void;
         static create<T>(): Callback<T>;
+    }
+    interface ControlProps<T> extends React.Props<T> {
+        id?: string;
+        name?: string;
+        className?: string;
+        style?: React.CSSProperties;
+        tabIndex?: number;
+        componentName?: string;
+        designMode?: boolean;
+        selected?: boolean;
     }
     class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
         private _selectedControlIds;
@@ -290,13 +254,13 @@ declare namespace jueying {
         componentWillReceiveProps(props: PageDesignerProps): void;
         componentDidUpdate(): void;
         pageData: ElementData | null;
-        readonly selectedControlIds: string[];
+        readonly selectedComponentIds: string[];
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any;
         /**
         * 启用拖放操作，以便通过拖放图标添加控件
         */
         enableDroppable(element: HTMLElement): void;
-        findContainerControlId(element: HTMLElement): ElementData;
+        findContainerComponentId(element: HTMLElement): ElementData;
         mouseEvent(): void;
         /**
          * 允许拖动指定的元素的子元素，移到子元素
@@ -320,13 +284,13 @@ declare namespace jueying {
          * 选择指定的控件
          * @param control 指定的控件
          */
-        selectControl(controlIds: string[] | string): void;
+        selectComponent(controlIds: string[] | string): void;
         /** 移除控件 */
         removeControl(...controlIds: string[]): void;
         /** 移动控件到另外一个控件容器 */
         moveControl(controlId: string, parentId: string, childIds: string[]): void;
         private removeControlFrom;
-        findControlData(controlId: string): ElementData | null;
+        findComponentData(controlId: string): ElementData | null;
         private onKeyDown;
         componentDidMount(): void;
         render(): JSX.Element;

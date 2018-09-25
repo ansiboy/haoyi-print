@@ -193,7 +193,7 @@ namespace jueying.extentions {
                 console.assert(pageViewId != null, 'pageView id is null');
                 console.assert(doc.pageData.type == 'PageView');
 
-                this.pageDesigner.selectControl(pageViewId);
+                this.pageDesigner.selectComponent(pageViewId);
             }, 50);
         }
         setState<K extends keyof DesignerFrameworkState>(
@@ -239,13 +239,13 @@ namespace jueying.extentions {
             if (!e) return
             this.pageDesigner = e || this.pageDesigner
             this.pageDesigner.controlSelected.add((controlIds) => {
-                let controlDatas = controlIds.map(o => this.pageDesigner.findControlData(o))
+                let controlDatas = controlIds.map(o => this.pageDesigner.findComponentData(o))
                 this.editorPanel.setControls(controlDatas, this.pageDesigner)
             })
             this.pageDesigner.componentUpdated.add((sender) => {
                 console.assert(this.toolbarElement)
                 this.renderToolbar(this.toolbarElement)
-                let controlDatas = sender.selectedControlIds.map(o => this.pageDesigner.findControlData(o))
+                let controlDatas = sender.selectedComponentIds.map(o => this.pageDesigner.findComponentData(o))
                 this.editorPanel.setControls(controlDatas, this.pageDesigner)
             })
         }

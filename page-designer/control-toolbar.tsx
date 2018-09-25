@@ -20,7 +20,7 @@ namespace jueying {
             console.assert(element != null)
             element.draggable = true
             element.addEventListener('dragstart', function (ev) {
-                ev.dataTransfer.setData(Control.controlTypeName, controlTypeName)
+                ev.dataTransfer.setData(constants.componentTypeName, controlTypeName)
             })
         }
 
@@ -38,12 +38,12 @@ namespace jueying {
                             <ul ref={(e: HTMLElement) => this.toolbarElement = this.toolbarElement || e}>
                                 {componets.map((c, i) => {
                                     let props = { key: i };
-                                    props[Control.controlTypeName] = c.name;
+                                    props[constants.componentTypeName] = c.name;
 
                                     return <li {...props}
                                         ref={e => {
                                             if (!e) return
-                                            this.componentDraggable(e, props[Control.controlTypeName])
+                                            this.componentDraggable(e, props[constants.componentTypeName])
                                         }}>
                                         <div className="btn-link">
                                             <i className={c.icon} style={{ fontSize: 44, color: 'black' }} />

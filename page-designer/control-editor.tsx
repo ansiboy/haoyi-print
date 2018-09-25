@@ -110,7 +110,9 @@ namespace jueying {
         render() {
             let editors = this.state.editors
             if (editors.length == 0) {
-                return this.Element(<div>EMPTY</div>)
+                return this.Element(
+                    <div className="text-center">暂无可用的属性</div>
+                )
             }
 
             return this.Element(<React.Fragment>

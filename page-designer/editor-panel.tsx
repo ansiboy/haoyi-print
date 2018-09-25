@@ -25,18 +25,13 @@ namespace jueying {
         render() {
             let { emptyText } = this.props;
             emptyText = emptyText || '';
-            return <DesignerContext.Consumer>
-                {context => {
-                    return <div {...Control.htmlDOMProps(this.props)} className="editor-panel panel panel-primary" ref={(e: HTMLElement) => this.element = e || this.element}>
-                        <div className="panel-heading">属性</div>
-                        <div className="panel-body">
-                            {/* {editor ? editor : <div className="empty">{emptyText}</div>} */}
-                            <ControlEditor ref={e => this.editor = e || this.editor} />
-                        </div>
+            return <div className="editor-panel panel panel-primary" ref={(e: HTMLElement) => this.element = e || this.element}>
+                <div className="panel-heading">属性</div>
+                <div className="panel-body">
+                    <ControlEditor ref={e => this.editor = e || this.editor} />
+                </div>
 
-                    </div>
-                }}
-            </DesignerContext.Consumer>
+            </div>
         }
     }
 }

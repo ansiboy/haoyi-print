@@ -1,4 +1,11 @@
 namespace jueying {
+
+    export let constants = {
+        componentsDir: 'components',
+        connectorElementClassName: 'component-container',
+        componentTypeName: 'data-component-name'
+    }
+    
     export function guid() {
         function s4() {
             return Math.floor((1 + Math.random()) * 0x10000)
