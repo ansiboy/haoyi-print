@@ -16,6 +16,7 @@ export function createMainWindow() {
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools()
+    BrowserWindow.addDevToolsExtension("C:/Users/maishu/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.4.0_0")
     // Emitted when the window is closed.
     mainWindow.on('closed', function () {
         // Dereference the window object, usually you would store windows

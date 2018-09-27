@@ -11,17 +11,19 @@ namespace jueying {
          * system 为系统页面
          */
         type?: 'snapshoot' | 'productTemplate' | 'page' | 'system',
-        data: ElementData
+        data: ComponentData
     }
 
-    export interface ElementData {
+    export interface ComponentData {
         type: string;
-        props:  ControlProps<any>;
-        children?: ElementData[],
+        props?: ComponentProps<any>;
+        children?: ComponentData[],
     }
 
     export interface ComponentDefine {
-        name: string, displayName: string, icon: string, introduce: string,
+        // name: string,
+        componentData: ComponentData,
+        displayName: string, icon: string, introduce: string,
         target?: 'view' | 'footer' | 'header',
         visible?: boolean,
         controlPath: string,

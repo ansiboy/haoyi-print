@@ -4,31 +4,50 @@ declare namespace jueying {
         componentsDir: string;
         connectorElementClassName: string;
         componentTypeName: string;
+        componentData: string;
+    };
+    let propsGroups: {
+        property: string;
+        style: string;
+    };
+    let strings: {
+        property: string;
+        style: string;
+        field: string;
+        fontSize: string;
+        height: string;
+        left: string;
+        name: string;
+        top: string;
+        text: string;
+        width: string;
     };
     function guid(): string;
     let classNames: {
-        controlSelected: string;
+        componentSelected: string;
         emptyTemplates: string;
         loadingTemplates: string;
         templateSelected: string;
         templateDialog: string;
+        component: string;
     };
 }
 declare namespace jueying {
-    interface EditorProps extends React.Props<ControlEditor> {
+    interface EditorProps extends React.Props<ComponentEditor> {
     }
     interface EditorState {
         editors: {
-            text: string;
+            group: string;
+            prop: string;
             editor: React.ReactElement<any>;
         }[];
     }
-    class ControlEditor extends React.Component<EditorProps, EditorState> {
+    class ComponentEditor extends React.Component<EditorProps, EditorState> {
         private _element;
         constructor(props: EditorProps);
-        setControls(controls: ElementData[], designer: PageDesigner): void;
+        setControls(controls: ComponentData[], designer: PageDesigner): void;
         private flatProps;
-        render(): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+        render(): JSX.Element;
         readonly element: HTMLElement;
         Element(...children: React.ReactElement<any>[]): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
     }
@@ -66,44 +85,43 @@ declare namespace jueying {
     function component<T extends React.Component>(args?: {
         container?: boolean;
         movable?: boolean;
-    }): (constructor: new (...args: any[]) => T) => {
+    }): (constructor: new (...args: any[]) => T) => (new (...args: any[]) => T) | {
         new (props: any, context: any): {
             wrapperElement: HTMLElement;
             designer: PageDesigner;
             id: string;
             readonly typename: string;
-            componentDidMount(): void;
-            designtimeComponentDidMount(): void;
             render(): JSX.Element;
             renderDesigntime(): JSX.Element;
             setState<K extends string | number | symbol>(state: any, callback?: () => void): void;
             forceUpdate(callBack?: () => void): void;
             readonly props: Readonly<{
                 children?: React.ReactNode;
-            }> & Readonly<ControlProps<any>>;
+            }> & Readonly<ComponentProps<any>>;
             state: Readonly<any>;
             context: any;
             refs: {
                 [key: string]: React.ReactInstance;
             };
-            shouldComponentUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): boolean;
+            componentDidMount?(): void;
+            shouldComponentUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): boolean;
             componentWillUnmount?(): void;
             componentDidCatch?(error: Error, errorInfo: React.ErrorInfo): void;
-            getSnapshotBeforeUpdate?(prevProps: Readonly<ControlProps<any>>, prevState: Readonly<any>): any;
-            componentDidUpdate?(prevProps: Readonly<ControlProps<any>>, prevState: Readonly<any>, snapshot?: any): void;
+            getSnapshotBeforeUpdate?(prevProps: Readonly<ComponentProps<any>>, prevState: Readonly<any>): any;
+            componentDidUpdate?(prevProps: Readonly<ComponentProps<any>>, prevState: Readonly<any>, snapshot?: any): void;
             componentWillMount?(): void;
             UNSAFE_componentWillMount?(): void;
-            componentWillReceiveProps?(nextProps: Readonly<ControlProps<any>>, nextContext: any): void;
-            UNSAFE_componentWillReceiveProps?(nextProps: Readonly<ControlProps<any>>, nextContext: any): void;
-            componentWillUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): void;
-            UNSAFE_componentWillUpdate?(nextProps: Readonly<ControlProps<any>>, nextState: Readonly<any>, nextContext: any): void;
+            componentWillReceiveProps?(nextProps: Readonly<ComponentProps<any>>, nextContext: any): void;
+            UNSAFE_componentWillReceiveProps?(nextProps: Readonly<ComponentProps<any>>, nextContext: any): void;
+            componentWillUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): void;
+            UNSAFE_componentWillUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): void;
         };
-        propTypes?: import("prop-types").ValidationMap<ControlProps<any>>;
+        propTypes?: import("prop-types").ValidationMap<ComponentProps<any>>;
         contextTypes?: import("prop-types").ValidationMap<any>;
         childContextTypes?: import("prop-types").ValidationMap<any>;
-        defaultProps?: Partial<ControlProps<any>>;
+        defaultProps?: Partial<ComponentProps<any>>;
         displayName?: string;
-        getDerivedStateFromProps?: React.GetDerivedStateFromProps<ControlProps<any>, any>;
+        getDerivedStateFromProps?: React.GetDerivedStateFromProps<ComponentProps<any>, any>;
     };
     let core: {
         originalCreateElement: typeof React.createElement;
@@ -119,9 +137,18 @@ declare namespace jueying {
      * 将持久化的元素数据转换为 ReactElement
      * @param args 元素数据
      */
-    function toReactElement(args: ElementData, async?: boolean): React.ReactElement<any> | null;
+    function toReactElement(args: ComponentData, designer?: PageDesigner): React.ReactElement<any> | null;
     function register(controlName: string, controlType: React.ComponentClass<any>): void;
     function loadAllTypes(): Promise<any[]>;
+    interface HTMLTagProps extends React.Props<HTMLTag> {
+        tagName?: string;
+        style?: React.CSSProperties;
+    }
+    class HTMLTag extends React.Component<HTMLTagProps, {}> {
+        static defaultProps: HTMLTagProps;
+        constructor(props: any);
+        render(): React.DOMElement<any, Element>;
+    }
 }
 declare namespace jueying {
     class ControlEditorFactory {
@@ -131,18 +158,20 @@ declare namespace jueying {
     }
     interface PropEditorInfo {
         propNames: string[];
-        text: string;
         editorType: PropEditorConstructor;
+        group: string;
     }
-    class ControlPropEditors {
+    class ComponentPropEditor {
         private static controlPropEditors;
         static getControlPropEditors(controlClassName: string): PropEditorInfo[];
         static getControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClassName: string, propName: K, propName1: K1): PropEditorInfo;
         static getControlPropEditor<T, K extends keyof T>(controlClassName: string, propName: string): PropEditorInfo;
         /** 通过属性数组获取属性的编辑器 */
         static getControlPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
-        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
-        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K): void;
+        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
+        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K): void;
+        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
+        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K): void;
         static getFlatPropValue(obj: Object, flatPropName: string): void;
     }
 }
@@ -158,7 +187,7 @@ declare namespace jueying {
         private element;
         private editor;
         constructor(props: any);
-        setControls(controlDatas: ElementData[], designer: PageDesigner): any;
+        setControls(controlDatas: ComponentData[], designer: PageDesigner): any;
         render(): JSX.Element;
     }
 }
@@ -182,15 +211,15 @@ declare namespace jueying {
          * system 为系统页面
          */
         type?: 'snapshoot' | 'productTemplate' | 'page' | 'system';
-        data: ElementData;
+        data: ComponentData;
     }
-    interface ElementData {
+    interface ComponentData {
         type: string;
-        props: ControlProps<any>;
-        children?: ElementData[];
+        props?: ComponentProps<any>;
+        children?: ComponentData[];
     }
     interface ComponentDefine {
-        name: string;
+        componentData: ComponentData;
         displayName: string;
         icon: string;
         introduce: string;
@@ -214,10 +243,10 @@ declare namespace jueying {
  ********************************************************************************/
 declare namespace jueying {
     interface PageDesignerProps extends React.Props<PageDesigner> {
-        pageData: ElementData | null;
+        pageData: ComponentData | null;
     }
     interface PageDesignerState {
-        pageData: ElementData | null;
+        pageData: ComponentData | null;
     }
     class Callback<T> {
         private funcs;
@@ -227,7 +256,7 @@ declare namespace jueying {
         fire(args: T): void;
         static create<T>(): Callback<T>;
     }
-    interface ControlProps<T> extends React.Props<T> {
+    interface ComponentProps<T> extends React.Props<T> {
         id?: string;
         name?: string;
         className?: string;
@@ -250,29 +279,23 @@ declare namespace jueying {
         private draggableElementIds;
         names: string[];
         constructor(props: PageDesignerProps);
-        initSelectedIds(pageData: ElementData): void;
+        initSelectedIds(pageData: ComponentData): void;
         componentWillReceiveProps(props: PageDesignerProps): void;
         componentDidUpdate(): void;
-        pageData: ElementData | null;
+        readonly pageData: ComponentData;
         readonly selectedComponentIds: string[];
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any;
         /**
         * 启用拖放操作，以便通过拖放图标添加控件
         */
         enableDroppable(element: HTMLElement): void;
-        findContainerComponentId(element: HTMLElement): ElementData;
-        mouseEvent(): void;
-        /**
-         * 允许拖动指定的元素的子元素，移到子元素
-         * @param element 指定元素
-         * @param designer 指定元素所在设计器
-         */
-        draggableControl(controlId: string): void;
-        sortControlChildren(controlId: string, childIds: string[]): void;
-        sortChildren(parentId: string, childIds: string[]): void;
+        private findContainerComponentId;
+        private mouseEvent;
+        private sortControlChildren;
+        private sortChildren;
         private namedControl;
         /** 添加控件 */
-        appendControl(parentId: string, childControl: ElementData, childIds?: string[]): void;
+        appendControl(parentId: string, childControl: ComponentData, childIds?: string[]): void;
         /** 设置控件位置 */
         setControlPosition(controlId: string, left: number | string, top: number | string): void;
         setControlsPosition(positions: {
@@ -290,8 +313,64 @@ declare namespace jueying {
         /** 移动控件到另外一个控件容器 */
         moveControl(controlId: string, parentId: string, childIds: string[]): void;
         private removeControlFrom;
-        findComponentData(controlId: string): ElementData | null;
+        findComponentData(controlId: string): ComponentData | null;
         private onKeyDown;
+        /**
+         * 对设计时元素进行处理
+         * 1. 可以根据设定是否移到该元素
+         * 2. 可以根据设定是否允许添加组件到该元素
+         * @param element 设计时元素
+         * @param args
+         */
+        designtimeBehavior(element: HTMLElement, args: {
+            container?: boolean;
+            movable?: boolean;
+        }): void;
+        static createDesigntimeClass<T>(constructor: {
+            new (...args: any[]): T;
+        }, args: {
+            container?: boolean;
+            movable?: boolean;
+        }): {
+            new (props: any, context: any): {
+                wrapperElement: HTMLElement;
+                designer: PageDesigner;
+                id: string;
+                readonly typename: string;
+                render(): JSX.Element;
+                renderDesigntime(): JSX.Element;
+                setState<K extends string | number | symbol>(state: any, callback?: () => void): void;
+                forceUpdate(callBack?: () => void): void;
+                readonly props: Readonly<{
+                    children?: React.ReactNode;
+                }> & Readonly<ComponentProps<any>>;
+                state: Readonly<any>;
+                context: any;
+                refs: {
+                    [key: string]: React.ReactInstance;
+                };
+                componentDidMount?(): void;
+                shouldComponentUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): boolean;
+                componentWillUnmount?(): void;
+                componentDidCatch?(error: Error, errorInfo: React.ErrorInfo): void;
+                getSnapshotBeforeUpdate?(prevProps: Readonly<ComponentProps<any>>, prevState: Readonly<any>): any;
+                componentDidUpdate?(prevProps: Readonly<ComponentProps<any>>, prevState: Readonly<any>, snapshot?: any): void;
+                componentWillMount?(): void;
+                UNSAFE_componentWillMount?(): void;
+                componentWillReceiveProps?(nextProps: Readonly<ComponentProps<any>>, nextContext: any): void;
+                UNSAFE_componentWillReceiveProps?(nextProps: Readonly<ComponentProps<any>>, nextContext: any): void;
+                componentWillUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): void;
+                UNSAFE_componentWillUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): void;
+            };
+            propTypes?: import("prop-types").ValidationMap<ComponentProps<any>>;
+            contextTypes?: import("prop-types").ValidationMap<any>;
+            childContextTypes?: import("prop-types").ValidationMap<any>;
+            defaultProps?: Partial<ComponentProps<any>>;
+            displayName?: string;
+            getDerivedStateFromProps?: React.GetDerivedStateFromProps<ComponentProps<any>, any>;
+        };
+        convertHTMLTag(componentData: ComponentData): ComponentData;
+        private draggableElement;
         componentDidMount(): void;
         render(): JSX.Element;
     }
@@ -371,7 +450,7 @@ declare namespace jueying.extentions {
     function isEquals(obj1: object, obj2: object): boolean;
 }
 declare namespace jueying.extentions {
-    type ElementData = jueying.ElementData;
+    type ElementData = jueying.ComponentData;
     interface DocumentData {
         pageData: ElementData;
         name: string;
@@ -380,7 +459,7 @@ declare namespace jueying.extentions {
 }
 declare namespace jueying.extentions {
     interface DesignerFrameworkProps {
-        components: jueying.ComponentDefine[];
+        components: ComponentDefine[];
         title?: string;
         templates?: DocumentData[];
     }
@@ -392,7 +471,7 @@ declare namespace jueying.extentions {
         activeDocument?: PageDocument;
     }
     class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState> {
-        protected pageDesigner: jueying.PageDesigner;
+        protected pageDesigner: PageDesigner;
         private names;
         private _storage;
         private ruleElement;
@@ -408,7 +487,7 @@ declare namespace jueying.extentions {
         undo(): void;
         redo(): void;
         save(): Promise<void>;
-        createDocuemnt(fileName: string, pageData: ElementData, isNew: boolean): Promise<void>;
+        createDocuemnt(fileName: string, pageData: ComponentData, isNew: boolean): Promise<void>;
         fetchTemplates(): Promise<{
             items: DocumentData[];
             count: number;
@@ -427,22 +506,22 @@ declare namespace jueying.extentions {
 declare namespace jueying.extentions {
     interface DocumentStorage {
         list(pageIndex: number, pageSize: number): Promise<{
-            items: [string, ElementData][];
+            items: [string, ComponentData][];
             count: number;
         }>;
-        load(name: string): Promise<ElementData>;
-        save(name: string, pageData: ElementData): Promise<any>;
+        load(name: string): Promise<ComponentData>;
+        save(name: string, pageData: ComponentData): Promise<any>;
         remove(name: string): Promise<any>;
     }
     class LocalDocumentStorage implements DocumentStorage {
         private static prefix;
         constructor();
         list(pageIndex: any, pageSize: any): Promise<{
-            items: [string, ElementData][];
+            items: [string, ComponentData][];
             count: number;
         }>;
         load(name: string): Promise<any>;
-        save(name: string, pageData: ElementData): Promise<void>;
+        save(name: string, pageData: ComponentData): Promise<void>;
         remove(name: string): Promise<any>;
     }
 }
@@ -453,13 +532,13 @@ declare namespace jueying.extentions {
         private _pageData;
         private originalPageData;
         private fileName;
-        constructor(fileName: any, storage: DocumentStorage, pageData: ElementData, isNew?: boolean);
+        constructor(fileName: any, storage: DocumentStorage, pageData: ComponentData, isNew?: boolean);
         save(): Promise<any>;
         readonly isChanged: boolean;
         readonly name: string;
-        readonly pageData: ElementData;
+        readonly pageData: ComponentData;
         static load(storage: DocumentStorage, fileName: string): Promise<PageDocument>;
-        static new(storage: DocumentStorage, fileName: string, init: ElementData): PageDocument;
+        static new(storage: DocumentStorage, fileName: string, init: ComponentData): PageDocument;
     }
 }
 declare namespace jueying.extentions {

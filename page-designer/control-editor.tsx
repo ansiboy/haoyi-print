@@ -1,14 +1,27 @@
+/*******************************************************************************
+ * Copyright (C) maishu All rights reserved.
+ *
+ * HTML 页面设计器 
+ * 
+ * 作者: 寒烟
+ * 日期: 2018/5/30
+ *
+ * 个人博客：   http://www.cnblogs.com/ansiboy/
+ * GITHUB:     http://github.com/ansiboy
+ * QQ 讨论组：  119038574
+ * 
+ ********************************************************************************/
 
 namespace jueying {
 
-    export interface EditorProps extends React.Props<ControlEditor> {
+    export interface EditorProps extends React.Props<ComponentEditor> {
     }
 
     export interface EditorState {
-        editors: { text: string, editor: React.ReactElement<any> }[]
+        editors: { group: string, prop: string, editor: React.ReactElement<any> }[]
     }
 
-    export class ControlEditor extends React.Component<EditorProps, EditorState>{
+    export class ComponentEditor extends React.Component<EditorProps, EditorState>{
 
         private _element: HTMLElement | null = null;
 
@@ -18,7 +31,7 @@ namespace jueying {
             this.state = { editors: [] }
         }
 
-        setControls(controls: ElementData[], designer: PageDesigner) {
+        setControls(controls: ComponentData[], designer: PageDesigner) {
             if (controls.length == 0) {
                 this.setState({ editors: [] })
                 return
@@ -30,7 +43,7 @@ namespace jueying {
             for (let i = 0; i < controls.length; i++) {
                 let control = controls[i]
                 let className = control.type
-                let propEditorInfos = ControlPropEditors.getControlPropEditors(className)
+                let propEditorInfos = ComponentPropEditor.getControlPropEditors(className)
                 if (i == 0) {
                     commonPropEditorInfos = propEditorInfos || []
                 }
@@ -40,7 +53,7 @@ namespace jueying {
                         propEditorInfos.forEach(propInfo2 => {
                             let propName1 = propInfo1.propNames.join('.')
                             let propName2 = propInfo2.propNames.join('.')
-                            if (propInfo1.text == propInfo2.text && propInfo1.editorType == propInfo2.editorType && propName1 == propName2) {
+                            if (propInfo1.editorType == propInfo2.editorType && propName1 == propName2) {
                                 items.push(propInfo1)
                             }
                         })
@@ -69,10 +82,10 @@ namespace jueying {
                 }
             }
 
-            let editors: { text: string, editor: React.ReactElement<any> }[] = []
+            let editors: { group: string, prop: string, editor: React.ReactElement<any> }[] = []
             for (let i = 0; i < commonPropEditorInfos.length; i++) {
                 let propEditorInfo = commonPropEditorInfos[i]
-                let text = propEditorInfo.text
+                let propName = propEditorInfo.propNames[propEditorInfo.propNames.length - 1]
                 let editorType = propEditorInfo.editorType
                 let propNames = propEditorInfo.propNames
                 let editor = React.createElement(editorType, {
@@ -85,7 +98,7 @@ namespace jueying {
                         }
                     }
                 })
-                editors.push({ text, editor })
+                editors.push({ prop: propName, editor, group: propEditorInfo.group })
             }
 
             this.setState({ editors })
@@ -110,21 +123,50 @@ namespace jueying {
         render() {
             let editors = this.state.editors
             if (editors.length == 0) {
-                return this.Element(
-                    <div className="text-center">暂无可用的属性</div>
-                )
+                return <div className="text-center">暂无可用的属性</div>
             }
 
-            return this.Element(<React.Fragment>
-                {editors.map((o, i) =>
-                    <div key={i} className="form-group">
-                        <label>{o.text}</label>
-                        <div className="control">
-                            {o.editor}
+            let groupEditorsArray: { group: string, editors: { prop: string, editor: React.ReactElement<any> }[] }[] = [] //{ [group: string]: { text: string, editor: React.ReactElement<any> }[] } = {}
+            for (let i = 0; i < editors.length; i++) {
+                let group = editors[i].group || ''
+                let groupEditors = groupEditorsArray.filter(o => o.group == group)[0] //groupEditors[editors[i].group] = groupEditors[editors[i].group] || []
+                if (groupEditors == null) {
+                    groupEditors = { group: editors[i].group, editors: [] }
+                    groupEditorsArray.push(groupEditors)
+                }
+
+                groupEditors.editors.push({ prop: editors[i].prop, editor: editors[i].editor })
+                // let editors = groupEditors
+            }
+
+            // {editors.map((o, i) => {
+            //     let text = strings[o.prop] || o.prop
+            //     return <div key={i} className="form-group">
+            //         <label>{text}</label>
+            //         <div className="control">
+            //             {o.editor}
+            //         </div>
+            //     </div>
+            // })}
+
+            return <React.Fragment>
+                {groupEditorsArray.map((g) =>
+                    <div key={g.group} className="panel panel-default">
+                        <div className="panel-heading">{strings[g.group] || g.group}</div>
+                        <div className="panel-body">
+                            {g.editors.map((o, i) =>
+                                <div key={i} className="form-group">
+                                    <label>{strings[o.prop] || o.prop}</label>
+                                    <div className="control">
+                                        {o.editor}
+                                    </div>
+                                </div>
+                            )}
                         </div>
+
                     </div>
                 )}
-            </React.Fragment>)
+            </React.Fragment>
         }
 
         get element() {

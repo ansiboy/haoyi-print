@@ -15,11 +15,11 @@
 namespace jueying {
 
     export interface PageDesignerProps extends React.Props<PageDesigner> {
-        pageData: ElementData | null,
+        pageData: ComponentData | null,
     }
 
     export interface PageDesignerState {
-        pageData: ElementData | null
+        pageData: ComponentData | null
     }
 
     export class Callback<T> {
@@ -43,7 +43,7 @@ namespace jueying {
         }
     }
 
-    export interface ControlProps<T> extends React.Props<T> {
+    export interface ComponentProps<T> extends React.Props<T> {
         id?: string,
         name?: string,
         className?: string,
@@ -72,24 +72,24 @@ namespace jueying {
         constructor(props: PageDesignerProps) {
             super(props);
 
-            this.state = { pageData: props.pageData };
             this.initSelectedIds(props.pageData)
+            let pageData = this.convertHTMLTag(props.pageData)
+            this.state = { pageData };
             this.designtimeComponentDidMount.add((args) => {
                 console.log(`this:designer event:controlComponentDidMount`)
-                // PageDesigner.draggableElement(args.element, this)
             })
         }
 
-        initSelectedIds(pageData: ElementData) {
+        initSelectedIds(pageData: ComponentData) {
             if (pageData == null) {
                 this._selectedControlIds = []
                 return
             }
-            let stack = new Array<ElementData>()
+            let stack = new Array<ComponentData>()
             stack.push(pageData)
             while (stack.length > 0) {
                 let item = stack.pop()
-                let props = item.props as ControlProps<any>
+                let props = item.props as ComponentProps<any>
                 if (props.selected) {
                     console.assert(props.id)
                     this._selectedControlIds.push(props.id)
@@ -101,8 +101,9 @@ namespace jueying {
         }
 
         componentWillReceiveProps(props: PageDesignerProps) {
-            this.setState({ pageData: props.pageData });
             this.initSelectedIds(props.pageData)
+            let pageData = this.convertHTMLTag(props.pageData)
+            this.setState({ pageData });
         }
 
         componentDidUpdate() {
@@ -112,11 +113,6 @@ namespace jueying {
 
         get pageData() {
             return this.state.pageData;
-        }
-        set pageData(value: ElementData | null) {
-            if (!value) throw Errors.argumentNull('value')
-
-            this.setState({ pageData: value });
         }
 
         get selectedComponentIds() {
@@ -153,7 +149,7 @@ namespace jueying {
                 event.preventDefault()
                 event.stopPropagation()
 
-                let componentName = event.dataTransfer.getData(constants.componentTypeName)
+                let componentName = event.dataTransfer.getData(constants.componentData)
                 if (componentName)
                     event.dataTransfer.dropEffect = "copy"
                 else
@@ -165,37 +161,21 @@ namespace jueying {
                 event.preventDefault()
                 event.stopPropagation()
 
-                let componentName = event.dataTransfer.getData(constants.componentTypeName)
-                if (!componentName) {
+                let componentData = event.dataTransfer.getData(constants.componentData)
+                if (!componentData) {
                     return
                 }
 
-
-                let defaultStyle = {}
-                let componentType = core.componentType(componentName)
-                if (componentType != null && typeof componentType != 'string' && componentType.defaultProps != null) {
-                    defaultStyle = componentType.defaultProps.style || {}
+                let ctrl = JSON.parse(componentData) as ComponentData
+                if (ctrl.props.style != null && ctrl.props.style.position == 'absolute') {
+                    ctrl.props.style.left = event.layerX
+                    ctrl.props.style.top = event.layerY
                 }
-
-                let left = event.layerX;
-                let top = event.layerY;
-                let ctrl: ElementData = {
-                    type: componentName,
-                    props: {
-                        id: guid(),
-                        style: Object.assign(defaultStyle, {
-                            position: 'absolute', //TODO: 不要写死
-                            left,
-                            top,
-                        } as React.CSSProperties)
-                    }
-                };
-
                 designer.appendControl(element.id, ctrl);
             }
         }
 
-        findContainerComponentId(element: HTMLElement): ElementData {
+        private findContainerComponentId(element: HTMLElement): ComponentData {
             if (element.id) {
                 let controlData = this.findComponentData(element.id)
                 if (controlData != null)
@@ -212,26 +192,10 @@ namespace jueying {
 
         //======================================================================================
         // 事件
-        mouseEvent() {
+        private mouseEvent() {
 
             //=====================================================
             // 组件的选取
-
-            // /**
-            //  * 将鼠标点中的组件设置为选中状态 
-            //  * 如果已选择的组件数量为 0 或者 1，mousedown 事件为选择当前组件  
-            //  * */
-            // this.element.addEventListener('mousedown', (e) => {
-            //     if (e.ctrlKey) {
-            //         return
-            //     }
-
-            //     let target = e.target as HTMLElement
-            //     let componentData = this.findContainerComponentId(target)
-            //     let componentId = componentData.props.id
-            //     this._selectedControlIds = [componentId]
-            //     this.selectComponent(this.selectedComponentIds)
-            // })
 
             /**
              * 将鼠标点中的组件设置为选中状态 
@@ -294,7 +258,6 @@ namespace jueying {
                 let target = ev.target as HTMLElement
                 let componentData = this.findContainerComponentId(target)
                 if (!componentData.props.selected) {
-                    // this._selectedControlIds = [componentData.props.id]
                     this.selectComponent([componentData.props.id])
                 }
 
@@ -312,8 +275,6 @@ namespace jueying {
 
                 deltaX = ev.clientX - x
                 deltaY = ev.clientY - y
-                // if (deltaX < MIN_DELTA && deltaY < MIN_DELTA)
-                //     return
 
             })
 
@@ -366,17 +327,7 @@ namespace jueying {
 
         }
 
-
-        /**
-         * 允许拖动指定的元素的子元素，移到子元素
-         * @param element 指定元素
-         * @param designer 指定元素所在设计器
-         */
-        draggableControl(controlId: string) {//, container: HTMLElement
-            this.draggableElementIds.push(controlId)
-        }
-
-        sortControlChildren(controlId: string, childIds: string[]): void {
+        private sortControlChildren(controlId: string, childIds: string[]): void {
             let c = this.findComponentData(controlId)
             if (c == null)
                 return
@@ -388,7 +339,7 @@ namespace jueying {
             this.setState({ pageData });
         }
 
-        sortChildren(parentId: string, childIds: string[]) {
+        private sortChildren(parentId: string, childIds: string[]) {
             if (!parentId) throw Errors.argumentNull('parentId');
             if (!childIds) throw Errors.argumentNull('childIds');
 
@@ -411,8 +362,8 @@ namespace jueying {
             this.setState({ pageData });
         }
 
-        private namedControl(control: jueying.ElementData) {
-            let props = control.props;
+        private namedControl(control: ComponentData) {
+            let props = control.props = control.props || {};
             if (!props.name) {
                 let num = 0;
                 let name: string;
@@ -437,10 +388,12 @@ namespace jueying {
         }
 
         /** 添加控件 */
-        appendControl(parentId: string, childControl: ElementData, childIds?: string[]) {
+        appendControl(parentId: string, childControl: ComponentData, childIds?: string[]) {
             if (!parentId) throw Errors.argumentNull('parentId');
             if (!childControl) throw Errors.argumentNull('childControl');
 
+            // childControl = this.convertHTMLTag(childControl)
+            this.namedControl(childControl)
             let parentControl = this.findComponentData(parentId);
             if (parentControl == null)
                 throw new Error('Parent is not exists')
@@ -448,9 +401,6 @@ namespace jueying {
             console.assert(parentControl != null);
             parentControl.children = parentControl.children || [];
             parentControl.children.push(childControl);
-
-            this.namedControl(childControl)
-
             if (childIds)
                 this.sortChildren(parentId, childIds);
             else {
@@ -503,7 +453,7 @@ namespace jueying {
                 controlIds = [controlIds]
 
 
-            var stack: ElementData[] = []
+            var stack: ComponentData[] = []
             stack.push(this.pageData)
             while (stack.length > 0) {
                 let item = stack.pop()
@@ -517,7 +467,7 @@ namespace jueying {
 
             this._selectedControlIds = controlIds
             controlIds.map(id => this.findComponentData(id)).forEach(o => {
-                let props = o.props as ControlProps<any>
+                let props = o.props as ComponentProps<any>
                 props.selected = true
             })
             this.setState({ pageData: this.pageData })
@@ -555,7 +505,7 @@ namespace jueying {
             this.appendControl(parentId, control, childIds);
         }
 
-        private removeControlFrom(controlId: string, collection: ElementData[]): boolean {
+        private removeControlFrom(controlId: string, collection: ComponentData[]): boolean {
             debugger
             let controlIndex: number | null = null;
             for (let i = 0; i < collection.length; i++) {
@@ -592,12 +542,12 @@ namespace jueying {
             return true;
         }
 
-        findComponentData(controlId: string): ElementData | null {
+        findComponentData(controlId: string): ComponentData | null {
             let pageData = this.state.pageData;
             if (!pageData)
                 throw Errors.pageDataIsNull();
 
-            let stack = new Array<ElementData>();
+            let stack = new Array<ComponentData>();
             stack.push(pageData);
             while (stack.length > 0) {
                 let item = stack.pop();
@@ -607,7 +557,8 @@ namespace jueying {
                 if (item.props.id == controlId)
                     return item;
 
-                stack.push(...(item.children || []));
+                let children = (item.children || []).filter(o => typeof o == 'object') as ComponentData[]
+                stack.push(...children);
             }
 
             return null;
@@ -623,16 +574,236 @@ namespace jueying {
             }
         }
 
+        /**
+         * 对设计时元素进行处理
+         * 1. 可以根据设定是否移到该元素
+         * 2. 可以根据设定是否允许添加组件到该元素
+         * @param element 设计时元素
+         * @param args 
+         */
+        designtimeBehavior(element: HTMLElement, args: { container?: boolean, movable?: boolean }) {
+            if (args.container) {
+                this.enableDroppable(element)
+            }
+            if (args.movable) {
+                // let element = document.getElementById(element.id)
+                console.assert(element != null)
+                // this.draggableElementIds.push(element.id)
+
+                this.draggableElement(element)
+            }
+        }
+
+        static createDesigntimeClass<T>(constructor: { new(...args): T }, args: { container?: boolean, movable?: boolean }) {
+            let c = constructor as any as React.ComponentClass<ComponentProps<any>, any>
+            let result = class ComponetWraper extends c implements DesigntimeComponent {
+                wrapperElement: HTMLElement
+                designer: PageDesigner
+                id: string
+                constructor(props, context) {
+                    super(props, context)
+
+                    this.id = this.props.id || guid()
+                    // Control.addInstance(this.id, this)
+                }
+
+                get typename(): string {
+                    return constructor.name
+                }
+
+                render() {
+                    return <DesignerContext.Consumer>
+                        {c => {
+                            this.designer = c.designer
+                            if (this.designer) {
+                                let component = this.renderDesigntime()
+                                this.designer.designtimeComponentDidMount.fire({ component, element: this.wrapperElement })
+                                return component
+                            }
+
+                            return super.render()
+                        }}
+                    </DesignerContext.Consumer>
+                }
+
+                renderDesigntime() {
+                    console.assert(this.id != null)
+                    let style = (this.props.style || {}) as React.CSSProperties
+                    let { left, top, position } = style
+
+                    return <div id={this.id}
+                        ref={e => {
+                            if (!e) return
+                            this.wrapperElement = e
+                            if ($(e).data('designtimeBehavior')) {
+                                return
+                            }
+
+                            $(e).data('designtimeBehavior', 'designtimeBehavior')
+                            this.designer.designtimeBehavior(e, args)
+                        }}
+                        className={this.props.selected ? `${classNames.componentSelected} ${classNames.component}` : classNames.component}
+                        style={{ left, top, position }} >
+                        {(() => {
+
+                            let createElement = React.createElement
+                            React.createElement = designTimeCreateElement as any
+
+                            let s = super.render()
+                            React.createElement = createElement
+
+                            return s
+                        })()}
+                    </div>
+                }
+
+
+            }
+
+            core.register(constructor.name, result)
+
+            return result
+        }
+
+        convertHTMLTag(componentData: ComponentData) {
+
+            let typename = componentData.type
+            let isHTMLTag = core.customControlTypes[typename] == null && typename.toLowerCase() == typename
+            componentData.children = (componentData.children || []).map(o => this.convertHTMLTag(o))
+
+            if (isHTMLTag) {
+                // let tmp = componentData
+                // componentData = {
+                //     type: HTMLTag.name,
+                //     props: {},
+                //     children: [tmp]
+                // }
+                // return componentData
+                componentData.type = HTMLTag.name
+            }
+
+            return componentData
+        }
+
+        private draggableElement(element: HTMLElement) {
+
+            let designerPosition = $(this.element).offset()
+            let elementID = element.id
+            console.assert(elementID)
+            $(element)
+                // .mousedown((ev) => {
+                //     if (ev.ctrlKey) {
+                //         return
+                //     }
+                //     $(`${classNames.componentSelected}`).removeClass(`${classNames.componentSelected}`)
+                //     $(this).addClass(classNames.componentSelected);
+
+                //     console.assert(elementID)
+                //     this.selectComponent(elementID)
+                // })
+                .click(ev => {
+                    if (!ev.ctrlKey) {
+                        this.selectComponent(element.id)
+                        return
+                    }
+
+                    // $(this).toggleClass(classNames.componentSelected)
+                    console.assert(elementID)
+                    if (this._selectedControlIds.indexOf(elementID) >= 0) {
+                        this._selectedControlIds = this._selectedControlIds.filter(o => o != elementID)
+                    }
+                    else {
+                        this._selectedControlIds.push(elementID)
+                    }
+                    this.selectComponent(this._selectedControlIds)
+
+
+                })
+                .drag("init", function () {
+                    if ($(this).is(`.${classNames.componentSelected}`))
+                        return $(`.${classNames.componentSelected}`);
+                })
+                .drag(function (ev, dd) {
+                    setPosition(ev, dd, this)
+                }, { click: false });
+
+            let offsetX, offsetY: number
+
+            function setPosition(ev: JQuery.Event<any>, dd, element: any) {
+                let left = dd.offsetX - designerPosition.left
+                let top = dd.offsetY - designerPosition.top
+                console.log(['ev.offsetX, ev.offsetY', ev.offsetX, ev.offsetY])
+                console.log(['dd.offsetX, dd.offsetY', dd.offsetX, dd.offsetY])
+                console.log(ev)
+                console.log(dd)
+                $(element).css({
+                    top, left
+                });
+
+            }
+
+        }
+
         componentDidMount() {
-            this.mouseEvent()
+            // let designerPosition = $('.page-view').position()
+            // setTimeout(() => {
+            // let designerPosition = $(this.element).offset()
+            // console.log(designerPosition)
+            // // }, 1000)
+            // let self = this
+            // $(this.element)
+            //     .on("drag", `.${classNames.component}`, function (ev, dd) {
+            //         setPosition(ev, dd, this)
+            //         $
+            //     })
+            //     .on('mousedown', `.${classNames.component}`, function (ev, dd) {
+            //         // if (ev.ctrlKey) {
+            //         //     return
+            //         // }
+            //         // $(`${classNames.componentSelected}`).removeClass(`${classNames.componentSelected}`)
+            //         // $(self).addClass(classNames.componentSelected);
+
+            //         // let elementId = this.id as string
+            //         // self.selectComponent(elementId)
+            //     })
+            //     .drag("init", function () {
+            //         if ($(this).is(`.${classNames.componentSelected}`))
+            //             return $(`.${classNames.componentSelected}`);
+            //     })
+            //     .on('click', `.${classNames.component}`, function (ev, dd) {
+            //         // if (!ev.ctrlKey)
+            //         //     return
+
+            //         let elementId = this.id as string
+            //         console.assert(elementId)
+            //         if (self._selectedControlIds.indexOf(elementId) >= 0) {
+            //             self._selectedControlIds = self._selectedControlIds.filter(o => o != elementId)
+            //         }
+            //         else {
+            //             self._selectedControlIds.push(elementId)
+            //         }
+            //         self.selectComponent(self._selectedControlIds)
+            //     });
+
+
+            // setInterval(() => {
+            //     this.selectedComponentIds.forEach(o => {
+            //         $(`#${o}`).css({ left: offsetX, top: offsetY })
+            //     })
+            // }, 100)
         }
 
         render() {
             let designer = this;
             let { pageData } = this.state
-            let asyncPageData = true
-            let pageView = pageData ? core.toReactElement(pageData, asyncPageData) : null
-            return <div className="designer" tabIndex={1} ref={e => this.element = e || this.element}
+            pageData = this.convertHTMLTag(pageData)
+            let pageView = pageData ? core.toReactElement(pageData) : null
+            return <div className="designer" tabIndex={1}
+                ref={e => {
+                    if (!e) return
+                    this.element = e || this.element
+                    // this.mouseEvent()
+                }}
                 onKeyDown={(e) => this.onKeyDown(e)}>
                 <DesignerContext.Provider value={{ designer }}>
                     {pageView}
@@ -640,6 +811,36 @@ namespace jueying {
             </div >;
         }
     }
+
+    function designTimeCreateElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
+
+        //====================================================
+        // 将 props copy 出来，以便于可以修改
+        props = Object.assign({}, props || {});
+        //====================================================
+
+        if (props.id != null)
+            props.key = props.id;
+
+        if (type == 'a' && (props as any).href) {
+            (props as any).href = 'javascript:';
+        }
+        else if (type == 'input' || type == 'button') {
+            delete props.onClick;
+            (props as any).readOnly = true;
+        }
+
+        if (props.style) {
+            let style = Object.assign({}, props.style)
+            delete style.left
+            delete style.top
+            props.style = style
+        }
+
+        return core.originalCreateElement(type, props, ...children)
+    }
+
+
 
 
 }

@@ -16,11 +16,32 @@ namespace jueying {
         componentDidMount() {
         }
 
-        private componentDraggable(element: HTMLElement, controlTypeName: string) {
+        private componentDraggable(element: HTMLElement, ctrl: ComponentData) {
             console.assert(element != null)
             element.draggable = true
             element.addEventListener('dragstart', function (ev) {
-                ev.dataTransfer.setData(constants.componentTypeName, controlTypeName)
+                // ev.dataTransfer.setData(constants.componentData, componentTypeName)
+                ctrl.props = ctrl.props || {}
+
+                let defaultStyle = {}
+                let componentTypeName = ctrl.type
+                let componentType = core.componentType(componentTypeName) || componentTypeName
+                if (componentType != null && typeof componentType != 'string' && componentType.defaultProps != null) {
+                    defaultStyle = componentType.defaultProps.style || {}
+                }
+
+                let left = ev.layerX;
+                let top = ev.layerY;
+
+                let style = Object.assign(defaultStyle, {
+                    position: 'absolute', //TODO: 不要写死
+                    left,
+                    top,
+                } as React.CSSProperties, ctrl.props.style || {})
+
+                ctrl.props.style = style
+
+                ev.dataTransfer.setData(constants.componentData, JSON.stringify(ctrl))
             })
         }
 
@@ -38,12 +59,22 @@ namespace jueying {
                             <ul ref={(e: HTMLElement) => this.toolbarElement = this.toolbarElement || e}>
                                 {componets.map((c, i) => {
                                     let props = { key: i };
-                                    props[constants.componentTypeName] = c.name;
+                                    // props[constants.componentTypeName] = c.name;
 
                                     return <li {...props}
                                         ref={e => {
                                             if (!e) return
-                                            this.componentDraggable(e, props[constants.componentTypeName])
+
+
+                                            // let ctrl: ElementData = {
+                                            //     type: c.name,
+                                            //     props: {
+                                            //         id: guid(),
+
+                                            //     }
+                                            // };
+                                            let ctrl = c.componentData
+                                            this.componentDraggable(e, ctrl)
                                         }}>
                                         <div className="btn-link">
                                             <i className={c.icon} style={{ fontSize: 44, color: 'black' }} />

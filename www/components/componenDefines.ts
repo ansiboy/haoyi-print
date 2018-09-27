@@ -8,42 +8,89 @@ let Label = 'Label'
 let List = 'List'
 export let components: Array<ComponentDefine> = [
     {
-        name: `${Label}`,
+        componentData: { type: 'Label' },
         controlPath: `${componentsDirectory}/${Label}/control`,
-        // editorPath: `${componentsDirectory}/${Label}/editor`,
-
         displayName: "标签",
         icon: "icon-text-width",
         introduce: "标签",
     },
     {
-        name: `${SquareCode}`,
+        componentData: { type: 'SquareCode' },
         controlPath: `${componentsDirectory}/${SquareCode}/control`,
-        // editorPath: `${componentsDirectory}/${SquareCode}/editor`,
-
         displayName: "二维码",
         icon: "icon-barcode",
         introduce: "二维码",
     },
     {
-        name: `${List}`,
+        componentData: {
+            type: 'List',
+            children: [
+                { type: 'ListHeader' },
+                { type: 'ListBody' },
+                { type: 'ListFooter' }
+            ]
+        },
         controlPath: `${componentsDirectory}/${List}`,
-        // editorPath: `${componentsDirectory}/${SquareCode}/editor`,
-
         displayName: "列表",
         icon: "icon-barcode",
         introduce: "列表",
     },
     {
-        name: `HTMLTag`,
+        componentData: { type: 'HTMLTag' },
         controlPath: `${componentsDirectory}/htmlTag`,
-        // editorPath: `${componentsDirectory}/${SquareCode}/editor`,
-
         displayName: "HTML 标签",
         icon: "icon-barcode",
         introduce: "HTML 标签",
     },
+    {
+        componentData: {
+            type: 'table',
+            props: {
+                style: { width: '200px', height: '200px', border: 'solid 1px black' }
+            },
+            children: [
+                { type: 'thead' },
+                {
+                    type: 'tbody',
+                    children: [
+                        {
+                            type: 'tr',
+                            children: [
+                                { type: 'td', props: { style: { width: '33%' } } },
+                                { type: 'td', props: { style: { width: '33%' } } },
+                                { type: 'td', props: { style: { width: '33%' } } }
+                            ]
+                        }
+                    ]
+                },
+                { type: 'tfoot' }
+            ]
+        },
+        controlPath: `${componentsDirectory}/htmlTag`,
+        displayName: "表格",
+        icon: "icon-barcode",
+        introduce: "表格",
+    },
+    {
+        componentData: {
+            type: 'div',
+            props: {
+                style: {
+                    width: '200px',
+                    height: '200px',
+                    border: 'solid 1px black',
+                    position: 'absolute'
+                }
+            }
+        },
+        controlPath: `${componentsDirectory}/htmlTag`,
+        displayName: "DIV",
+        icon: "icon-barcode",
+        introduce: "DIV",
+    }
 ];
+
+
 
 let style = { width: '100%', height: '100%', minWidth: 'unset' };
 
@@ -80,18 +127,7 @@ let template2: jueying.extentions.DocumentData = {
             style,
             componentName: "PageView",
             layout: 'absolute'
-        } as any,
-        children: [
-            {
-                type: "div",
-                props: {
-                    id: guid(),
-                    // emptyText: "页面中部，可以从工具栏拖拉控件到这里",
-                    // htmlTag: 'section',
-                    style: { height: '100%', margin: 0 }
-                } as any
-            }
-        ]
+        } as any
     },
     name: '空白模板(绝对定位)'
 }

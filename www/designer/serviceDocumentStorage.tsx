@@ -1,13 +1,14 @@
 import { Service } from "../service";
+import { ComponentData } from "jueying";
 
 let service = new Service()
 
 export class ServiceDocumentStorage implements jueying.extentions.DocumentStorage {
-    list(pageIndex: number, pageSize: number): Promise<{ items: [string, jueying.ElementData][]; count: number; }> {
+    list(pageIndex: number, pageSize: number): Promise<{ items: [string, ComponentData][]; count: number; }> {
 
         return service.templateList().then(r => {
             let items = r.map(o => {
-                let b: [string, jueying.ElementData] = [o.name, o.data]
+                let b: [string, ComponentData] = [o.name, o.data]
                 return b
             })
             return {
@@ -16,10 +17,10 @@ export class ServiceDocumentStorage implements jueying.extentions.DocumentStorag
             }
         })
     }
-    load(name: string): Promise<jueying.ElementData | null> {
+    load(name: string): Promise<ComponentData | null> {
         return service.templateGet(name)
     }
-    save(name: string, pageData: jueying.ElementData): Promise<any> {
+    save(name: string, pageData: ComponentData): Promise<any> {
         return service.templateSave(name, pageData)
     }
     remove(name: string): Promise<any> {

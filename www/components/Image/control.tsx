@@ -1,8 +1,8 @@
 import { BaseControl } from "../baseControl";
-import { ControlProps } from "jueying";
+import { ComponentProps } from "jueying";
 import React = require("react");
 
-export interface Props extends ControlProps<Image> {
+export interface Props extends ComponentProps<Image> {
 
 }
 

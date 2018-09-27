@@ -29,3 +29,4 @@ declare interface HTMLWebViewElement {
 	openDevTools()
 	loadURL(url: string)
 }
+

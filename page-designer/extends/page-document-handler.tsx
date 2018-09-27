@@ -3,11 +3,11 @@ namespace jueying.extentions {
     export class PageDocument {
         private static instances: { [key: string]: PageDocument } = {};
         private storage: DocumentStorage;
-        private _pageData: ElementData;
-        private originalPageData: ElementData;
+        private _pageData: ComponentData;
+        private originalPageData: ComponentData;
         private fileName: string;
 
-        constructor(fileName, storage: DocumentStorage, pageData: ElementData, isNew?: boolean) {
+        constructor(fileName, storage: DocumentStorage, pageData: ComponentData, isNew?: boolean) {
             this.storage = storage;
             this._pageData = pageData;
 
@@ -48,7 +48,7 @@ namespace jueying.extentions {
             return new PageDocument(fileName, storage, data);
         }
 
-        static new(storage: DocumentStorage, fileName: string, init: ElementData) {
+        static new(storage: DocumentStorage, fileName: string, init: ComponentData) {
             // let storage = new LocalDocumentStorage()
             return new PageDocument(fileName, storage, init, true);
         }

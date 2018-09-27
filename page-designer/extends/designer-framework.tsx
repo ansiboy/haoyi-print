@@ -2,7 +2,7 @@
 
 namespace jueying.extentions {
     export interface DesignerFrameworkProps {
-        components: jueying.ComponentDefine[],
+        components: ComponentDefine[],
         title?: string,
         templates?: DocumentData[]
     }
@@ -14,7 +14,7 @@ namespace jueying.extentions {
         activeDocument?: PageDocument
     }
     export class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState>{
-        protected pageDesigner: jueying.PageDesigner;
+        protected pageDesigner: PageDesigner;
         private names: string[] = [];
         private _storage: DocumentStorage;
         private ruleElement: HTMLCanvasElement;
@@ -35,7 +35,8 @@ namespace jueying.extentions {
         }
 
         /** 对控件进行命名 */
-        private namedControl(control: jueying.ElementData) {
+        private namedControl(control: jueying.ComponentData) {
+            console.assert(control.props)
             let props = control.props;
             if (!props.name) {
                 let num = 0;
@@ -56,7 +57,9 @@ namespace jueying.extentions {
                 return;
             }
             for (let i = 0; i < control.children.length; i++) {
-                this.namedControl(control.children[i]);
+                let child = control.children[i]
+                if (typeof child != 'string')
+                    this.namedControl(child);
             }
         }
 
@@ -131,7 +134,7 @@ namespace jueying.extentions {
             pageDocument.save();
             this.setState({ pageDocuments });
         }
-        async createDocuemnt(fileName: string, pageData: ElementData, isNew: boolean) {
+        async createDocuemnt(fileName: string, pageData: ComponentData, isNew: boolean) {
             console.assert(fileName);
             let { pageDocuments } = this.state;
             let documentStorage = this.storage

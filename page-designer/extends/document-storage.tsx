@@ -1,8 +1,8 @@
 namespace jueying.extentions {
     export interface DocumentStorage {
-        list(pageIndex: number, pageSize: number): Promise<{ items: [string, ElementData][], count: number }>;
-        load(name: string): Promise<ElementData>;
-        save(name: string, pageData: ElementData): Promise<any>;
+        list(pageIndex: number, pageSize: number): Promise<{ items: [string, ComponentData][], count: number }>;
+        load(name: string): Promise<ComponentData>;
+        save(name: string, pageData: ComponentData): Promise<any>;
         remove(name: string): Promise<any>;
     }
 
@@ -15,7 +15,7 @@ namespace jueying.extentions {
             if (pageIndex == null) throw Errors.argumentNull('pageIndex');
             if (pageSize == null) throw Errors.argumentNull('pageSize');
 
-            let allItems = new Array<[string, ElementData]>();
+            let allItems = new Array<[string, ComponentData]>();
             for (let i = 0; i < localStorage.length; i++) {
                 let key = localStorage.key(i);
                 if (!key.startsWith(LocalDocumentStorage.prefix)) {
@@ -40,7 +40,7 @@ namespace jueying.extentions {
 
             return JSON.parse(text);
         }
-        async save(name: string, pageData: ElementData) {
+        async save(name: string, pageData: ComponentData) {
             let key = `${LocalDocumentStorage.prefix}${name}`;
             let value = JSON.stringify(pageData);
             localStorage.setItem(key, value);

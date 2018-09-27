@@ -1,7 +1,7 @@
 /// <reference path="../host/modules/printTask.ts"/>
 /// <reference path="../host/modules/config.ts"/>
 
-import { ElementData } from "jueying";
+import { ComponentData } from "jueying";
 import * as chitu from 'chitu';
 import { PrintTask } from "../host/modules/printTask";
 import { UserConfig } from "../host/config";
@@ -31,13 +31,13 @@ export class Service extends chitu.Service {
     }
     templateList() {
         let url = this.url('template/list')
-        return this.get<{ name: string, data: ElementData }[]>(url)
+        return this.get<{ name: string, data: ComponentData }[]>(url)
     }
     templateGet(name: string) {
         let url = this.url('template/get')
-        return this.get<ElementData>(url, { name })
+        return this.get<ComponentData>(url, { name })
     }
-    templateSave(name: string, data: ElementData) {
+    templateSave(name: string, data: ComponentData) {
         let url = this.url('template/save')
         return this.postByJson(url, { name, item: data })
     }

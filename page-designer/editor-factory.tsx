@@ -13,10 +13,12 @@ namespace jueying {
     }
 
     export interface PropEditorInfo {
-        propNames: string[], text: string, editorType: PropEditorConstructor
+        propNames: string[], //text: string,
+        editorType: PropEditorConstructor, group: string
     }
 
-    export class ControlPropEditors {
+    /** 组件属性编辑器，为组件的属性提供可视化的编辑器 */
+    export class ComponentPropEditor {
         private static controlPropEditors: {
             [controlClassName: string]: PropEditorInfo[]
         } = {}
@@ -39,22 +41,23 @@ namespace jueying {
             return editor
         }
 
-        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
-        static setControlPropEditor<T, K extends keyof T>(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, propName: K): void
-        static setControlPropEditor(controlClass: React.ComponentClass, text: string, editorType: PropEditorConstructor, ...propNames: string[]): void {
+        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
+        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K): void
+        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
+        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K): void
+        static setControlPropEditor(componentType: React.ComponentClass | string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, ...propNames: string[]): void {
 
-            let className = controlClass.prototype.typename || controlClass.name
+            let className = typeof componentType == 'string' ? componentType : componentType.prototype.typename || componentType.name
             let classProps = this.controlPropEditors[className] = this.controlPropEditors[className] || []
             for (let i = 0; i < classProps.length; i++) {
                 let propName1 = classProps[i].propNames.join('.')
                 let propName2 = propNames.join('.')
                 if (propName1 == propName2) {
-                    classProps[i].text = text
                     classProps[i].editorType = editorType
                     return
                 }
             }
-            classProps.push({ propNames: propNames, text, editorType })
+            classProps.push({ propNames: propNames, editorType, group })
         }
 
         static getFlatPropValue(obj: Object, flatPropName: string) {
