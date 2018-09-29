@@ -1,6 +1,6 @@
 namespace jueying.extentions {
     export let classNames = {
-        controlSelected: `control-selected `,
+        componentSelected: `component-selected `,
         emptyTemplates: `empty-templates`,
         loadingTemplates: `loading-templates`,
         templateSelected: `template-selected`,
@@ -16,7 +16,7 @@ namespace jueying.extentions {
     let element = document.createElement('style');
     element.type = 'text/css';
     element.innerHTML = `
-        .${classNames.controlSelected} {
+        .${classNames.componentSelected} {
             border: solid 1px #337ab7!important;
         }
         .${classNames.emptyTemplates} {

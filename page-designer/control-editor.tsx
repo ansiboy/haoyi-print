@@ -88,7 +88,7 @@ namespace jueying {
                 let propName = propEditorInfo.propNames[propEditorInfo.propNames.length - 1]
                 let editorType = propEditorInfo.editorType
                 let propNames = propEditorInfo.propNames
-                let editor = React.createElement(editorType, {
+                let editor = h(editorType, {
                     value: commonFlatProps[propNames.join('.')],
                     onChange: (value) => {
                         for (let i = 0; i < controls.length; i++) {
@@ -136,18 +136,7 @@ namespace jueying {
                 }
 
                 groupEditors.editors.push({ prop: editors[i].prop, editor: editors[i].editor })
-                // let editors = groupEditors
             }
-
-            // {editors.map((o, i) => {
-            //     let text = strings[o.prop] || o.prop
-            //     return <div key={i} className="form-group">
-            //         <label>{text}</label>
-            //         <div className="control">
-            //             {o.editor}
-            //         </div>
-            //     </div>
-            // })}
 
             return <React.Fragment>
                 {groupEditorsArray.map((g) =>
@@ -174,7 +163,7 @@ namespace jueying {
         }
 
         Element(...children: React.ReactElement<any>[]) {
-            return React.createElement('div', {
+            return h('div', {
                 ref: (e) => {
                     this._element = e || this._element
                 }

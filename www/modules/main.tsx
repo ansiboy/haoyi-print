@@ -10,7 +10,6 @@ import '../components/Label/editor';
 import '../components/SquareCode/editor';
 import '../components/control-placeholder'
 import '../components/list'
-import '../components/htmlTag'
 
 class MainPage extends DesignerFramework {
     private _storage1: DocumentStorage;

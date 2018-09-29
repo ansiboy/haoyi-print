@@ -36,12 +36,13 @@ namespace jueying {
     }
 
     export let classNames = {
-        componentSelected: `control-selected `,
+        componentSelected: `component-selected `,
         emptyTemplates: `empty-templates`,
         loadingTemplates: `loading-templates`,
         templateSelected: `template-selected`,
         templateDialog: `template-dialog`,
-        component: 'component'
+        component: 'component',
+        componentWrapper: 'component-wrapper'
     }
 
     let element = document.createElement('style');

@@ -8,7 +8,14 @@ let Label = 'Label'
 let List = 'List'
 export let components: Array<ComponentDefine> = [
     {
-        componentData: { type: 'Label' },
+        componentData: {
+            type: 'Label',
+            props: {
+                style: {
+                    position: 'absolute'
+                }
+            }
+        },
         controlPath: `${componentsDirectory}/${Label}/control`,
         displayName: "标签",
         icon: "icon-text-width",

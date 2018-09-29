@@ -30,8 +30,22 @@ declare namespace jueying {
         templateSelected: string;
         templateDialog: string;
         component: string;
+        componentWrapper: string;
     };
 }
+/*******************************************************************************
+ * Copyright (C) maishu All rights reserved.
+ *
+ * HTML 页面设计器
+ *
+ * 作者: 寒烟
+ * 日期: 2018/5/30
+ *
+ * 个人博客：   http://www.cnblogs.com/ansiboy/
+ * GITHUB:     http://github.com/ansiboy
+ * QQ 讨论组：  119038574
+ *
+ ********************************************************************************/
 declare namespace jueying {
     interface EditorProps extends React.Props<ComponentEditor> {
     }
@@ -49,7 +63,7 @@ declare namespace jueying {
         private flatProps;
         render(): JSX.Element;
         readonly element: HTMLElement;
-        Element(...children: React.ReactElement<any>[]): React.DetailedReactHTMLElement<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+        Element(...children: React.ReactElement<any>[]): any;
     }
 }
 declare namespace jueying {
@@ -68,12 +82,20 @@ declare namespace jueying {
         render(): JSX.Element;
     }
 }
+/*******************************************************************************
+ * Copyright (C) maishu All rights reserved.
+ *
+ * 作者: 寒烟
+ * 日期: 2018/5/30
+ *
+ * 个人博客：   http://www.cnblogs.com/ansiboy/
+ * GITHUB:     http://github.com/ansiboy
+ * QQ 讨论组：  119038574
+ *
+ * core 文件用于运行时加载，所以要控制此文件的大小，用于在运行时创建页面
+ *
+ ********************************************************************************/
 declare namespace jueying {
-    /**
-     * 说明：
-     * core 文件用于运行时加载，所以要控制此文件的大小，用于在运行时创建页面
-     *
-     */
     type DesignerContextValue = {
         designer: PageDesigner | null;
     };
@@ -81,74 +103,29 @@ declare namespace jueying {
     interface DesigntimeComponent {
         /** 运行时控件的类型名称 */
         typename: string;
+        designer: PageDesigner;
     }
     function component<T extends React.Component>(args?: {
         container?: boolean;
         movable?: boolean;
-    }): (constructor: new (...args: any[]) => T) => (new (...args: any[]) => T) | {
-        new (props: any, context: any): {
-            wrapperElement: HTMLElement;
-            designer: PageDesigner;
-            id: string;
-            readonly typename: string;
-            render(): JSX.Element;
-            renderDesigntime(): JSX.Element;
-            setState<K extends string | number | symbol>(state: any, callback?: () => void): void;
-            forceUpdate(callBack?: () => void): void;
-            readonly props: Readonly<{
-                children?: React.ReactNode;
-            }> & Readonly<ComponentProps<any>>;
-            state: Readonly<any>;
-            context: any;
-            refs: {
-                [key: string]: React.ReactInstance;
-            };
-            componentDidMount?(): void;
-            shouldComponentUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): boolean;
-            componentWillUnmount?(): void;
-            componentDidCatch?(error: Error, errorInfo: React.ErrorInfo): void;
-            getSnapshotBeforeUpdate?(prevProps: Readonly<ComponentProps<any>>, prevState: Readonly<any>): any;
-            componentDidUpdate?(prevProps: Readonly<ComponentProps<any>>, prevState: Readonly<any>, snapshot?: any): void;
-            componentWillMount?(): void;
-            UNSAFE_componentWillMount?(): void;
-            componentWillReceiveProps?(nextProps: Readonly<ComponentProps<any>>, nextContext: any): void;
-            UNSAFE_componentWillReceiveProps?(nextProps: Readonly<ComponentProps<any>>, nextContext: any): void;
-            componentWillUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): void;
-            UNSAFE_componentWillUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): void;
-        };
-        propTypes?: import("prop-types").ValidationMap<ComponentProps<any>>;
-        contextTypes?: import("prop-types").ValidationMap<any>;
-        childContextTypes?: import("prop-types").ValidationMap<any>;
-        defaultProps?: Partial<ComponentProps<any>>;
-        displayName?: string;
-        getDerivedStateFromProps?: React.GetDerivedStateFromProps<ComponentProps<any>, any>;
-    };
+    }): (constructor: new (...args: any[]) => T) => new (...args: any[]) => T;
     let core: {
-        originalCreateElement: typeof React.createElement;
-        toReactElement: typeof toReactElement;
-        customControlTypes: {
+        createElement: typeof createElement;
+        componentTypes: {
             [key: string]: string | React.ComponentClass<any, any>;
         };
         register: typeof register;
         loadAllTypes: typeof loadAllTypes;
         componentType(name: string): string | React.ComponentClass<any, any>;
     };
+    type ReactFactory = (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element;
     /**
      * 将持久化的元素数据转换为 ReactElement
      * @param args 元素数据
      */
-    function toReactElement(args: ComponentData, designer?: PageDesigner): React.ReactElement<any> | null;
-    function register(controlName: string, controlType: React.ComponentClass<any>): void;
+    function createElement(args: ComponentData, h?: ReactFactory): React.ReactElement<any> | null;
+    function register(componentName: string, componentType: React.ComponentClass<any>): void;
     function loadAllTypes(): Promise<any[]>;
-    interface HTMLTagProps extends React.Props<HTMLTag> {
-        tagName?: string;
-        style?: React.CSSProperties;
-    }
-    class HTMLTag extends React.Component<HTMLTagProps, {}> {
-        static defaultProps: HTMLTagProps;
-        constructor(props: any);
-        render(): React.DOMElement<any, Element>;
-    }
 }
 declare namespace jueying {
     class ControlEditorFactory {
@@ -161,6 +138,7 @@ declare namespace jueying {
         editorType: PropEditorConstructor;
         group: string;
     }
+    /** 组件属性编辑器，为组件的属性提供可视化的编辑器 */
     class ComponentPropEditor {
         private static controlPropEditors;
         static getControlPropEditors(controlClassName: string): PropEditorInfo[];
@@ -265,6 +243,7 @@ declare namespace jueying {
         componentName?: string;
         designMode?: boolean;
         selected?: boolean;
+        onClick?: (e: MouseEvent) => void;
     }
     class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
         private _selectedControlIds;
@@ -276,22 +255,16 @@ declare namespace jueying {
             element: HTMLElement;
         }>;
         componentUpdated: Callback<PageDesigner>;
-        private draggableElementIds;
         names: string[];
         constructor(props: PageDesignerProps);
         initSelectedIds(pageData: ComponentData): void;
-        componentWillReceiveProps(props: PageDesignerProps): void;
-        componentDidUpdate(): void;
         readonly pageData: ComponentData;
         readonly selectedComponentIds: string[];
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any;
         /**
-        * 启用拖放操作，以便通过拖放图标添加控件
-        */
-        enableDroppable(element: HTMLElement): void;
-        private findContainerComponentId;
-        private mouseEvent;
-        private sortControlChildren;
+         * 启用拖放操作，以便通过拖放图标添加控件
+         */
+        static enableDroppable(element: HTMLElement, designer: PageDesigner): void;
         private sortChildren;
         private namedControl;
         /** 添加控件 */
@@ -326,52 +299,10 @@ declare namespace jueying {
             container?: boolean;
             movable?: boolean;
         }): void;
-        static createDesigntimeClass<T>(constructor: {
-            new (...args: any[]): T;
-        }, args: {
-            container?: boolean;
-            movable?: boolean;
-        }): {
-            new (props: any, context: any): {
-                wrapperElement: HTMLElement;
-                designer: PageDesigner;
-                id: string;
-                readonly typename: string;
-                render(): JSX.Element;
-                renderDesigntime(): JSX.Element;
-                setState<K extends string | number | symbol>(state: any, callback?: () => void): void;
-                forceUpdate(callBack?: () => void): void;
-                readonly props: Readonly<{
-                    children?: React.ReactNode;
-                }> & Readonly<ComponentProps<any>>;
-                state: Readonly<any>;
-                context: any;
-                refs: {
-                    [key: string]: React.ReactInstance;
-                };
-                componentDidMount?(): void;
-                shouldComponentUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): boolean;
-                componentWillUnmount?(): void;
-                componentDidCatch?(error: Error, errorInfo: React.ErrorInfo): void;
-                getSnapshotBeforeUpdate?(prevProps: Readonly<ComponentProps<any>>, prevState: Readonly<any>): any;
-                componentDidUpdate?(prevProps: Readonly<ComponentProps<any>>, prevState: Readonly<any>, snapshot?: any): void;
-                componentWillMount?(): void;
-                UNSAFE_componentWillMount?(): void;
-                componentWillReceiveProps?(nextProps: Readonly<ComponentProps<any>>, nextContext: any): void;
-                UNSAFE_componentWillReceiveProps?(nextProps: Readonly<ComponentProps<any>>, nextContext: any): void;
-                componentWillUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): void;
-                UNSAFE_componentWillUpdate?(nextProps: Readonly<ComponentProps<any>>, nextState: Readonly<any>, nextContext: any): void;
-            };
-            propTypes?: import("prop-types").ValidationMap<ComponentProps<any>>;
-            contextTypes?: import("prop-types").ValidationMap<any>;
-            childContextTypes?: import("prop-types").ValidationMap<any>;
-            defaultProps?: Partial<ComponentProps<any>>;
-            displayName?: string;
-            getDerivedStateFromProps?: React.GetDerivedStateFromProps<ComponentProps<any>, any>;
-        };
-        convertHTMLTag(componentData: ComponentData): ComponentData;
-        private draggableElement;
-        componentDidMount(): void;
+        private static draggableElement;
+        createDesignTimeElement(type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]): React.ReactElement<any>;
+        componentWillReceiveProps(props: PageDesignerProps): void;
+        componentDidUpdate(): void;
         render(): JSX.Element;
     }
 }
@@ -543,7 +474,7 @@ declare namespace jueying.extentions {
 }
 declare namespace jueying.extentions {
     let classNames: {
-        controlSelected: string;
+        componentSelected: string;
         emptyTemplates: string;
         loadingTemplates: string;
         templateSelected: string;

@@ -8,6 +8,6 @@
         "rootDir": ".",
         "jsx": "react",
         "strict": false,
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
     }
 }

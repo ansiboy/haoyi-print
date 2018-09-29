@@ -14,12 +14,15 @@
 
 namespace jueying {
 
+    // export let h = React.createElement
+
     export type DesignerContextValue = { designer: PageDesigner | null };
     export const DesignerContext = React.createContext<DesignerContextValue>({ designer: null });
 
     export interface DesigntimeComponent {
         /** 运行时控件的类型名称 */
-        typename: string
+        typename: string,
+        designer: PageDesigner,
     }
 
     export function component<T extends React.Component>(args?: { container?: boolean, movable?: boolean }) {
@@ -27,81 +30,61 @@ namespace jueying {
         args = Object.assign(defaultArguments, args || {})
 
         return function (constructor: { new(...args): T }) {
-            // let c = constructor as any as React.ComponentClass<ControlProps<any>, any>
-            if (PageDesigner) {
-                return PageDesigner.createDesigntimeClass(constructor, args)
-            }
+            let c = constructor as any as React.ComponentClass<ComponentProps<any>, any>
+            // let result = class ComponetWraper extends c implements DesigntimeComponent {
+            //     designer: PageDesigner;
+            //     get typename(): string {
+            //         return constructor.name
+            //     }
 
+            //     render() {
+            //         return super.render()
+            //     }
+            // }
+
+            core.register(constructor.name, constructor)
             return constructor
         }
     }
 
     export let core = {
-        originalCreateElement: React.createElement,
-        toReactElement,
-        customControlTypes: {} as { [key: string]: React.ComponentClass<any> | string },
+        // originalCreateElement: React.createElement,
+        createElement,
+        componentTypes: {} as { [key: string]: React.ComponentClass<any> | string },
         register,
         loadAllTypes,
         componentType(name: string) {
-            let t = core.customControlTypes[name]
-            // if (t == null)
-            //     throw new Error(`Component ${name} is not exists`)
-
+            let t = core.componentTypes[name]
             return t
         }
     }
 
-
+    type ReactFactory = (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element
 
     /**
      * 将持久化的元素数据转换为 ReactElement
      * @param args 元素数据
      */
-    function toReactElement(args: ComponentData, designer?: PageDesigner): React.ReactElement<any> | null {
+    function createElement(args: ComponentData, h?: ReactFactory): React.ReactElement<any> | null {
+
+        h = h || React.createElement
+
         try {
 
             let type: string | React.ComponentClass = args.type;
             let componentName = args.type;
-            let controlType = core.customControlTypes[componentName];
+            let controlType = core.componentTypes[componentName];
             if (controlType) {
                 type = controlType;
             }
 
-            let children = args.children ? args.children.map(o => this.toReactElement(o, designer)) : [];
+            let children = args.children ? args.children.map(o => createElement(o, h)) : [];
 
             console.assert(args.props)
             let props = JSON.parse(JSON.stringify(args.props));
-            // if (designer && typeof type == 'string') {
-            //     let _ref = props.ref
-            //     props.ref = (e: HTMLElement) => {
-            //         if (!e) return
-            //         if (typeof _ref == 'function')
-            //             _ref.apply(this, [e])
-
-            //         designer.designtimeBehavior(e, { container: true, movable: true })
-            //     }
-            // }
-            let result = core.originalCreateElement<React.Props<any>>(type, props, ...children);
-            // if (async) {
-            //     let elementChildren: React.ReactElement<any>[] = null
-            //     if (result.props.children) {
-            //         elementChildren = (Array.isArray(result.props.children) ? result.props.children : [result.props.children]) as React.ReactElement<any>[]
-            //     }
-            //     let children: ElementData[] = []
-            //     if (elementChildren)
-            //         children = elementChildren.map(o => toElementData(o))
-
-            //     children.forEach(o => {
-            //         let notExists = args.children.filter(c => typeof c != 'string' && c.props.id == c.props.id).length == 0
-            //         if (notExists) {
-            //             args.children.push(o)
-            //         }
-            //     })
-            // }
+            let result = h(type, props, ...children);
 
             return result
-            //     }
-            // );
         }
         catch (e) {
             console.error(e);
@@ -138,26 +121,26 @@ namespace jueying {
     }
 
 
-    function register(controlName: string, controlType: React.ComponentClass<any>): void {
-        if (controlType == null && typeof controlName == 'function') {
-            controlType = controlName;
-            controlName = (controlType as React.ComponentClass<any>).name;
-            (controlType as any)['componentName'] = controlName;
+    function register(componentName: string, componentType: React.ComponentClass<any>): void {
+        if (componentType == null && typeof componentName == 'function') {
+            componentType = componentName;
+            componentName = (componentType as React.ComponentClass<any>).name;
+            (componentType as any)['componentName'] = componentName;
         }
 
-        if (!controlName)
-            throw Errors.argumentNull('controlName');
+        if (!componentName)
+            throw Errors.argumentNull('componentName');
 
-        if (!controlType)
-            throw Errors.argumentNull('controlType');
+        if (!componentType)
+            throw Errors.argumentNull('componentType');
 
-        core.customControlTypes[controlName] = controlType;
+        core.componentTypes[componentName] = componentType;
     }
 
     function loadAllTypes() {
         let ps = new Array<Promise<any>>();
-        for (let key in core.customControlTypes) {
-            if (typeof core.customControlTypes[key] == 'string') {
+        for (let key in core.componentTypes) {
+            if (typeof core.componentTypes[key] == 'string') {
                 ps.push(this.getControlType(key));
             }
         }
@@ -166,54 +149,17 @@ namespace jueying {
     }
 
     function componentNameByType(type: React.ComponentClass<any> | React.StatelessComponent<any>) {
-        for (let key in core.customControlTypes) {
-            if (core.customControlTypes[key] == type)
+        for (let key in core.componentTypes) {
+            if (core.componentTypes[key] == type)
                 return key;
         }
 
         return null;
     }
 
-    interface HTMLTagProps extends React.Props<HTMLTag> {
-        tagName?: string,
-        style?: React.CSSProperties,
-    }
-    
 
-    @(component({ container: true, movable: true }) as any)
-    export class HTMLTag extends React.Component<HTMLTagProps, {}> {
 
-        static defaultProps: HTMLTagProps = { tagName: 'div', style: { width: 50, height: 50 } }
 
-        constructor(props) {
-            super(props)
-        }
-
-        render() {
-            let { tagName } = this.props
-            let obj = {} as any
-            for (let key in this.props) {
-                let name = key as keyof HTMLTagProps
-                if (name == 'tagName' || name == 'children')
-                    continue
-
-                obj[key] = this.props[key]
-            }
-
-            obj.className = 'html-tag'
-            // obj.style = Object.assign({ width: 50, height: 50 }, obj.style || {})
-
-            let children = []
-            if (this.props.children) {
-                if (Array.isArray(this.props.children))
-                    children = this.props.children
-                else
-                    children = [this.props.children]
-            }
-
-            return React.createElement(tagName, obj, ...children)
-        }
-    }
 }
 
 

@@ -13,7 +13,7 @@ namespace jueying {
     }
 
     export interface PropEditorInfo {
-        propNames: string[], //text: string,
+        propNames: string[], 
         editorType: PropEditorConstructor, group: string
     }
 

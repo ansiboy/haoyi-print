@@ -52,11 +52,11 @@ namespace jueying {
         componentName?: string,
         designMode?: boolean,
         selected?: boolean,
+        onClick?: (e: MouseEvent) => void,
     }
 
-
     export class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
-
+        // private _h: (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element
         private _selectedControlIds: string[] = [];
         element: HTMLElement;
 
@@ -65,7 +65,6 @@ namespace jueying {
         designtimeComponentDidMount = Callback.create<{ component: React.ReactElement<any>, element: HTMLElement }>();
         componentUpdated = Callback.create<PageDesigner>()
 
-        private draggableElementIds: string[] = []
 
         names = new Array<string>();
 
@@ -73,8 +72,7 @@ namespace jueying {
             super(props);
 
             this.initSelectedIds(props.pageData)
-            let pageData = this.convertHTMLTag(props.pageData)
-            this.state = { pageData };
+            this.state = { pageData: props.pageData };
             this.designtimeComponentDidMount.add((args) => {
                 console.log(`this:designer event:controlComponentDidMount`)
             })
@@ -98,16 +96,6 @@ namespace jueying {
                     stack.push(o)
                 })
             }
-        }
-
-        componentWillReceiveProps(props: PageDesignerProps) {
-            this.initSelectedIds(props.pageData)
-            let pageData = this.convertHTMLTag(props.pageData)
-            this.setState({ pageData });
-        }
-
-        componentDidUpdate() {
-            this.componentUpdated.fire(this)
         }
 
 
@@ -139,11 +127,10 @@ namespace jueying {
         }
 
         /**
-        * 启用拖放操作，以便通过拖放图标添加控件
-        */
-        enableDroppable(element: HTMLElement) {
+         * 启用拖放操作，以便通过拖放图标添加控件
+         */
+        static enableDroppable(element: HTMLElement, designer: PageDesigner) {
             // let element = this.element
-            let designer: PageDesigner = this
             console.assert(element != null)
             element.addEventListener('dragover', function (event) {
                 event.preventDefault()
@@ -173,170 +160,6 @@ namespace jueying {
                 }
                 designer.appendControl(element.id, ctrl);
             }
-        }
-
-        private findContainerComponentId(element: HTMLElement): ComponentData {
-            if (element.id) {
-                let controlData = this.findComponentData(element.id)
-                if (controlData != null)
-                    return controlData
-            }
-
-            let parent = element.parentElement
-            if (parent != null && parent != this.element) {
-                return this.findContainerComponentId(parent)
-            }
-
-            return null
-        }
-
-        //======================================================================================
-        // 事件
-        private mouseEvent() {
-
-            //=====================================================
-            // 组件的选取
-
-            /**
-             * 将鼠标点中的组件设置为选中状态 
-             * 如果已选择的组件数量为 0 或者 1，mousedown 事件为选择当前组件  
-             * */
-            this.element.onclick = (e: MouseEvent) => {
-
-                // 由于拖放会产生 onclick 事件，所有需要判断如果是拖放操作
-                // 则取消当前的 onclick 操作
-                if (dragExecuted) {
-                    dragExecuted = false
-                    console.log(`component select implement, onclick dragExecuted = false`)
-                    return
-                }
-
-                let target = e.target as HTMLElement
-                let componentData = this.findContainerComponentId(target)
-                console.assert(componentData != null)
-                console.log(`designer event:${e.type} target:${target.tagName}`)
-                let componentId = componentData.props.id
-
-                // 按下 CTRL 为多选，以及反选操作
-                if (e.ctrlKey) {
-
-
-                    let selectedComponentIds = this.selectedComponentIds
-                    if (selectedComponentIds.indexOf(componentId) >= 0) {
-                        selectedComponentIds = selectedComponentIds.filter(o => o != componentId)
-                    }
-                    else {
-                        selectedComponentIds.push(componentId)
-                    }
-
-                    console.assert(this != null)
-                    this.selectComponent(selectedComponentIds)
-                }
-                else {
-                    this.selectComponent([componentId])
-                }
-            }
-
-
-            //=====================================================
-            // 以下代码为实现拖放操作
-            let dragExecuted: boolean
-            let isDragOperation = false
-            let x: number, y: number;
-            let deltaX: number, deltaY: number;
-            const MIN_DELTA = 3
-            let startPositions: { left: number, top: number, element: HTMLElement }[]
-            this.element.addEventListener('mousedown', (ev: MouseEvent) => {
-                if (ev.shiftKey || ev.ctrlKey || ev.metaKey) {
-                    return
-                }
-
-                isDragOperation = true
-                x = ev.clientX
-                y = ev.clientY
-
-                let target = ev.target as HTMLElement
-                let componentData = this.findContainerComponentId(target)
-                if (!componentData.props.selected) {
-                    this.selectComponent([componentData.props.id])
-                }
-
-                startPositions = this.selectedComponentIds
-                    .filter(o => this.draggableElementIds.indexOf(o) >= 0)
-                    .map(o => document.getElementById(o))
-                    .map(o => {
-                        let { left, top } = $(o).position()
-                        return { left, top, element: o }
-                    })
-            })
-            this.element.addEventListener('mousemove', (ev: MouseEvent) => {
-                if (!isDragOperation || ev.shiftKey || ev.ctrlKey || ev.metaKey)
-                    return
-
-                deltaX = ev.clientX - x
-                deltaY = ev.clientY - y
-
-            })
-
-            // 采用定时更新位置，以提高性能
-            setInterval(() => {
-                if (deltaX == null || deltaY == null || startPositions.length == 0)
-                    return
-
-                startPositions.forEach(pos => {
-                    let { left, top, element } = pos
-                    // element.style.transform = "translate3d(" + deltaX + "px, " + deltaY + "px, 0)";
-                    element.style.left = `${left + deltaX}px`
-                    element.style.top = `${top + deltaY}px`
-                })
-            }, 30)
-
-            this.element.addEventListener('mouseup', (ev: MouseEvent) => {
-                if (ev.shiftKey || ev.ctrlKey || ev.metaKey) {
-                    return
-                }
-
-                ev.stopPropagation()
-                ev.preventDefault()
-
-                console.log(`mouseup deltaX:${deltaX} deltaY:${deltaY}`)
-                if (Math.abs(deltaX) >= MIN_DELTA || Math.abs(deltaY) >= MIN_DELTA) {
-                    let positions = startPositions.map(pos => ({
-                        controlId: pos.element.id,
-                        left: pos.left + deltaX,
-                        top: pos.top + deltaY
-                    }))
-
-                    startPositions.forEach(o => {
-                        o.element.style.removeProperty('transform')
-                    })
-
-                    this.setControlsPosition(positions)
-                    dragExecuted = true
-                    console.log(`drag implement, mouseup dragExecuted = true`)
-                }
-
-                // init data
-                isDragOperation = false
-                x = y = deltaX = deltaY = null
-                startPositions = []
-            })
-
-            // 拖放代码结束
-            //======================================================================================
-
-        }
-
-        private sortControlChildren(controlId: string, childIds: string[]): void {
-            let c = this.findComponentData(controlId)
-            if (c == null)
-                return
-
-            let children = c.children || []
-            c.children = childIds.map(o => children.filter(a => a.props.id == o)[0]).filter(o => o != null);
-
-            let { pageData } = this.state;
-            this.setState({ pageData });
         }
 
         private sortChildren(parentId: string, childIds: string[]) {
@@ -392,7 +215,6 @@ namespace jueying {
             if (!parentId) throw Errors.argumentNull('parentId');
             if (!childControl) throw Errors.argumentNull('childControl');
 
-            // childControl = this.convertHTMLTag(childControl)
             this.namedControl(childControl)
             let parentControl = this.findComponentData(parentId);
             if (parentControl == null)
@@ -472,6 +294,10 @@ namespace jueying {
             })
             this.setState({ pageData: this.pageData })
             this.controlSelected.fire(this.selectedComponentIds)
+            //====================================================
+            // 设置焦点，以便获取键盘事件
+            this.element.focus()
+            //====================================================
         }
 
         /** 移除控件 */
@@ -506,7 +332,6 @@ namespace jueying {
         }
 
         private removeControlFrom(controlId: string, collection: ComponentData[]): boolean {
-            debugger
             let controlIndex: number | null = null;
             for (let i = 0; i < collection.length; i++) {
                 if (controlId == collection[i].props.id) {
@@ -583,153 +408,82 @@ namespace jueying {
          */
         designtimeBehavior(element: HTMLElement, args: { container?: boolean, movable?: boolean }) {
             if (args.container) {
-                this.enableDroppable(element)
+                PageDesigner.enableDroppable(element, this)
             }
             if (args.movable) {
-                // let element = document.getElementById(element.id)
                 console.assert(element != null)
-                // this.draggableElementIds.push(element.id)
-
-                this.draggableElement(element)
+                PageDesigner.draggableElement(element, this)
             }
         }
 
-        static createDesigntimeClass<T>(constructor: { new(...args): T }, args: { container?: boolean, movable?: boolean }) {
-            let c = constructor as any as React.ComponentClass<ComponentProps<any>, any>
-            let result = class ComponetWraper extends c implements DesigntimeComponent {
-                wrapperElement: HTMLElement
-                designer: PageDesigner
-                id: string
-                constructor(props, context) {
-                    super(props, context)
+        private static draggableElement(element: HTMLElement, designer: PageDesigner) {
+            if (!element) throw Errors.argumentNull('element')
+            if (!element) throw Errors.argumentNull('designer')
 
-                    this.id = this.props.id || guid()
-                    // Control.addInstance(this.id, this)
-                }
+            // let designerPosition = $(designer.element).offset()
+            // if (designerPosition == null)
+            //     debugger
 
-                get typename(): string {
-                    return constructor.name
-                }
-
-                render() {
-                    return <DesignerContext.Consumer>
-                        {c => {
-                            this.designer = c.designer
-                            if (this.designer) {
-                                let component = this.renderDesigntime()
-                                this.designer.designtimeComponentDidMount.fire({ component, element: this.wrapperElement })
-                                return component
-                            }
-
-                            return super.render()
-                        }}
-                    </DesignerContext.Consumer>
-                }
-
-                renderDesigntime() {
-                    console.assert(this.id != null)
-                    let style = (this.props.style || {}) as React.CSSProperties
-                    let { left, top, position } = style
-
-                    return <div id={this.id}
-                        ref={e => {
-                            if (!e) return
-                            this.wrapperElement = e
-                            if ($(e).data('designtimeBehavior')) {
-                                return
-                            }
-
-                            $(e).data('designtimeBehavior', 'designtimeBehavior')
-                            this.designer.designtimeBehavior(e, args)
-                        }}
-                        className={this.props.selected ? `${classNames.componentSelected} ${classNames.component}` : classNames.component}
-                        style={{ left, top, position }} >
-                        {(() => {
-
-                            let createElement = React.createElement
-                            React.createElement = designTimeCreateElement as any
-
-                            let s = super.render()
-                            React.createElement = createElement
-
-                            return s
-                        })()}
-                    </div>
-                }
-
-
-            }
-
-            core.register(constructor.name, result)
-
-            return result
-        }
-
-        convertHTMLTag(componentData: ComponentData) {
-
-            let typename = componentData.type
-            let isHTMLTag = core.customControlTypes[typename] == null && typename.toLowerCase() == typename
-            componentData.children = (componentData.children || []).map(o => this.convertHTMLTag(o))
-
-            if (isHTMLTag) {
-                // let tmp = componentData
-                // componentData = {
-                //     type: HTMLTag.name,
-                //     props: {},
-                //     children: [tmp]
-                // }
-                // return componentData
-                componentData.type = HTMLTag.name
-            }
-
-            return componentData
-        }
-
-        private draggableElement(element: HTMLElement) {
-
-            let designerPosition = $(this.element).offset()
+            let timeStart: number
             let elementID = element.id
             console.assert(elementID)
             $(element)
-                // .mousedown((ev) => {
-                //     if (ev.ctrlKey) {
-                //         return
-                //     }
-                //     $(`${classNames.componentSelected}`).removeClass(`${classNames.componentSelected}`)
-                //     $(this).addClass(classNames.componentSelected);
-
-                //     console.assert(elementID)
-                //     this.selectComponent(elementID)
-                // })
-                .click(ev => {
-                    if (!ev.ctrlKey) {
-                        this.selectComponent(element.id)
-                        return
-                    }
-
-                    // $(this).toggleClass(classNames.componentSelected)
-                    console.assert(elementID)
-                    if (this._selectedControlIds.indexOf(elementID) >= 0) {
-                        this._selectedControlIds = this._selectedControlIds.filter(o => o != elementID)
-                    }
-                    else {
-                        this._selectedControlIds.push(elementID)
-                    }
-                    this.selectComponent(this._selectedControlIds)
-
-
-                })
-                .drag("init", function () {
+                .drag("init", function (ev) {
+                    let e = ev.currentTarget as HTMLElement
                     if ($(this).is(`.${classNames.componentSelected}`))
                         return $(`.${classNames.componentSelected}`);
                 })
-                .drag(function (ev, dd) {
-                    setPosition(ev, dd, this)
-                }, { click: false });
+                .drag('start', function (ev) {
+                    timeStart = Date.now()
 
-            let offsetX, offsetY: number
+                })
+                .drag(function (ev, dd) {
+                    ev.preventDefault()
+                    ev.stopPropagation()
+
+                    setPosition(ev, dd, this)
+
+                }, { click: true })
+                .drag('end', function (ev, dd) {
+                    let designerPosition = $(designer.element).offset()
+                    let left = dd.offsetX - designerPosition.left
+                    let top = dd.offsetY - designerPosition.top
+                    designer.setControlPosition(ev.currentTarget.id, left, top)
+                })
+                .click(function (ev, dd) {
+                    ev.preventDefault()
+                    ev.stopPropagation()
+
+                    console.log(`draggableElement drag end: ${timeStart}`)
+                    let t = Date.now() - (timeStart || Date.now())
+                    timeStart = null
+                    if (t > 300) {
+                        return
+                    }
+                    console.log(`time interval:` + t)
+
+                    let e = ev.currentTarget as HTMLElement
+                    let element = ev.currentTarget as HTMLElement
+                    let elementID = element.id
+                    if (!ev.ctrlKey) {
+                        designer.selectComponent(element.id)
+                        return
+                    }
+
+                    console.assert(elementID)
+                    if (designer._selectedControlIds.indexOf(elementID) >= 0) {
+                        designer._selectedControlIds = designer._selectedControlIds.filter(o => o != elementID)
+                    }
+                    else {
+                        designer._selectedControlIds.push(elementID)
+                    }
+                    designer.selectComponent(designer._selectedControlIds)
+                })
+
+
 
             function setPosition(ev: JQuery.Event<any>, dd, element: any) {
+                let designerPosition = $(designer.element).offset()
                 let left = dd.offsetX - designerPosition.left
                 let top = dd.offsetY - designerPosition.top
                 console.log(['ev.offsetX, ev.offsetY', ev.offsetX, ev.offsetY])
@@ -739,108 +493,104 @@ namespace jueying {
                 $(element).css({
                     top, left
                 });
-
             }
-
         }
 
-        componentDidMount() {
-            // let designerPosition = $('.page-view').position()
-            // setTimeout(() => {
-            // let designerPosition = $(this.element).offset()
-            // console.log(designerPosition)
-            // // }, 1000)
-            // let self = this
-            // $(this.element)
-            //     .on("drag", `.${classNames.component}`, function (ev, dd) {
-            //         setPosition(ev, dd, this)
-            //         $
-            //     })
-            //     .on('mousedown', `.${classNames.component}`, function (ev, dd) {
-            //         // if (ev.ctrlKey) {
-            //         //     return
-            //         // }
-            //         // $(`${classNames.componentSelected}`).removeClass(`${classNames.componentSelected}`)
-            //         // $(self).addClass(classNames.componentSelected);
+        createDesignTimeElement(type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) {
 
-            //         // let elementId = this.id as string
-            //         // self.selectComponent(elementId)
-            //     })
-            //     .drag("init", function () {
-            //         if ($(this).is(`.${classNames.componentSelected}`))
-            //             return $(`.${classNames.componentSelected}`);
-            //     })
-            //     .on('click', `.${classNames.component}`, function (ev, dd) {
-            //         // if (!ev.ctrlKey)
-            //         //     return
+            console.assert(props.id)
+            if (props.id != null)
+                props.key = props.id;
 
-            //         let elementId = this.id as string
-            //         console.assert(elementId)
-            //         if (self._selectedControlIds.indexOf(elementId) >= 0) {
-            //             self._selectedControlIds = self._selectedControlIds.filter(o => o != elementId)
-            //         }
-            //         else {
-            //             self._selectedControlIds.push(elementId)
-            //         }
-            //         self.selectComponent(self._selectedControlIds)
-            //     });
+            if (type == 'a' && (props as any).href) {
+                (props as any).href = 'javascript:';
+            }
+            else if (type == 'input' || type == 'button') {
+                delete (props as any).onClick;
+                (props as any).readOnly = true;
+            }
 
+            let allowWrapper: boolean = true
+            let tagName: keyof HTMLElementTagNameMap = type as keyof HTMLElementTagNameMap
+            if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
+                tagName == 'thead' || tagName == 'tbody' || tagName == 'tfoot' || tagName == 'th' || tagName == 'tr' || tagName == 'td') {
+                allowWrapper = false
+            }
 
-            // setInterval(() => {
-            //     this.selectedComponentIds.forEach(o => {
-            //         $(`#${o}`).css({ left: offsetX, top: offsetY })
-            //     })
-            // }, 100)
+            if (allowWrapper) {
+
+                let style = props.style || {}
+                let { top, left, position, width, height } = style
+
+                delete style.left
+                delete style.top
+
+                let wrapperProps: ComponentProps<any> & React.HTMLAttributes<any> = {
+                    id: props.id,
+                    className: props.selected ? `${classNames.componentSelected} ${classNames.component}` : classNames.component,
+                    style: { top, left, position, width, height },
+                    ref: (e: HTMLElement) => {
+                        if (!e) return
+                        if (e.getAttribute('data-behavior')) {
+                            return
+                        }
+                        e.setAttribute('data-behavior', 'behavior')
+                        PageDesigner.enableDroppable(e, this)
+                        PageDesigner.draggableElement(e, this)
+                    },
+                    onKeyDown: (e) => {
+                        console.log('onKeyDown')
+                    }
+                }
+
+                return <div {...wrapperProps}>
+                    <div style={{ height: 12, width: 12, top: -6, left: 8, border: 'solid 1px black', position: 'absolute' }} />
+                    {React.createElement(type, props, ...children)}
+                </div>
+            }
+
+            props.ref = (e: HTMLElement) => {
+                if (!e) return
+                e.onclick = (ev) => {
+                    ev.stopPropagation()
+                    this.selectComponent(e.id)
+                }
+            }
+
+            let element = React.createElement(type, props, ...children)
+            return element
+        }
+
+        componentWillReceiveProps(props: PageDesignerProps) {
+            this.initSelectedIds(props.pageData)
+            this.setState({ pageData: props.pageData });
+        }
+
+        componentDidUpdate() {
+            this.componentUpdated.fire(this)
         }
 
         render() {
             let designer = this;
             let { pageData } = this.state
-            pageData = this.convertHTMLTag(pageData)
-            let pageView = pageData ? core.toReactElement(pageData) : null
-            return <div className="designer" tabIndex={1}
+
+
+
+            let result = <div className="designer" tabIndex={1}
                 ref={e => {
                     if (!e) return
                     this.element = e || this.element
-                    // this.mouseEvent()
                 }}
                 onKeyDown={(e) => this.onKeyDown(e)}>
                 <DesignerContext.Provider value={{ designer }}>
-                    {pageView}
+                    {(() => {
+                        let pageView = pageData ? core.createElement(pageData, this.createDesignTimeElement.bind(this)) : null
+                        return pageView
+                    })()}
                 </DesignerContext.Provider>
-            </div >;
+            </div >
+
+            return result
         }
     }
-
-    function designTimeCreateElement(type: string | React.ComponentClass<any>, props: React.HTMLAttributes<any> & React.Attributes, ...children: any[]) {
-
-        //====================================================
-        // 将 props copy 出来，以便于可以修改
-        props = Object.assign({}, props || {});
-        //====================================================
-
-        if (props.id != null)
-            props.key = props.id;
-
-        if (type == 'a' && (props as any).href) {
-            (props as any).href = 'javascript:';
-        }
-        else if (type == 'input' || type == 'button') {
-            delete props.onClick;
-            (props as any).readOnly = true;
-        }
-
-        if (props.style) {
-            let style = Object.assign({}, props.style)
-            delete style.left
-            delete style.top
-            props.style = style
-        }
-
-        return core.originalCreateElement(type, props, ...children)
-    }
-
-
-
-
 }

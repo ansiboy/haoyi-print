@@ -100,7 +100,7 @@ namespace jueying.extentions {
                         </li>
                     );
                 }
-                pagingBar = React.createElement("ul", { className: 'pagination', style: { margin: 0 } }, children);
+                pagingBar = h("ul", { className: 'pagination', style: { margin: 0 } }, children);
             }
             return <div className="modal-dialog">
                 <div className="modal-content" style={{ width: dialog_content_width }}>
@@ -122,7 +122,7 @@ namespace jueying.extentions {
                                                 onClick={() => this.selectTemplate(i)}
                                                 className={i == selectedTemplateIndex ? classNames.templateSelected : null}>
                                                 <PageViewContainer>
-                                                    {core.toReactElement(o.pageData)}
+                                                    {core.createElement(o.pageData)}
                                                     <div className="name">
                                                         <span>{o.name}</span>
                                                     </div>

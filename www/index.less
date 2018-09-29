@@ -17,11 +17,51 @@ body {
     height: 100%;
 }
 
-.modal {
+.page-view {
+    background: white;
     color: @dark-text-color;
+    list-style: none;
+    font-size: 10pt;
+    top: 0;
+    bottom: 0;
+    left:0;
+    right: 0;
+    position: absolute;
+    font-family: 'Microsoft YaHei', 'FangSong_GB2312','Hiragino Sans GB',Helvetica,Arial,'Lucida Grande',sans-serif;
+    header {
+        min-height: 2cm;
+        // border: dotted 3px #ccc;
+    }
+    section {
+        // border: dotted 0.1cm #ccc;
+    }
+    footer {
+        min-height: 2cm;
+        // border: dotted 0.1cm #ccc;
+    }
+    .control-container {
+        .empty {
+            text-align: center;
+            padding-top: 1cm;
+        }
+    }
 }
 
-// @panel-height: ~'calc(100% - 80px)';
+
+:focus {
+    /* -webkit-focus-ring-color = '#5B9DD9' */
+    outline:none;
+}
+
+
+button {
+    span {
+        padding-left: 4px
+    }
+}
+
+//=======================================================
+// PageDesigner
 
 .component-panel {
     position: absolute;
@@ -100,6 +140,12 @@ body {
     }
 }
 
+.editor-panel.panel.panel-primary {
+    > .panel-body {
+        padding: 0;
+    }
+}
+
 .page-container {
     @nav-height: 42px;
     position: absolute;
@@ -139,34 +185,8 @@ body {
     }
 }
 
-.page-view {
-    background: white;
-    color: @dark-text-color;
-    list-style: none;
-    font-size: 10pt;
-    top: 0;
-    bottom: 0;
-    left:0;
-    right: 0;
-    position: absolute;
-    font-family: 'Microsoft YaHei', 'FangSong_GB2312','Hiragino Sans GB',Helvetica,Arial,'Lucida Grande',sans-serif;
-    header {
-        min-height: 2cm;
-        // border: dotted 3px #ccc;
-    }
-    section {
-        // border: dotted 0.1cm #ccc;
-    }
-    footer {
-        min-height: 2cm;
-        // border: dotted 0.1cm #ccc;
-    }
-    .control-container {
-        .empty {
-            text-align: center;
-            padding-top: 1cm;
-        }
-    }
+.designer
+.component-panel {
     -moz-user-select: none;
     -webkit-user-select: none;
     -ms-user-select:none;
@@ -174,45 +194,13 @@ body {
     -o-user-select:none;
 }
 
-:focus {
-    /* -webkit-focus-ring-color = '#5B9DD9' */
-    outline:none;
-}
-
-
-
-
-
-.spliter {
-    background-color: #ccc;
-}
-
-button {
-    span {
-        padding-left: 4px
-    }
-}
-
-.ruler {
-	position: absolute;
-	top: 50px;
-	left: 80px;
-	z-index: -1;
-}
-
-.html-tag {
-    border: 1px dotted;
-
-}
-
-.control-selected {
+.component-selected {
     :first-child {
         border-color: blue;
     }
 }
-
-.editor-panel.panel.panel-primary {
-    > .panel-body {
-        padding: 0;
-    }
+.component-wrapper {
+    border-width: 1px;
+    border-style: dotted;
 }
+//=======================================================
