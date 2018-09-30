@@ -4,7 +4,6 @@ import { BaseControlProps } from "./baseControl";
 import { ControlSize } from "./controls/controlSize";
 
 export interface PageViewProps extends BaseControlProps<PageView> {
-    layout?: 'flowing' | 'absolute',
     data?: any,
 }
 
@@ -36,11 +35,11 @@ export class PageView extends React.Component<PageViewProps, State>{
 if (jueying.PageDesigner) {
     ComponentPropEditor.setControlPropEditor<PageViewProps, "name">(PageView, 'property', TextInput, "name")
 
-    let items = {
-        flowing: '流式定位',
-        absolute: '绝对定位'
-    }
-    ComponentPropEditor.setControlPropEditor<PageViewProps, "layout">(PageView, 'property', dropdown(items), "layout")
+    // let items = {
+    //     flowing: '流式定位',
+    //     absolute: '绝对定位'
+    // }
+    // ComponentPropEditor.setControlPropEditor<PageViewProps, "layout">(PageView, 'property', dropdown(items), "layout")
     ComponentPropEditor.setControlPropEditor<PageViewProps, "name">(PageView, 'property', TextInput, "name")
     ComponentPropEditor.setControlPropEditor<PageViewProps, "style">(PageView, 'property', ControlSize, "style", 'width')
 }

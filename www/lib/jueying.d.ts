@@ -105,10 +105,13 @@ declare namespace jueying {
         typename: string;
         designer: PageDesigner;
     }
-    function component<T extends React.Component>(args?: {
+    interface ComponentAttribute {
+        /** 表示组件为容器，可以添加组件 */
         container?: boolean;
+        /** 表示组件可移动 */
         movable?: boolean;
-    }): (constructor: new (...args: any[]) => T) => new (...args: any[]) => T;
+    }
+    function component<T extends React.Component>(args?: ComponentAttribute): (constructor: new (...args: any[]) => T) => new (...args: any[]) => T;
     let core: {
         createElement: typeof createElement;
         componentTypes: {
@@ -146,10 +149,10 @@ declare namespace jueying {
         static getControlPropEditor<T, K extends keyof T>(controlClassName: string, propName: string): PropEditorInfo;
         /** 通过属性数组获取属性的编辑器 */
         static getControlPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
-        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
-        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K): void;
-        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
-        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K): void;
+        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
+        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: string, editorType: PropEditorConstructor, propName: K): void;
+        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
+        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: string, editorType: PropEditorConstructor, propName: K): void;
         static getFlatPropValue(obj: Object, flatPropName: string): void;
     }
 }
@@ -247,7 +250,7 @@ declare namespace jueying {
     }
     class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
         private _selectedControlIds;
-        element: HTMLElement;
+        private element;
         controlSelected: Callback<string[]>;
         controlRemoved: Callback<string[]>;
         designtimeComponentDidMount: Callback<{
@@ -256,10 +259,13 @@ declare namespace jueying {
         }>;
         componentUpdated: Callback<PageDesigner>;
         names: string[];
+        private static componentAttributes;
+        private static defaultComponentAttribute;
         constructor(props: PageDesignerProps);
         initSelectedIds(pageData: ComponentData): void;
         readonly pageData: ComponentData;
         readonly selectedComponentIds: string[];
+        static setComponentAttribute(typename: string, attr: ComponentAttribute): void;
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any;
         /**
          * 启用拖放操作，以便通过拖放图标添加控件
@@ -268,7 +274,7 @@ declare namespace jueying {
         private sortChildren;
         private namedControl;
         /** 添加控件 */
-        appendControl(parentId: string, childControl: ComponentData, childIds?: string[]): void;
+        appendComponent(parentId: string, childControl: ComponentData, childIds?: string[]): void;
         /** 设置控件位置 */
         setControlPosition(controlId: string, left: number | string, top: number | string): void;
         setControlsPosition(positions: {
@@ -293,9 +299,9 @@ declare namespace jueying {
          * 1. 可以根据设定是否移到该元素
          * 2. 可以根据设定是否允许添加组件到该元素
          * @param element 设计时元素
-         * @param args
+         * @param attr
          */
-        designtimeBehavior(element: HTMLElement, args: {
+        designtimeBehavior(element: HTMLElement, attr: {
             container?: boolean;
             movable?: boolean;
         }): void;

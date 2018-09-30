@@ -99,7 +99,7 @@ export let components: Array<ComponentDefine> = [
 
 
 
-let style = { width: '100%', height: '100%', minWidth: 'unset' };
+let style: React.CSSProperties = { width: '100%', height: '100%', minWidth: 'unset', position: 'absolute' };
 
 let template1: jueying.extentions.DocumentData = {
     pageData: {
@@ -132,8 +132,6 @@ let template2: jueying.extentions.DocumentData = {
             id: guid(),
             className: "page-view",
             style,
-            componentName: "PageView",
-            layout: 'absolute'
         } as any
     },
     name: '空白模板(绝对定位)'

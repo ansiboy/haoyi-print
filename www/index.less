@@ -97,11 +97,14 @@ button {
     margin: 0;
     font-size: @title-font-size;
     z-index: 100;
+    overflow: auto;
 
     label {
         width: 80px;
         float: left;
         padding: 4px;
+        text-overflow: ellipsis;
+        overflow: hidden;
     }
     .control {
         padding-left: 90px;

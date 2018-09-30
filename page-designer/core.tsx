@@ -25,22 +25,18 @@ namespace jueying {
         designer: PageDesigner,
     }
 
-    export function component<T extends React.Component>(args?: { container?: boolean, movable?: boolean }) {
-        let defaultArguments: typeof args = { container: false, movable: true }
-        args = Object.assign(defaultArguments, args || {})
+    export interface ComponentAttribute {
+        /** 表示组件为容器，可以添加组件 */
+        container?: boolean,
+        /** 表示组件可移动 */
+        movable?: boolean
+    }
 
+    export function component<T extends React.Component>(args?: ComponentAttribute) {
         return function (constructor: { new(...args): T }) {
-            let c = constructor as any as React.ComponentClass<ComponentProps<any>, any>
-            // let result = class ComponetWraper extends c implements DesigntimeComponent {
-            //     designer: PageDesigner;
-            //     get typename(): string {
-            //         return constructor.name
-            //     }
-
-            //     render() {
-            //         return super.render()
-            //     }
-            // }
+            if (PageDesigner) {
+                PageDesigner.setComponentAttribute(constructor.name, args)
+            }
 
             core.register(constructor.name, constructor)
             return constructor
@@ -48,7 +44,6 @@ namespace jueying {
     }
 
     export let core = {
-        // originalCreateElement: React.createElement,
         createElement,
         componentTypes: {} as { [key: string]: React.ComponentClass<any> | string },
         register,
@@ -91,35 +86,6 @@ namespace jueying {
             return null;
         }
     }
-
-    function toElementData(element: React.ReactElement<React.Props<any>>): ComponentData {
-
-        let elementChildren: React.ReactElement<any>[] = null
-        if (element.props.children) {
-            let arr = Array.isArray(element.props.children) ? element.props.children : [element.props.children]
-            elementChildren = arr as React.ReactElement<any>[]
-        }
-
-        let children: ComponentData[] = null
-        if (elementChildren)
-            elementChildren.map(o => toElementData(o)).filter(o => o)
-
-        let type = typeof element.type == 'function' ? componentNameByType(element.type) : null;
-        if (!type)
-            return null
-
-        let props = {}
-        for (let key in element.props) {
-            if (key == 'children' || key == 'ref' || key == 'key')
-                continue
-
-            props[key] = element.props[key]
-        }
-
-        let data: ComponentData = children ? { type, children, props } : { type, props }
-        return data
-    }
-
 
     function register(componentName: string, componentType: React.ComponentClass<any>): void {
         if (componentType == null && typeof componentName == 'function') {

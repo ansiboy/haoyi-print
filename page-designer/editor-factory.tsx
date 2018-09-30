@@ -13,7 +13,7 @@ namespace jueying {
     }
 
     export interface PropEditorInfo {
-        propNames: string[], 
+        propNames: string[],
         editorType: PropEditorConstructor, group: string
     }
 
@@ -41,14 +41,14 @@ namespace jueying {
             return editor
         }
 
-        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
-        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K): void
-        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
-        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: keyof typeof propsGroups, editorType: PropEditorConstructor, propName: K): void
-        static setControlPropEditor(componentType: React.ComponentClass | string, group: keyof typeof propsGroups, editorType: PropEditorConstructor, ...propNames: string[]): void {
+        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
+        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: string, editorType: PropEditorConstructor, propName: K): void
+        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
+        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: string, editorType: PropEditorConstructor, propName: K): void
+        static setControlPropEditor(componentType: React.ComponentClass | string, group: string, editorType: PropEditorConstructor, ...propNames: string[]): void {
 
             let className = typeof componentType == 'string' ? componentType : componentType.prototype.typename || componentType.name
-            let classProps = this.controlPropEditors[className] = this.controlPropEditors[className] || []
+            let classProps = ComponentPropEditor.controlPropEditors[className] = ComponentPropEditor.controlPropEditors[className] || []
             for (let i = 0; i < classProps.length; i++) {
                 let propName1 = classProps[i].propNames.join('.')
                 let propName2 = propNames.join('.')

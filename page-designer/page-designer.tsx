@@ -24,10 +24,7 @@ namespace jueying {
 
     export class Callback<T> {
         private funcs = new Array<(...args: Array<any>) => void>();
-
-        constructor() {
-        }
-
+        
         add(func: (args: T) => void) {
             this.funcs.push(func);
         }
@@ -56,17 +53,28 @@ namespace jueying {
     }
 
     export class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
-        // private _h: (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element
         private _selectedControlIds: string[] = [];
-        element: HTMLElement;
+        private element: HTMLElement;
 
         controlSelected = Callback.create<string[]>();
         controlRemoved = Callback.create<string[]>()
         designtimeComponentDidMount = Callback.create<{ component: React.ReactElement<any>, element: HTMLElement }>();
         componentUpdated = Callback.create<PageDesigner>()
-
-
         names = new Array<string>();
+
+        private static componentAttributes: { [key: string]: ComponentAttribute } = {
+            'table': { container: false, movable: true },
+            'thead': { container: false, movable: false },
+            'tbody': { container: false, movable: false },
+            'tfoot': { container: false, movable: false },
+            'tr': { container: false, movable: false },
+            'td': { container: true, movable: false },
+
+            'img': { container: false, movable: true },
+
+            'div': { container: true, movable: true },
+        }
+        private static defaultComponentAttribute: ComponentAttribute = { container: false, movable: true }
 
         constructor(props: PageDesignerProps) {
             super(props);
@@ -105,6 +113,10 @@ namespace jueying {
 
         get selectedComponentIds() {
             return this._selectedControlIds
+        }
+
+        static setComponentAttribute(typename: string, attr: ComponentAttribute) {
+            this.componentAttributes[typename] = attr
         }
 
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any {
@@ -154,11 +166,18 @@ namespace jueying {
                 }
 
                 let ctrl = JSON.parse(componentData) as ComponentData
-                if (ctrl.props.style != null && ctrl.props.style.position == 'absolute') {
+
+                ctrl.props.style = ctrl.props.style || {}
+                designer.pageData.props.style = designer.pageData.props.style || {}
+                if (!ctrl.props.style.position) {
+                    ctrl.props.style.position = designer.pageData.props.style.position
+                }
+
+                if (ctrl.props.style.position == 'absolute') {
                     ctrl.props.style.left = event.layerX
                     ctrl.props.style.top = event.layerY
                 }
-                designer.appendControl(element.id, ctrl);
+                designer.appendComponent(element.id, ctrl);
             }
         }
 
@@ -211,7 +230,7 @@ namespace jueying {
         }
 
         /** 添加控件 */
-        appendControl(parentId: string, childControl: ComponentData, childIds?: string[]) {
+        appendComponent(parentId: string, childControl: ComponentData, childIds?: string[]) {
             if (!parentId) throw Errors.argumentNull('parentId');
             if (!childControl) throw Errors.argumentNull('childControl');
 
@@ -328,7 +347,7 @@ namespace jueying {
             let pageData = this.state.pageData;
             console.assert(pageData.children);
             this.removeControlFrom(controlId, pageData.children);
-            this.appendControl(parentId, control, childIds);
+            this.appendComponent(parentId, control, childIds);
         }
 
         private removeControlFrom(controlId: string, collection: ComponentData[]): boolean {
@@ -404,13 +423,18 @@ namespace jueying {
          * 1. 可以根据设定是否移到该元素
          * 2. 可以根据设定是否允许添加组件到该元素
          * @param element 设计时元素
-         * @param args 
+         * @param attr 
          */
-        designtimeBehavior(element: HTMLElement, args: { container?: boolean, movable?: boolean }) {
-            if (args.container) {
+        designtimeBehavior(element: HTMLElement, attr: { container?: boolean, movable?: boolean }) {
+            if (!element) throw Errors.argumentNull('element')
+            if (!attr) throw Errors.argumentNull('args')
+
+            console.assert(attr.container != null)
+            console.assert(attr.movable != null)
+            if (attr.container) {
                 PageDesigner.enableDroppable(element, this)
             }
-            if (args.movable) {
+            if (attr.movable) {
                 console.assert(element != null)
                 PageDesigner.draggableElement(element, this)
             }
@@ -419,10 +443,6 @@ namespace jueying {
         private static draggableElement(element: HTMLElement, designer: PageDesigner) {
             if (!element) throw Errors.argumentNull('element')
             if (!element) throw Errors.argumentNull('designer')
-
-            // let designerPosition = $(designer.element).offset()
-            // if (designerPosition == null)
-            //     debugger
 
             let timeStart: number
             let elementID = element.id
@@ -535,11 +555,9 @@ namespace jueying {
                             return
                         }
                         e.setAttribute('data-behavior', 'behavior')
-                        PageDesigner.enableDroppable(e, this)
-                        PageDesigner.draggableElement(e, this)
-                    },
-                    onKeyDown: (e) => {
-                        console.log('onKeyDown')
+                        let typename = typeof type == 'string' ? type : type.name
+                        let attr = Object.assign(PageDesigner.defaultComponentAttribute, PageDesigner.componentAttributes[typename] || {})
+                        this.designtimeBehavior(e, attr)
                     }
                 }
 
@@ -573,8 +591,6 @@ namespace jueying {
         render() {
             let designer = this;
             let { pageData } = this.state
-
-
 
             let result = <div className="designer" tabIndex={1}
                 ref={e => {

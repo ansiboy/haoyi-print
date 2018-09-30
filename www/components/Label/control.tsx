@@ -1,6 +1,6 @@
 import { component } from "jueying";
 import React = require("react");
-import { BaseControl, BaseControlProps } from "../baseControl";
+import { BaseControl, BaseControlProps, stylePropEditors } from "../baseControl";
 
 export interface Props extends BaseControlProps<Label> {
     text: string,
@@ -8,6 +8,7 @@ export interface Props extends BaseControlProps<Label> {
     fontFa?: string,
 }
 
+@stylePropEditors
 @(component({ container: false, movable: true }) as any)
 export default class Label extends BaseControl<Props, {}>{
     static defaultProps: Props = { text: '', fontSize: '10pt' }

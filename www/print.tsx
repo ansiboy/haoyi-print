@@ -106,7 +106,7 @@ async function createTemplateElement(templateName: string, data?: object): Promi
 
 
     (r.props as any).data = data;
-    let reactElement = jueying.toReactElement(r)
+    let reactElement = jueying.createElement(r)
     if (reactElement == null)
         throw new Error('create element fail')
 
