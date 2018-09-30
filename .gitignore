@@ -2,5 +2,7 @@ node_modules
 host/**/*.js
 page-designer/**/*.js
 www/**/*.js
+!www/lib/**/*.js
+
 **/*.map
 print-templates
