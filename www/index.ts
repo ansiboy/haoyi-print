@@ -63,7 +63,8 @@
 
 
     requirejs([`less!${lib}/bootstrap-3.3.7/less/bootstrap.less`])
-    requirejs(['less!index'])
+    requirejs(['less!content/page-designer'])
+    requirejs(['less!content/index'])
     requirejs(['react', 'react-dom', 'jquery', 'ui', 'chitu'], function (react, reactDOM, jquery) {
         (window as any)['React'] = react;
         (window as any)['ReactDOM'] = reactDOM;

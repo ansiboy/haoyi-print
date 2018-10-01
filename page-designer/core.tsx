@@ -1,3 +1,4 @@
+
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
  * 
@@ -14,8 +15,6 @@
 
 namespace jueying {
 
-    // export let h = React.createElement
-
     export type DesignerContextValue = { designer: PageDesigner | null };
     export const DesignerContext = React.createContext<DesignerContextValue>({ designer: null });
 
@@ -25,17 +24,11 @@ namespace jueying {
         designer: PageDesigner,
     }
 
-    export interface ComponentAttribute {
-        /** 表示组件为容器，可以添加组件 */
-        container?: boolean,
-        /** 表示组件可移动 */
-        movable?: boolean
-    }
 
     export function component<T extends React.Component>(args?: ComponentAttribute) {
         return function (constructor: { new(...args): T }) {
             if (PageDesigner) {
-                PageDesigner.setComponentAttribute(constructor.name, args)
+                Component.setComponentAttribute(constructor.name, args)
             }
 
             core.register(constructor.name, constructor)
@@ -47,11 +40,7 @@ namespace jueying {
         createElement,
         componentTypes: {} as { [key: string]: React.ComponentClass<any> | string },
         register,
-        loadAllTypes,
-        componentType(name: string) {
-            let t = core.componentTypes[name]
-            return t
-        }
+        loadAllTypes
     }
 
     type ReactFactory = (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element
@@ -114,14 +103,6 @@ namespace jueying {
         return Promise.all(ps);
     }
 
-    function componentNameByType(type: React.ComponentClass<any> | React.StatelessComponent<any>) {
-        for (let key in core.componentTypes) {
-            if (core.componentTypes[key] == type)
-                return key;
-        }
-
-        return null;
-    }
 
 
 

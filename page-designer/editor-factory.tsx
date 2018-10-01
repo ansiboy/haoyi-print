@@ -41,11 +41,9 @@ namespace jueying {
             return editor
         }
 
-        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
-        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: string, editorType: PropEditorConstructor, propName: K): void
-        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void
-        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: string, editorType: PropEditorConstructor, propName: K): void
-        static setControlPropEditor(componentType: React.ComponentClass | string, group: string, editorType: PropEditorConstructor, ...propNames: string[]): void {
+        static setControlPropEditor(componentType: React.ComponentClass | string, propName: string, editorType: PropEditorConstructor, group?: string, ): void {
+
+            let propNames = (propName as string).split('.')
 
             let className = typeof componentType == 'string' ? componentType : componentType.prototype.typename || componentType.name
             let classProps = ComponentPropEditor.controlPropEditors[className] = ComponentPropEditor.controlPropEditors[className] || []
@@ -58,10 +56,6 @@ namespace jueying {
                 }
             }
             classProps.push({ propNames: propNames, editorType, group })
-        }
-
-        static getFlatPropValue(obj: Object, flatPropName: string) {
-
         }
     }
 

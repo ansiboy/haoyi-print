@@ -6,21 +6,17 @@ var jueying;
         componentTypeName: 'data-component-name',
         componentData: 'component-data'
     };
-    jueying.propsGroups = {
-        property: 'property',
-        style: 'style'
-    };
     jueying.strings = {
-        property: '属性',
-        style: '样式',
-        field: '字段',
-        fontSize: '字体大小',
-        height: '高',
-        left: '左边',
-        name: '名称',
-        top: '顶部',
-        text: '文本',
-        width: '宽'
+    // property: '属性',
+    // style: '样式',
+    // field: '字段',
+    // fontSize: '字体大小',
+    // height: '高',
+    // left: '左边',
+    // name: '名称',
+    // top: '顶部',
+    // text: '文本',
+    // width: '宽'
     };
     function guid() {
         function s4() {
@@ -32,6 +28,24 @@ var jueying;
             s4() + '-' + s4() + s4() + s4();
     }
     jueying.guid = guid;
+    class Callback {
+        constructor() {
+            this.funcs = new Array();
+        }
+        add(func) {
+            this.funcs.push(func);
+        }
+        remove(func) {
+            this.funcs = this.funcs.filter(o => o != func);
+        }
+        fire(args) {
+            this.funcs.forEach(o => o(args));
+        }
+        static create() {
+            return new Callback();
+        }
+    }
+    jueying.Callback = Callback;
     jueying.classNames = {
         componentSelected: `component-selected `,
         emptyTemplates: `empty-templates`,
@@ -81,6 +95,172 @@ var jueying;
         }
     */
     document.head.appendChild(element);
+})(jueying || (jueying = {}));
+var jueying;
+(function (jueying) {
+    class ComponentWrapper extends React.Component {
+        designtimeBehavior(element, attr) {
+            if (!element)
+                throw jueying.Errors.argumentNull('element');
+            if (!attr)
+                throw jueying.Errors.argumentNull('args');
+            let designer = this.props.designer;
+            console.assert(attr.container != null);
+            console.assert(attr.movable != null);
+            if (attr.container) {
+                ComponentWrapper.enableDroppable(element, designer);
+            }
+            if (attr.movable) {
+                console.assert(element != null);
+                ComponentWrapper.draggable(designer, element);
+                if (this.handler != null)
+                    ComponentWrapper.draggable(designer, element, this.handler);
+            }
+            else {
+                element.onclick = (ev) => ComponentWrapper.invokeOnClick(ev, designer, element);
+            }
+        }
+        /**
+         * 启用拖放操作，以便通过拖放图标添加控件
+         */
+        static enableDroppable(element, designer) {
+            console.assert(element != null);
+            element.addEventListener('dragover', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                let componentName = event.dataTransfer.getData(jueying.constants.componentData);
+                if (componentName)
+                    event.dataTransfer.dropEffect = "copy";
+                else
+                    event.dataTransfer.dropEffect = "move";
+                console.log(`dragover: left:${event.layerX} top:${event.layerX}`);
+            });
+            element.ondrop = (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                let componentData = event.dataTransfer.getData(jueying.constants.componentData);
+                if (!componentData) {
+                    return;
+                }
+                let ctrl = JSON.parse(componentData);
+                ctrl.props.style = ctrl.props.style || {};
+                designer.pageData.props.style = designer.pageData.props.style || {};
+                if (!ctrl.props.style.position) {
+                    ctrl.props.style.position = designer.pageData.props.style.position;
+                }
+                if (ctrl.props.style.position == 'absolute') {
+                    ctrl.props.style.left = event.layerX;
+                    ctrl.props.style.top = event.layerY;
+                }
+                designer.appendComponent(element.id, ctrl);
+            };
+        }
+        static draggable(designer, element, handler) {
+            if (!designer)
+                throw jueying.Errors.argumentNull('designer');
+            if (!element)
+                throw jueying.Errors.argumentNull('element');
+            handler = handler || element;
+            let elementID = element.id;
+            console.assert(elementID);
+            let startPos;
+            $(handler)
+                .drag("init", function (ev) {
+                startPos = $(element).position();
+                if ($(this).is(`.${jueying.classNames.componentSelected}`))
+                    return $(`.${jueying.classNames.componentSelected}`);
+            })
+                .drag(function (ev, dd) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                setPosition(ev, dd);
+            }, { click: true })
+                .drag('end', function (ev, dd) {
+                let left = startPos.left + dd.deltaX;
+                let top = startPos.top + dd.deltaY;
+                designer.setControlPosition(element.id, left, top);
+                element.style.transform = '';
+            })
+                .click((ev) => ComponentWrapper.invokeOnClick(ev, designer, element));
+            let setPosition = (ev, dd) => {
+                console.log(['ev.offsetX, ev.offsetY', ev.offsetX, ev.offsetY]);
+                console.log(['dd.offsetX, dd.offsetY', dd.offsetX, dd.offsetY]);
+                console.log(ev);
+                console.log(dd);
+                element.style.transform = `translate(${dd.deltaX}px,${dd.deltaY}px)`;
+            };
+        }
+        static invokeOnClick(ev, designer, element) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            let elementID = element.id;
+            if (!ev.ctrlKey) {
+                designer.selectComponent(element.id);
+                return;
+            }
+            let selectedControlIds = designer.selectedComponentIds;
+            console.assert(elementID);
+            if (selectedControlIds.indexOf(elementID) >= 0) {
+                selectedControlIds = selectedControlIds.filter(o => o != elementID);
+            }
+            else {
+                selectedControlIds.push(elementID);
+            }
+            designer.selectComponent(selectedControlIds);
+        }
+        componentDidMount() {
+            if (this.element.getAttribute('data-behavior')) {
+                return;
+            }
+            this.element.setAttribute('data-behavior', 'behavior');
+            let type = this.props.type;
+            let typename = typeof type == 'string' ? type : type.name;
+            let attr = Component.getComponentAttribute(typename);
+            this.designtimeBehavior(this.element, attr);
+        }
+        render() {
+            let style = this.props.style || {};
+            let { top, left, position, width, height } = style;
+            let props = this.props;
+            let wrapperProps = {
+                id: props.id,
+                className: props.selected ? `${jueying.classNames.componentSelected} ${jueying.classNames.component}` : jueying.classNames.component,
+                style: { top, left, position, width, height },
+                ref: (e) => this.element = e || this.element
+            };
+            let type = this.props.type;
+            let typename = typeof type == 'string' ? type : type.name;
+            let attr = Component.getComponentAttribute(typename);
+            let handler = this.props.selected && attr.showHandler ? React.createElement("div", { style: { height: 12, width: 12, top: -6, left: 8, border: 'solid 1px black', position: 'absolute' }, ref: e => this.handler = e || this.handler }) : null;
+            return React.createElement("div", Object.assign({}, wrapperProps),
+                handler,
+                this.props.children);
+        }
+    }
+    jueying.ComponentWrapper = ComponentWrapper;
+    class Component {
+        static setComponentAttribute(typename, attr) {
+            Component.componentAttributes[typename] = attr;
+        }
+        static getComponentAttribute(typename) {
+            let attr = Component.componentAttributes[typename];
+            return Object.assign({}, Component.defaultComponentAttribute, attr || {});
+        }
+    }
+    Component.defaultComponentAttribute = {
+        container: false, movable: true, showHandler: false
+    };
+    Component.componentAttributes = {
+        'table': { container: false, movable: true, showHandler: true },
+        'thead': { container: false, movable: false },
+        'tbody': { container: false, movable: false },
+        'tfoot': { container: false, movable: false },
+        'tr': { container: false, movable: false },
+        'td': { container: true, movable: false },
+        'img': { container: false, movable: true },
+        'div': { container: true, movable: true, showHandler: true },
+    };
+    jueying.Component = Component;
 })(jueying || (jueying = {}));
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
@@ -199,20 +379,13 @@ var jueying;
                 groupEditors.editors.push({ prop: editors[i].prop, editor: editors[i].editor });
             }
             return React.createElement(React.Fragment, null, groupEditorsArray.map((g) => React.createElement("div", { key: g.group, className: "panel panel-default" },
-                React.createElement("div", { className: "panel-heading" }, jueying.strings[g.group] || g.group),
+                g.group ? React.createElement("div", { className: "panel-heading" }, jueying.strings[g.group] || g.group) : null,
                 React.createElement("div", { className: "panel-body" }, g.editors.map((o, i) => React.createElement("div", { key: i, className: "form-group" },
                     React.createElement("label", null, jueying.strings[o.prop] || o.prop),
                     React.createElement("div", { className: "control" }, o.editor)))))));
         }
         get element() {
             return this._element;
-        }
-        Element(...children) {
-            return h('div', {
-                ref: (e) => {
-                    this._element = e || this._element;
-                }
-            }, ...children);
         }
     }
     jueying.ComponentEditor = ComponentEditor;
@@ -227,19 +400,6 @@ var jueying;
             toolItemElement.draggable = true;
             toolItemElement.addEventListener('dragstart', function (ev) {
                 componentData.props = componentData.props || {};
-                // let defaultStyle = {}
-                // let componentTypeName = componentData.type
-                // let componentType = core.componentType(componentTypeName) || componentTypeName
-                // if (componentType != null && typeof componentType != 'string' && componentType.defaultProps != null) {
-                //     defaultStyle = componentType.defaultProps.style || {}
-                // }
-                // let left = ev.layerX;
-                // let top = ev.layerY;
-                // let style = Object.assign(defaultStyle, {
-                //     left,
-                //     top,
-                // } as React.CSSProperties, componentData.props.style || {})
-                // componentData.props.style = style
                 ev.dataTransfer.setData(jueying.constants.componentData, JSON.stringify(componentData));
             });
         }
@@ -284,12 +444,11 @@ var jueying;
  ********************************************************************************/
 var jueying;
 (function (jueying) {
-    // export let h = React.createElement
     jueying.DesignerContext = React.createContext({ designer: null });
     function component(args) {
         return function (constructor) {
             if (jueying.PageDesigner) {
-                jueying.PageDesigner.setComponentAttribute(constructor.name, args);
+                jueying.Component.setComponentAttribute(constructor.name, args);
             }
             jueying.core.register(constructor.name, constructor);
             return constructor;
@@ -300,11 +459,7 @@ var jueying;
         createElement,
         componentTypes: {},
         register,
-        loadAllTypes,
-        componentType(name) {
-            let t = jueying.core.componentTypes[name];
-            return t;
-        }
+        loadAllTypes
     };
     /**
      * 将持久化的元素数据转换为 ReactElement
@@ -351,13 +506,6 @@ var jueying;
         }
         return Promise.all(ps);
     }
-    function componentNameByType(type) {
-        for (let key in jueying.core.componentTypes) {
-            if (jueying.core.componentTypes[key] == type)
-                return key;
-        }
-        return null;
-    }
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -386,7 +534,8 @@ var jueying;
             let editor = classEditors.filter(o => o.propNames.join('.') == propNames.join('.'))[0];
             return editor;
         }
-        static setControlPropEditor(componentType, group, editorType, ...propNames) {
+        static setControlPropEditor(componentType, propName, editorType, group) {
+            let propNames = propName.split('.');
             let className = typeof componentType == 'string' ? componentType : componentType.prototype.typename || componentType.name;
             let classProps = ComponentPropEditor.controlPropEditors[className] = ComponentPropEditor.controlPropEditors[className] || [];
             for (let i = 0; i < classProps.length; i++) {
@@ -399,8 +548,6 @@ var jueying;
             }
             classProps.push({ propNames: propNames, editorType, group });
         }
-        static getFlatPropValue(obj, flatPropName) {
-        }
     }
     ComponentPropEditor.controlPropEditors = {};
     jueying.ComponentPropEditor = ComponentPropEditor;
@@ -410,18 +557,39 @@ var jueying;
     class EditorPanel extends React.Component {
         constructor(props) {
             super(props);
-            this.state = {};
+            this.state = { componentDatas: [] };
         }
-        setControls(controlDatas, designer) {
-            // let controls = controlIds.map(id => Control.getInstance(id))
+        setDesigner(designer) {
+            let controlDatas = designer.selectedComponentIds.map(o => designer.findComponentData(o));
             this.editor.setControls(controlDatas, designer);
+            let componentDatas = [];
+            let stack = new Array();
+            stack.push(designer.pageData);
+            while (stack.length > 0) {
+                let item = stack.pop();
+                componentDatas.push(item);
+                let children = item.children || [];
+                for (let i = 0; i < children.length; i++) {
+                    stack.push(children[i]);
+                }
+            }
+            let selectedComponentId = designer.selectedComponentIds.length == 1 ? designer.selectedComponentIds[0] : '';
+            this.setState({ componentDatas, designer, selectedComponentId });
         }
         render() {
             let { emptyText } = this.props;
             emptyText = emptyText || '';
+            let componentDatas = this.state.componentDatas;
+            let designer = this.state.designer;
+            let selectedComponentId = this.state.selectedComponentId;
             return React.createElement("div", { className: "editor-panel panel panel-primary", ref: (e) => this.element = e || this.element },
                 React.createElement("div", { className: "panel-heading" }, "\u5C5E\u6027"),
                 React.createElement("div", { className: "panel-body" },
+                    React.createElement("div", { className: "form-group" },
+                        React.createElement("select", { className: "form-control", value: selectedComponentId || '', onChange: e => {
+                                if (designer && e.target.value)
+                                    designer.selectComponent(e.currentTarget.value);
+                            } }, componentDatas.map(o => React.createElement("option", { key: o.props.id, id: o.props.id, value: o.props.id }, o.props.name)))),
                     React.createElement(jueying.ComponentEditor, { ref: e => this.editor = e || this.editor })));
         }
     }
@@ -442,254 +610,6 @@ var jueying;
     }
     jueying.Errors = Errors;
 })(jueying || (jueying = {}));
-// /*******************************************************************************
-//  * Copyright (C) maishu All rights reserved.
-//  *
-//  * HTML 页面设计器 
-//  * 
-//  * 作者: 寒烟
-//  * 日期: 2018/5/30
-//  *
-//  * 个人博客：   http://www.cnblogs.com/ansiboy/
-//  * GITHUB:     http://github.com/ansiboy
-//  * QQ 讨论组：  119038574
-//  * 
-//  ********************************************************************************/
-// namespace jueying {
-//     let h = React.createElement;
-//     export interface ControlProps<T> extends React.Props<T> {
-//         id?: string,
-//         name?: string,
-//         className?: string,
-//         style?: React.CSSProperties,
-//         tabIndex?: number,
-//         componentName?: string,
-//         designMode?: boolean,
-//         selected?: boolean,
-//     }
-//     export interface ControlState {
-//         selected: boolean
-//     }
-//     let customControlTypes: { [key: string]: React.ComponentClass<any> | string } = {}
-//     export abstract class Control<P extends ControlProps<any>, S> extends React.Component<P, S> {
-//         private _designer: PageDesigner | null = null;
-//         private originalComponentDidMount: (() => void) | undefined;
-//         private originalRender: () => React.ReactNode;
-//         // private static allInstance: { [key: string]: Control<any, any> } = {};
-//         static tabIndex = 1;
-//         // static componentsDir = 'components';
-//         static connectorElementClassName = 'component-container';
-//         // static componentTypeName = 'data-component-name';
-//         protected hasCSS = false;
-//         // pageView: PageView
-//         element: HTMLElement;
-//         constructor(props: P) {
-//             super(props);
-//             console.assert((this.props as any).id != null);
-//             this.originalComponentDidMount = this.componentDidMount;
-//             this.componentDidMount = this.myComponentDidMount;
-//             console.assert(this.props.id, 'id is null or empty')
-//         }
-//         get id(): string {
-//             let id = (this.props as any).id;
-//             console.assert(id);
-//             return id;
-//         }
-//         get isDesignMode(): boolean {
-//             if (this.props.designMode == null)
-//                 return this.designer != null;
-//             return this.props.designMode as boolean;
-//         }
-//         get componentName() {
-//             var componentName = (this.constructor as any)['componentName'];
-//             console.assert(componentName != null)
-//             return componentName;
-//         }
-//         get designer() {
-//             return this._designer;
-//         }
-//         static htmlDOMProps(props: any) {
-//             let result: { [key: string]: any } = {};
-//             if (!props) {
-//                 return result;
-//             }
-//             let keys = ['id', 'style', 'className', 'onClick'];
-//             for (let key in props) {
-//                 if (keys.indexOf(key) >= 0) {
-//                     result[key] = props[key];
-//                 }
-//             }
-//             return result;
-//         }
-//         protected async loadControlCSS() {
-//             let componentName = this.componentName;
-//             console.assert(componentName != null);
-//             let path = `${constants.componentsDir}/${componentName}/control`;
-//             requirejs([`less!${path}`])
-//         }
-//         private myComponentDidMount() {
-//             if (this.originalComponentDidMount)
-//                 this.originalComponentDidMount();
-//             if (this.hasCSS) {
-//                 this.loadControlCSS();
-//             }
-//         }
-//         // Element(child: React.ReactElement<any>): React.ReactElement<any> | null
-//         // Element(props: any, element: React.ReactElement<any>): React.ReactElement<any> | null
-//         // Element(type: string, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null
-//         // Element(type: string, props: ControlProps<this>, ...children: React.ReactElement<any>[]): React.ReactElement<any> | null
-//         // Element(type: any, props?: any, ...children: any[]): React.ReactElement<any> | null {
-//         //     if (typeof type == 'string' && typeof (props) == 'object' && !React.isValidElement(props)) {
-//         //     }
-//         //     else if (typeof type == 'string' && (props == null || typeof (props) == 'object' && React.isValidElement(props) ||
-//         //         typeof (props) == 'string')) {
-//         //         children = children || [];
-//         //         if (props)
-//         //             children.unshift(props);
-//         //         props = {};
-//         //         if (children.length == 0)
-//         //             children = null as any;
-//         //     }
-//         //     else if (typeof type == 'object' && React.isValidElement(type) && props == null) {
-//         //         children = [type];
-//         //         type = 'div';
-//         //         props = {};
-//         //     }
-//         //     else if (typeof type == 'object' && !React.isValidElement(type) && React.isValidElement(props)) {
-//         //         children = [props];
-//         //         props = type;
-//         //         type = 'div';
-//         //     }
-//         //     else {
-//         //         throw new Error('not implement');
-//         //     }
-//         //     if (this.props.id)
-//         //         props.id = this.props.id;
-//         //     if (this.props.style) {
-//         //         props.style = props.style ? Object.assign(this.props.style, props.style || {}) : this.props.style;
-//         //     }
-//         //     let className = ''
-//         //     if (this.props.className) {
-//         //         className = this.props.className
-//         //     }
-//         //     if (this.props.selected) {
-//         //         className = className + ' ' + classNames.controlSelected
-//         //     }
-//         //     if (className)
-//         //         props.className = className;
-//         //     if (this.props.tabIndex)
-//         //         props.tabIndex = this.props.tabIndex;
-//         //     else
-//         //         props.tabIndex = Control.tabIndex++
-//         //     if (this.isDesignMode && typeof type == 'string') {
-//         //         let func = (e: React.MouseEvent<any>) => {
-//         //             console.log(`event type:${event.type}`)
-//         //             let selectedControlIds = this.designer.selectedControlIds //[this.id]
-//         //             //========================================================================
-//         //             // 如果是多个 click 事件选中
-//         //             if (selectedControlIds.length > 1 && event.type == 'react-mousedown') {
-//         //                 return
-//         //             }
-//         //             //========================================================================
-//         //             if (e.ctrlKey) {
-//         //                 if (selectedControlIds.indexOf(this.id) >= 0) {
-//         //                     selectedControlIds = selectedControlIds.filter(o => o != this.id)
-//         //                 }
-//         //                 else {
-//         //                     selectedControlIds.push(this.id)
-//         //                 }
-//         //             }
-//         //             else {
-//         //                 selectedControlIds = [this.id]
-//         //             }
-//         //             console.assert(this.designer != null)
-//         //             this.designer.selectControl(selectedControlIds)
-//         //             e.stopPropagation();
-//         //         }
-//         //         (props as React.DOMAttributes<any>).onMouseDown = func;
-//         //         (props as React.DOMAttributes<any>).onClick = func;
-//         //     }
-//         //     let originalRef = props.ref;
-//         //     props.ref = (e: any) => {
-//         //         if (originalRef) {
-//         //             originalRef(e);
-//         //         }
-//         //         if (e == null)
-//         //             return
-//         //         this.element = e
-//         //     };
-//         //     return ControlFactory.createElement(this, type, props, ...children);
-//         // }
-//         // private static render() {
-//         //     let self = this as any as Control<any, any>;
-//         //     return <DesignerContext.Consumer>
-//         //         {
-//         //             context => {
-//         //                 self._designer = context.designer;
-//         //                 return <PageViewContext.Consumer>
-//         //                     {pageViewContext => {
-//         //                         self.pageView = pageViewContext.pageView
-//         //                         if (typeof self.originalRender != 'function')
-//         //                             return null;
-//         //                         let h = (type: string | React.ComponentClass<any>, props: ControlProps<any>, ...children: any[]) =>
-//         //                             ControlFactory.createElement(self, type, props, ...children);
-//         //                         return (self.originalRender as Function)(h)
-//         //                     }}
-//         //                 </PageViewContext.Consumer>
-//         //             }
-//         //         }
-//         //     </DesignerContext.Consumer >
-//         // }
-//         private static getControlType(componentName: string): Promise<React.ComponentClass<any>> {
-//             return new Promise<React.ComponentClass<any>>((resolve, reject) => {
-//                 let controlType = customControlTypes[componentName];
-//                 if (typeof controlType != 'string') {
-//                     resolve(controlType);
-//                     return;
-//                 }
-//                 let controlPath = controlType;
-//                 requirejs([controlPath],
-//                     (exports2: any) => {
-//                         let controlType: React.ComponentClass = exports2['default'];
-//                         if (controlType == null)
-//                             throw new Error(`Default export of file '${controlPath}' is null.`);
-//                         (controlType as any)['componentName'] = componentName;
-//                         customControlTypes[componentName] = controlType;
-//                         resolve(controlType);
-//                     },
-//                     (err: Error) => reject(err)
-//                 )
-//             })
-//         }
-//         static loadTypes(elementData: ElementData) {
-//             if (!elementData) throw Errors.argumentNull('elementData');
-//             let stack = new Array<ElementData>();
-//             stack.push(elementData);
-//             let ps = new Array<Promise<any>>();
-//             while (stack.length > 0) {
-//                 let item = stack.pop();
-//                 if (item == null)
-//                     continue
-//                 let componentName = item.type;
-//                 ps.push(this.getControlType(componentName));
-//                 let children = item.children || [];
-//                 for (let i = 0; i < children.length; i++)
-//                     stack.push(children[i]);
-//             }
-//             return Promise.all(ps);
-//         }
-//         // static getInstance(id: string) {
-//         //     if (!id) throw Errors.argumentNull('id');
-//         //     return this.allInstance[id];
-//         // }
-//         // static addInstance(id: string, instance: React.Component) {
-//         //     this.allInstance[id] = instance as any
-//         // }
-//         // static create(args: ElementData): React.ReactElement<any> | null {
-//         //     return ControlFactory.toReactElement(args);
-//         // }
-//     }
-// }
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
  *
@@ -705,40 +625,23 @@ var jueying;
  ********************************************************************************/
 var jueying;
 (function (jueying) {
-    class Callback {
-        constructor() {
-            this.funcs = new Array();
-        }
-        add(func) {
-            this.funcs.push(func);
-        }
-        remove(func) {
-            this.funcs = this.funcs.filter(o => o != func);
-        }
-        fire(args) {
-            this.funcs.forEach(o => o(args));
-        }
-        static create() {
-            return new Callback();
-        }
-    }
-    jueying.Callback = Callback;
     class PageDesigner extends React.Component {
         constructor(props) {
             super(props);
             this._selectedControlIds = [];
-            this.controlSelected = Callback.create();
-            this.controlRemoved = Callback.create();
-            this.designtimeComponentDidMount = Callback.create();
-            this.componentUpdated = Callback.create();
-            this.names = new Array();
-            this.initSelectedIds(props.pageData);
+            this.componentSelected = jueying.Callback.create();
+            this.controlRemoved = jueying.Callback.create();
+            this.designtimeComponentDidMount = jueying.Callback.create();
+            this.componentUpdated = jueying.Callback.create();
+            // names = new Array<string>();
+            this.namedComponents = {};
+            this.initPageData(props.pageData);
             this.state = { pageData: props.pageData };
             this.designtimeComponentDidMount.add((args) => {
                 console.log(`this:designer event:controlComponentDidMount`);
             });
         }
-        initSelectedIds(pageData) {
+        initPageData(pageData) {
             if (pageData == null) {
                 this._selectedControlIds = [];
                 return;
@@ -756,15 +659,13 @@ var jueying;
                     stack.push(o);
                 });
             }
+            this.nameComponent(pageData);
         }
         get pageData() {
             return this.state.pageData;
         }
         get selectedComponentIds() {
             return this._selectedControlIds;
-        }
-        static setComponentAttribute(typename, attr) {
-            this.componentAttributes[typename] = attr;
         }
         updateControlProps(controlId, navPropsNames, value) {
             let controlDescription = this.findComponentData(controlId);
@@ -779,42 +680,6 @@ var jueying;
             }
             obj[navPropsNames[navPropsNames.length - 1]] = value;
             this.setState(this.state);
-        }
-        /**
-         * 启用拖放操作，以便通过拖放图标添加控件
-         */
-        static enableDroppable(element, designer) {
-            // let element = this.element
-            console.assert(element != null);
-            element.addEventListener('dragover', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                let componentName = event.dataTransfer.getData(jueying.constants.componentData);
-                if (componentName)
-                    event.dataTransfer.dropEffect = "copy";
-                else
-                    event.dataTransfer.dropEffect = "move";
-                console.log(`dragover: left:${event.layerX} top:${event.layerX}`);
-            });
-            element.ondrop = (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                let componentData = event.dataTransfer.getData(jueying.constants.componentData);
-                if (!componentData) {
-                    return;
-                }
-                let ctrl = JSON.parse(componentData);
-                ctrl.props.style = ctrl.props.style || {};
-                designer.pageData.props.style = designer.pageData.props.style || {};
-                if (!ctrl.props.style.position) {
-                    ctrl.props.style.position = designer.pageData.props.style.position;
-                }
-                if (ctrl.props.style.position == 'absolute') {
-                    ctrl.props.style.left = event.layerX;
-                    ctrl.props.style.top = event.layerY;
-                }
-                designer.appendComponent(element.id, ctrl);
-            };
         }
         sortChildren(parentId, childIds) {
             if (!parentId)
@@ -836,25 +701,29 @@ var jueying;
             });
             this.setState({ pageData });
         }
-        namedControl(control) {
-            let props = control.props = control.props || {};
+        /**
+         * 对组件及其子控件进行命名
+         * @param component
+         */
+        nameComponent(component) {
+            let props = component.props = component.props || {};
             if (!props.name) {
                 let num = 0;
                 let name;
                 do {
                     num = num + 1;
-                    name = `${control.type}${num}`;
-                } while (this.names.indexOf(name) >= 0);
-                this.names.push(name);
+                    name = `${component.type}${num}`;
+                } while (this.namedComponents[name]);
+                this.namedComponents[name] = component;
                 props.name = name;
             }
             if (!props.id)
                 props.id = jueying.guid();
-            if (!control.children || control.children.length == 0) {
+            if (!component.children || component.children.length == 0) {
                 return;
             }
-            for (let i = 0; i < control.children.length; i++) {
-                this.namedControl(control.children[i]);
+            for (let i = 0; i < component.children.length; i++) {
+                this.nameComponent(component.children[i]);
             }
         }
         /** 添加控件 */
@@ -863,7 +732,7 @@ var jueying;
                 throw jueying.Errors.argumentNull('parentId');
             if (!childControl)
                 throw jueying.Errors.argumentNull('childControl');
-            this.namedControl(childControl);
+            this.nameComponent(childControl);
             let parentControl = this.findComponentData(parentId);
             if (parentControl == null)
                 throw new Error('Parent is not exists');
@@ -906,27 +775,28 @@ var jueying;
          * 选择指定的控件
          * @param control 指定的控件
          */
-        selectComponent(controlIds) {
-            if (typeof controlIds == 'string')
-                controlIds = [controlIds];
+        selectComponent(componentIds) {
+            if (typeof componentIds == 'string')
+                componentIds = [componentIds];
             var stack = [];
             stack.push(this.pageData);
             while (stack.length > 0) {
                 let item = stack.pop();
-                let isSelectedControl = controlIds.indexOf(item.props.id) >= 0;
+                let isSelectedControl = componentIds.indexOf(item.props.id) >= 0;
                 item.props.selected = isSelectedControl;
                 let children = item.children || [];
                 for (let i = 0; i < children.length; i++) {
                     stack.push(children[i]);
                 }
             }
-            this._selectedControlIds = controlIds;
-            controlIds.map(id => this.findComponentData(id)).forEach(o => {
+            this._selectedControlIds = componentIds;
+            componentIds.map(id => this.findComponentData(id)).forEach(o => {
+                console.assert(o != null);
                 let props = o.props;
                 props.selected = true;
             });
             this.setState({ pageData: this.pageData });
-            this.controlSelected.fire(this.selectedComponentIds);
+            this.componentSelected.fire(this.selectedComponentIds);
             //====================================================
             // 设置焦点，以便获取键盘事件
             this.element.focus();
@@ -1011,95 +881,6 @@ var jueying;
                 this.removeControl(...this._selectedControlIds);
             }
         }
-        /**
-         * 对设计时元素进行处理
-         * 1. 可以根据设定是否移到该元素
-         * 2. 可以根据设定是否允许添加组件到该元素
-         * @param element 设计时元素
-         * @param attr
-         */
-        designtimeBehavior(element, attr) {
-            if (!element)
-                throw jueying.Errors.argumentNull('element');
-            if (!attr)
-                throw jueying.Errors.argumentNull('args');
-            console.assert(attr.container != null);
-            console.assert(attr.movable != null);
-            if (attr.container) {
-                PageDesigner.enableDroppable(element, this);
-            }
-            if (attr.movable) {
-                console.assert(element != null);
-                PageDesigner.draggableElement(element, this);
-            }
-        }
-        static draggableElement(element, designer) {
-            if (!element)
-                throw jueying.Errors.argumentNull('element');
-            if (!element)
-                throw jueying.Errors.argumentNull('designer');
-            let timeStart;
-            let elementID = element.id;
-            console.assert(elementID);
-            $(element)
-                .drag("init", function (ev) {
-                let e = ev.currentTarget;
-                if ($(this).is(`.${jueying.classNames.componentSelected}`))
-                    return $(`.${jueying.classNames.componentSelected}`);
-            })
-                .drag('start', function (ev) {
-                timeStart = Date.now();
-            })
-                .drag(function (ev, dd) {
-                ev.preventDefault();
-                ev.stopPropagation();
-                setPosition(ev, dd, this);
-            }, { click: true })
-                .drag('end', function (ev, dd) {
-                let designerPosition = $(designer.element).offset();
-                let left = dd.offsetX - designerPosition.left;
-                let top = dd.offsetY - designerPosition.top;
-                designer.setControlPosition(ev.currentTarget.id, left, top);
-            })
-                .click(function (ev, dd) {
-                ev.preventDefault();
-                ev.stopPropagation();
-                console.log(`draggableElement drag end: ${timeStart}`);
-                let t = Date.now() - (timeStart || Date.now());
-                timeStart = null;
-                if (t > 300) {
-                    return;
-                }
-                console.log(`time interval:` + t);
-                let e = ev.currentTarget;
-                let element = ev.currentTarget;
-                let elementID = element.id;
-                if (!ev.ctrlKey) {
-                    designer.selectComponent(element.id);
-                    return;
-                }
-                console.assert(elementID);
-                if (designer._selectedControlIds.indexOf(elementID) >= 0) {
-                    designer._selectedControlIds = designer._selectedControlIds.filter(o => o != elementID);
-                }
-                else {
-                    designer._selectedControlIds.push(elementID);
-                }
-                designer.selectComponent(designer._selectedControlIds);
-            });
-            function setPosition(ev, dd, element) {
-                let designerPosition = $(designer.element).offset();
-                let left = dd.offsetX - designerPosition.left;
-                let top = dd.offsetY - designerPosition.top;
-                console.log(['ev.offsetX, ev.offsetY', ev.offsetX, ev.offsetY]);
-                console.log(['dd.offsetX, dd.offsetY', dd.offsetX, dd.offsetY]);
-                console.log(ev);
-                console.log(dd);
-                $(element).css({
-                    top, left
-                });
-            }
-        }
         createDesignTimeElement(type, props, ...children) {
             console.assert(props.id);
             if (props.id != null)
@@ -1111,6 +892,8 @@ var jueying;
                 delete props.onClick;
                 props.readOnly = true;
             }
+            let typename = typeof type == 'string' ? type : type.name;
+            let attr = jueying.Component.getComponentAttribute(typename);
             let allowWrapper = true;
             let tagName = type;
             if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
@@ -1122,39 +905,26 @@ var jueying;
                 let { top, left, position, width, height } = style;
                 delete style.left;
                 delete style.top;
-                let wrapperProps = {
-                    id: props.id,
-                    className: props.selected ? `${jueying.classNames.componentSelected} ${jueying.classNames.component}` : jueying.classNames.component,
-                    style: { top, left, position, width, height },
-                    ref: (e) => {
-                        if (!e)
-                            return;
-                        if (e.getAttribute('data-behavior')) {
-                            return;
-                        }
-                        e.setAttribute('data-behavior', 'behavior');
-                        let typename = typeof type == 'string' ? type : type.name;
-                        let attr = Object.assign(PageDesigner.defaultComponentAttribute, PageDesigner.componentAttributes[typename] || {});
-                        this.designtimeBehavior(e, attr);
-                    }
-                };
-                return React.createElement("div", Object.assign({}, wrapperProps),
-                    React.createElement("div", { style: { height: 12, width: 12, top: -6, left: 8, border: 'solid 1px black', position: 'absolute' } }),
-                    React.createElement(type, props, ...children));
+                delete style.position;
+                return React.createElement(jueying.ComponentWrapper, { id: props.id, style: { top, left, position, width, height }, type: type, selected: props.selected, designer: this }, React.createElement(type, props, ...children));
             }
             props.ref = (e) => {
                 if (!e)
                     return;
-                e.onclick = (ev) => {
-                    ev.stopPropagation();
-                    this.selectComponent(e.id);
-                };
+                if (e.tagName) {
+                    e.onclick = (ev) => {
+                        ev.stopPropagation();
+                        this.selectComponent(e.id);
+                    };
+                    return;
+                }
+                throw new Error('not implement');
             };
             let element = React.createElement(type, props, ...children);
             return element;
         }
         componentWillReceiveProps(props) {
-            this.initSelectedIds(props.pageData);
+            this.initPageData(props.pageData);
             this.setState({ pageData: props.pageData });
         }
         componentDidUpdate() {
@@ -1175,17 +945,6 @@ var jueying;
             return result;
         }
     }
-    PageDesigner.componentAttributes = {
-        'table': { container: false, movable: true },
-        'thead': { container: false, movable: false },
-        'tbody': { container: false, movable: false },
-        'tfoot': { container: false, movable: false },
-        'tr': { container: false, movable: false },
-        'td': { container: true, movable: false },
-        'img': { container: false, movable: true },
-        'div': { container: true, movable: true },
-    };
-    PageDesigner.defaultComponentAttribute = { container: false, movable: true };
     jueying.PageDesigner = PageDesigner;
 })(jueying || (jueying = {}));
 var jueying;
@@ -1624,16 +1383,18 @@ var jueying;
                 if (!e)
                     return;
                 this.pageDesigner = e || this.pageDesigner;
-                this.pageDesigner.controlSelected.add((controlIds) => {
-                    let controlDatas = controlIds.map(o => this.pageDesigner.findComponentData(o));
-                    this.editorPanel.setControls(controlDatas, this.pageDesigner);
-                });
+                // this.pageDesigner.componentSelected.add((controlIds) => {
+                //     let controlDatas = controlIds.map(o => this.pageDesigner.findComponentData(o))
+                //     this.editorPanel.setControls(controlDatas, this.pageDesigner)
+                // })
                 this.pageDesigner.componentUpdated.add((sender) => {
                     console.assert(this.toolbarElement);
                     this.renderToolbar(this.toolbarElement);
-                    let controlDatas = sender.selectedComponentIds.map(o => this.pageDesigner.findComponentData(o));
-                    this.editorPanel.setControls(controlDatas, this.pageDesigner);
+                    // let controlDatas = sender.selectedComponentIds.map(o => this.pageDesigner.findComponentData(o))
+                    // this.editorPanel.setControls(controlDatas, this.pageDesigner)
+                    this.editorPanel.setDesigner(this.pageDesigner);
                 });
+                // this.editorPanel.set
             }
             renderToolbar(element) {
                 let pageDocument = this.state.activeDocument;

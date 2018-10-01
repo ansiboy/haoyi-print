@@ -17,7 +17,6 @@ interface Props extends PageViewProps {
     close: () => void
 }
 
-requirejs(['less!modules/settings'])
 export default function (page: chitu.Page) {
     ReactDOM.render(<SettingsView close={() => {
         const { remote } = nodeRequire('electron')

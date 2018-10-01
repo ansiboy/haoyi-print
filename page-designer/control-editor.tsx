@@ -141,7 +141,7 @@ namespace jueying {
             return <React.Fragment>
                 {groupEditorsArray.map((g) =>
                     <div key={g.group} className="panel panel-default">
-                        <div className="panel-heading">{strings[g.group] || g.group}</div>
+                        {g.group ? <div className="panel-heading">{strings[g.group] || g.group}</div> : null}
                         <div className="panel-body">
                             {g.editors.map((o, i) =>
                                 <div key={i} className="form-group">
@@ -162,12 +162,5 @@ namespace jueying {
             return this._element;
         }
 
-        Element(...children: React.ReactElement<any>[]) {
-            return h('div', {
-                ref: (e) => {
-                    this._element = e || this._element
-                }
-            }, ...children);
-        }
     }
 }

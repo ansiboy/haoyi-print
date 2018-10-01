@@ -7,22 +7,17 @@ namespace jueying {
         componentData: 'component-data'
     }
 
-    export let propsGroups = {
-        property: 'property',
-        style: 'style'
-    }
-
-    export let strings = {
-        property: '属性',
-        style: '样式',
-        field: '字段',
-        fontSize: '字体大小',
-        height: '高',
-        left: '左边',
-        name: '名称',
-        top: '顶部',
-        text: '文本',
-        width: '宽'
+    export let strings: { [key: string]: string } = {
+        // property: '属性',
+        // style: '样式',
+        // field: '字段',
+        // fontSize: '字体大小',
+        // height: '高',
+        // left: '左边',
+        // name: '名称',
+        // top: '顶部',
+        // text: '文本',
+        // width: '宽'
     }
 
     export function guid() {
@@ -33,6 +28,24 @@ namespace jueying {
         }
         return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
             s4() + '-' + s4() + s4() + s4();
+    }
+
+    export class Callback<T> {
+        private funcs = new Array<(...args: Array<any>) => void>();
+
+        add(func: (args: T) => void) {
+            this.funcs.push(func);
+        }
+        remove(func: (args: T) => any) {
+            this.funcs = this.funcs.filter(o => o != func);
+        }
+        fire(args: T) {
+            this.funcs.forEach(o => o(args));
+        }
+
+        static create<T>() {
+            return new Callback<T>();
+        }
     }
 
     export let classNames = {

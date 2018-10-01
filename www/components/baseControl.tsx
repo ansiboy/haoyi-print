@@ -1,4 +1,4 @@
-import { ComponentProps, ComponentPropEditor, TextInput, PropEditorConstructor } from "jueying";
+import { ComponentProps, ComponentPropEditor, TextInput, PropEditorConstructor, dropdown } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
 import { PageViewContext, PageView } from "./page-view";
@@ -12,7 +12,6 @@ export function stylePropEditors<T extends { new(...args: any[]): {} }>(construc
     setStyleEditor(constructor as any)
     return constructor
 }
-
 
 export abstract class BaseControl<P extends BaseControlProps<any>, S> extends React.Component<P, S> {
     private _render: (h?: any) => React.ReactNode
@@ -57,21 +56,11 @@ export let controlSize = function () {
     return ControlSize
 }
 
-export function createBasePropEditors(controlClass: React.ComponentClass) {
-    ComponentPropEditor.setControlPropEditor<BaseControlProps<any>, "name">(controlClass, 'property', TextInput, 'name')
-    ComponentPropEditor.setControlPropEditor<BaseControlProps<any>, "text">(controlClass, 'property', TextInput, 'text')
-    ComponentPropEditor.setControlPropEditor<BaseControlProps<any>, "field">(controlClass, 'property', TextInput, 'field')
-
-
-    ComponentPropEditor.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, 'style', ControlSize, 'style', 'left')
-    ComponentPropEditor.setControlPropEditor<BaseControlProps<any>, "style">(controlClass, 'style', ControlSize, 'style', 'top')
-}
-
-export function setStyleEditor(componentType: React.ComponentClass) {
+export function setStyleEditor(componentType: React.ComponentClass | string) {
     type T = BaseControlProps<any>
     let func = ComponentPropEditor.setControlPropEditor;
-    func<T, "style">(componentType, 'layout', TextInput, 'style', 'width')
-    func<T, "style">(componentType, 'layout', TextInput, 'style', 'height')
+    func(componentType, 'style.width', TextInput, 'layout')
+    func(componentType, 'style.height', TextInput, 'layout')
     setStylePropEditor(componentType, 'layout', 'width', ControlSize)
     setStylePropEditor(componentType, 'layout', 'height', ControlSize)
     setStylePropEditor(componentType, 'layout', 'padding', TextInput)
@@ -85,15 +74,31 @@ export function setStyleEditor(componentType: React.ComponentClass) {
 
     setStylePropEditor(componentType, 'behavior', 'display', TextInput)
 
-    setStylePropEditor(componentType, 'appearance', 'backgroundColor', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'backgroundImage', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'backgroundRepeat', TextInput)
+    setStylePropEditor(componentType, 'appearance', 'background', TextInput)
     setStylePropEditor(componentType, 'appearance', 'border', TextInput)
     setStylePropEditor(componentType, 'appearance', 'font', TextInput)
     setStylePropEditor(componentType, 'appearance', 'color', TextInput)
     setStylePropEditor(componentType, 'appearance', 'cursor', TextInput)
+
+    let fontSizes = {
+        '8pt': '8pt', '9pt': '9pt', '10pt': '10pt',
+        '11pt': '11pt', '12pt': '12pt', '13pt': '13pt',
+        '14pt': '14pt'
+    }
+    setStylePropEditor(componentType, 'appearance', "fontSize", dropdown(fontSizes, '请选择字体大小'))
 }
 
-function setStylePropEditor(componentType: React.ComponentClass, group: string, name: keyof React.CSSProperties, editorType: PropEditorConstructor) {
-    ComponentPropEditor.setControlPropEditor<BaseControlProps<any>, "style">(componentType, group, editorType, 'style', name)
+function setStylePropEditor(componentType: React.ComponentClass | string, group: string, name: keyof React.CSSProperties, editorType: PropEditorConstructor) {
+    ComponentPropEditor.setControlPropEditor(componentType, `style.${name}`, editorType, group)
 }
+
+jueying.strings = {
+    layout: '布局',
+    behavior: '行为',
+    appearance: '外观',
+}
+
+let htmlTypes = ['table', 'thead', 'th', 'tbody', 'tfoot', 'tr', 'td']
+htmlTypes.forEach(o => {
+    setStyleEditor(o)
+})

@@ -6,23 +6,17 @@ declare namespace jueying {
         componentTypeName: string;
         componentData: string;
     };
-    let propsGroups: {
-        property: string;
-        style: string;
-    };
     let strings: {
-        property: string;
-        style: string;
-        field: string;
-        fontSize: string;
-        height: string;
-        left: string;
-        name: string;
-        top: string;
-        text: string;
-        width: string;
+        [key: string]: string;
     };
     function guid(): string;
+    class Callback<T> {
+        private funcs;
+        add(func: (args: T) => void): void;
+        remove(func: (args: T) => any): void;
+        fire(args: T): void;
+        static create<T>(): Callback<T>;
+    }
     let classNames: {
         componentSelected: string;
         emptyTemplates: string;
@@ -32,6 +26,44 @@ declare namespace jueying {
         component: string;
         componentWrapper: string;
     };
+}
+declare namespace jueying {
+    interface ComponentWrapperProps {
+        id: string;
+        style: React.CSSProperties;
+        type: string | React.ComponentClass;
+        selected: boolean;
+        designer: PageDesigner;
+    }
+    class ComponentWrapper extends React.Component<ComponentWrapperProps, any> {
+        private handler;
+        private element;
+        designtimeBehavior(element: HTMLElement, attr: {
+            container?: boolean;
+            movable?: boolean;
+        }): void;
+        /**
+         * 启用拖放操作，以便通过拖放图标添加控件
+         */
+        static enableDroppable(element: HTMLElement, designer: PageDesigner): void;
+        static draggable(designer: PageDesigner, element: HTMLElement, handler?: HTMLElement): void;
+        private static invokeOnClick;
+        componentDidMount(): void;
+        render(): JSX.Element;
+    }
+    interface ComponentAttribute {
+        /** 表示组件为容器，可以添加组件 */
+        container?: boolean;
+        /** 表示组件可移动 */
+        movable?: boolean;
+        showHandler?: boolean;
+    }
+    class Component {
+        private static defaultComponentAttribute;
+        private static componentAttributes;
+        static setComponentAttribute(typename: string, attr: ComponentAttribute): void;
+        static getComponentAttribute(typename: string): ComponentAttribute;
+    }
 }
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
@@ -63,7 +95,6 @@ declare namespace jueying {
         private flatProps;
         render(): JSX.Element;
         readonly element: HTMLElement;
-        Element(...children: React.ReactElement<any>[]): any;
     }
 }
 declare namespace jueying {
@@ -105,12 +136,6 @@ declare namespace jueying {
         typename: string;
         designer: PageDesigner;
     }
-    interface ComponentAttribute {
-        /** 表示组件为容器，可以添加组件 */
-        container?: boolean;
-        /** 表示组件可移动 */
-        movable?: boolean;
-    }
     function component<T extends React.Component>(args?: ComponentAttribute): (constructor: new (...args: any[]) => T) => new (...args: any[]) => T;
     let core: {
         createElement: typeof createElement;
@@ -119,7 +144,6 @@ declare namespace jueying {
         };
         register: typeof register;
         loadAllTypes: typeof loadAllTypes;
-        componentType(name: string): string | React.ComponentClass<any, any>;
     };
     type ReactFactory = (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element;
     /**
@@ -149,15 +173,14 @@ declare namespace jueying {
         static getControlPropEditor<T, K extends keyof T>(controlClassName: string, propName: string): PropEditorInfo;
         /** 通过属性数组获取属性的编辑器 */
         static getControlPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
-        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
-        static setControlPropEditor<T, K extends keyof T>(componentType: string, group: string, editorType: PropEditorConstructor, propName: K): void;
-        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: string, editorType: PropEditorConstructor, propName: K, propName1: keyof T[K]): void;
-        static setControlPropEditor<T, K extends keyof T>(componentType: React.ComponentClass, group: string, editorType: PropEditorConstructor, propName: K): void;
-        static getFlatPropValue(obj: Object, flatPropName: string): void;
+        static setControlPropEditor(componentType: React.ComponentClass | string, propName: string, editorType: PropEditorConstructor, group?: string): void;
     }
 }
 declare namespace jueying {
     interface EditorPanelState {
+        componentDatas: ComponentData[];
+        designer?: PageDesigner;
+        selectedComponentId?: string;
     }
     interface EditorPanelProps {
         className?: string;
@@ -168,7 +191,7 @@ declare namespace jueying {
         private element;
         private editor;
         constructor(props: any);
-        setControls(controlDatas: ComponentData[], designer: PageDesigner): any;
+        setDesigner(designer: PageDesigner): void;
         render(): JSX.Element;
     }
 }
@@ -229,14 +252,6 @@ declare namespace jueying {
     interface PageDesignerState {
         pageData: ComponentData | null;
     }
-    class Callback<T> {
-        private funcs;
-        constructor();
-        add(func: (args: T) => void): void;
-        remove(func: (args: T) => any): void;
-        fire(args: T): void;
-        static create<T>(): Callback<T>;
-    }
     interface ComponentProps<T> extends React.Props<T> {
         id?: string;
         name?: string;
@@ -250,29 +265,28 @@ declare namespace jueying {
     }
     class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
         private _selectedControlIds;
-        private element;
-        controlSelected: Callback<string[]>;
+        element: HTMLElement;
+        componentSelected: Callback<string[]>;
         controlRemoved: Callback<string[]>;
         designtimeComponentDidMount: Callback<{
             component: React.ReactElement<any>;
             element: HTMLElement;
         }>;
         componentUpdated: Callback<PageDesigner>;
-        names: string[];
-        private static componentAttributes;
-        private static defaultComponentAttribute;
+        namedComponents: {
+            [key: string]: ComponentData;
+        };
         constructor(props: PageDesignerProps);
-        initSelectedIds(pageData: ComponentData): void;
+        initPageData(pageData: ComponentData): void;
         readonly pageData: ComponentData;
         readonly selectedComponentIds: string[];
-        static setComponentAttribute(typename: string, attr: ComponentAttribute): void;
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any;
-        /**
-         * 启用拖放操作，以便通过拖放图标添加控件
-         */
-        static enableDroppable(element: HTMLElement, designer: PageDesigner): void;
         private sortChildren;
-        private namedControl;
+        /**
+         * 对组件及其子控件进行命名
+         * @param component
+         */
+        private nameComponent;
         /** 添加控件 */
         appendComponent(parentId: string, childControl: ComponentData, childIds?: string[]): void;
         /** 设置控件位置 */
@@ -286,7 +300,7 @@ declare namespace jueying {
          * 选择指定的控件
          * @param control 指定的控件
          */
-        selectComponent(controlIds: string[] | string): void;
+        selectComponent(componentIds: string[] | string): void;
         /** 移除控件 */
         removeControl(...controlIds: string[]): void;
         /** 移动控件到另外一个控件容器 */
@@ -294,19 +308,7 @@ declare namespace jueying {
         private removeControlFrom;
         findComponentData(controlId: string): ComponentData | null;
         private onKeyDown;
-        /**
-         * 对设计时元素进行处理
-         * 1. 可以根据设定是否移到该元素
-         * 2. 可以根据设定是否允许添加组件到该元素
-         * @param element 设计时元素
-         * @param attr
-         */
-        designtimeBehavior(element: HTMLElement, attr: {
-            container?: boolean;
-            movable?: boolean;
-        }): void;
-        private static draggableElement;
-        createDesignTimeElement(type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]): React.ReactElement<any>;
+        private createDesignTimeElement;
         componentWillReceiveProps(props: PageDesignerProps): void;
         componentDidUpdate(): void;
         render(): JSX.Element;

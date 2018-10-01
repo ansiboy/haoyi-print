@@ -1,5 +1,5 @@
 import React = require("react");
-import { BaseControlProps } from "./baseControl";
+import { BaseControlProps } from "components/baseControl";
 import { component } from "jueying";
 
 

@@ -241,16 +241,19 @@ namespace jueying.extentions {
         designerRef(e: PageDesigner) {
             if (!e) return
             this.pageDesigner = e || this.pageDesigner
-            this.pageDesigner.controlSelected.add((controlIds) => {
-                let controlDatas = controlIds.map(o => this.pageDesigner.findComponentData(o))
-                this.editorPanel.setControls(controlDatas, this.pageDesigner)
-            })
+            // this.pageDesigner.componentSelected.add((controlIds) => {
+            //     let controlDatas = controlIds.map(o => this.pageDesigner.findComponentData(o))
+            //     this.editorPanel.setControls(controlDatas, this.pageDesigner)
+            // })
             this.pageDesigner.componentUpdated.add((sender) => {
                 console.assert(this.toolbarElement)
                 this.renderToolbar(this.toolbarElement)
-                let controlDatas = sender.selectedComponentIds.map(o => this.pageDesigner.findComponentData(o))
-                this.editorPanel.setControls(controlDatas, this.pageDesigner)
+                // let controlDatas = sender.selectedComponentIds.map(o => this.pageDesigner.findComponentData(o))
+                // this.editorPanel.setControls(controlDatas, this.pageDesigner)
+                this.editorPanel.setDesigner(this.pageDesigner)
             })
+
+            // this.editorPanel.set
         }
         renderToolbar(element: HTMLElement) {
             let pageDocument = this.state.activeDocument

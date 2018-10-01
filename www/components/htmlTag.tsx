@@ -1,6 +1,5 @@
 import React = require("react");
-import { component, ComponentPropEditor, TextInput } from "jueying";
-import { controlSize } from "./baseControl";
+import { component } from "jueying";
 
 interface Props extends React.Props<HTMLTag> {
     tagName?: string,
@@ -42,10 +41,10 @@ export class HTMLTag extends React.Component<Props, {}> {
     }
 }
 
-if (jueying.PageDesigner) {
-    ComponentPropEditor.setControlPropEditor<Props, "tagName">(HTMLTag, 'property', TextInput, "tagName")
-    ComponentPropEditor.setControlPropEditor<Props, "style">(HTMLTag, 'style', controlSize(), "style", "left")
-    ComponentPropEditor.setControlPropEditor<Props, "style">(HTMLTag, 'style', controlSize(), "style", "top")
-    ComponentPropEditor.setControlPropEditor<Props, "style">(HTMLTag, 'style', controlSize(), "style", "width")
-    ComponentPropEditor.setControlPropEditor<Props, "style">(HTMLTag, 'style', controlSize(), "style", "height")
-}
+// if (jueying.PageDesigner) {
+//     ComponentPropEditor.setControlPropEditor<Props>(HTMLTag, 'property', TextInput, "tagName")
+//     ComponentPropEditor.setControlPropEditor<Props>(HTMLTag, 'style', controlSize(), "style", "left")
+//     ComponentPropEditor.setControlPropEditor<Props, "style">(HTMLTag, 'style', controlSize(), "style", "top")
+//     ComponentPropEditor.setControlPropEditor<Props, "style">(HTMLTag, 'style', controlSize(), "style", "width")
+//     ComponentPropEditor.setControlPropEditor<Props, "style">(HTMLTag, 'style', controlSize(), "style", "height")
+// }

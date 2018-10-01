@@ -29,7 +29,7 @@ class ListBody extends React.Component<any, any>{
     }
 }
 
-@(component({ container: true, movable: true }) as any)
+@(component({ container: true, movable: true, showHandler: true }) as any)
 export default class List extends BaseControl<any, any>{
     render() {
         return <div className='list' style={{ height: 'auto', width: 300, paddingTop: 10 }}>

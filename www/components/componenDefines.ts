@@ -16,14 +16,14 @@ export let components: Array<ComponentDefine> = [
                 }
             }
         },
-        controlPath: `${componentsDirectory}/${Label}/control`,
+        controlPath: `${componentsDirectory}/label`,
         displayName: "标签",
         icon: "icon-text-width",
         introduce: "标签",
     },
     {
         componentData: { type: 'SquareCode' },
-        controlPath: `${componentsDirectory}/${SquareCode}/control`,
+        controlPath: `${componentsDirectory}/squareCode`,
         displayName: "二维码",
         icon: "icon-barcode",
         introduce: "二维码",
@@ -37,7 +37,7 @@ export let components: Array<ComponentDefine> = [
                 { type: 'ListFooter' }
             ]
         },
-        controlPath: `${componentsDirectory}/${List}`,
+        controlPath: `${componentsDirectory}/list`,
         displayName: "列表",
         icon: "icon-barcode",
         introduce: "列表",

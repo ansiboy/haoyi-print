@@ -1,6 +1,6 @@
 import { component } from "jueying";
 import React = require("react");
-import { BaseControl, BaseControlProps, stylePropEditors } from "../baseControl";
+import { BaseControl, BaseControlProps, stylePropEditors } from "./baseControl";
 
 export interface Props extends BaseControlProps<Label> {
     text: string,
@@ -16,7 +16,7 @@ export default class Label extends BaseControl<Props, {}>{
         let text = this.text()
         console.assert(text != null)
         let style = this.props.style
-        return <div>
+        return <div style={style}>
             {this.text()}
         </div>
     }

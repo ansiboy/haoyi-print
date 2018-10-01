@@ -5,11 +5,12 @@ import * as React from 'react';
 import { showPrintDialog, generatePrintHTML } from 'print'
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
-import '../components/placeholder'
-import '../components/Label/editor';
-import '../components/SquareCode/editor';
-import '../components/control-placeholder'
+// import '../components/placeholder'
+// import '../components/control-placeholder'
 import '../components/list'
+import '../components/label'
+import '../components/htmlTag'
+import '../components/squareCode'
 
 class MainPage extends DesignerFramework {
     private _storage1: DocumentStorage;

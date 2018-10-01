@@ -1,5 +1,6 @@
 import { BrowserWindow } from "electron"
 import * as path from 'path'
+import * as fs from 'fs'
 
 export function createMainWindow() {
     // Create the browser window.
@@ -16,7 +17,16 @@ export function createMainWindow() {
 
     // Open the DevTools.
     mainWindow.webContents.openDevTools()
-    BrowserWindow.addDevToolsExtension("C:/Users/maishu/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.4.0_0")
+
+    let extes = [
+        "C:/Users/maishu/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.4.0_0",
+        "C:/Users/ansib/AppData/Local/Google/Chrome/User Data/Default/Extensions/fmkadmapgofadopljbjfkapdkoienihi/3.4.0_0"
+    ]
+
+    extes.forEach(path => {
+        if (fs.existsSync(path))
+            BrowserWindow.addDevToolsExtension(path)
+    })
     // Emitted when the window is closed.
     mainWindow.on('closed', function () {
         // Dereference the window object, usually you would store windows
