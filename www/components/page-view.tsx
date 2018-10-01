@@ -29,9 +29,9 @@ export class PageView extends React.Component<PageViewProps, State>{
 }
 
 if (jueying.PageDesigner) {
-    ComponentPropEditor.setControlPropEditor<PageViewProps>(PageView, "name", TextInput, '')
-    ComponentPropEditor.setControlPropEditor<PageViewProps>(PageView, "name", TextInput, '')
-    ComponentPropEditor.setControlPropEditor(PageView, "style.width", ControlSize, '')
+    ComponentPropEditor.setControlPropEditor(PageView, "name", TextInput)
+    ComponentPropEditor.setControlPropEditor(PageView, "name", TextInput)
+    ComponentPropEditor.setControlPropEditor(PageView, "style.width", ControlSize)
 }
 
 
