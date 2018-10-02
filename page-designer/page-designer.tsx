@@ -425,8 +425,9 @@ namespace jueying {
 
                 if ((e as HTMLElement).tagName) {
                     (e as HTMLElement).onclick = (ev) => {
-                        ev.stopPropagation()
-                        this.selectComponent((e as HTMLElement).id)
+                        // ev.stopPropagation()
+                        // this.selectComponent((e as HTMLElement).id)
+                        ComponentWrapper.invokeOnClick(ev, this, e as HTMLElement)
                     }
                     return
                 }

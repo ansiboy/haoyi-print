@@ -195,7 +195,7 @@ namespace jueying {
 
         }
 
-        private static invokeOnClick(ev: MouseEvent, designer: PageDesigner, element: HTMLElement) {
+        static invokeOnClick(ev: MouseEvent, designer: PageDesigner, element: HTMLElement) {
             ev.preventDefault()
             ev.stopPropagation()
 
