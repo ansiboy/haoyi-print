@@ -11,6 +11,8 @@ namespace jueying {
     export class ComponentWrapper extends React.Component<ComponentWrapperProps, any>{
         private handler: HTMLElement;
         private element: HTMLElement;
+        private static isDrag: boolean = false;
+
         designtimeBehavior(element: HTMLElement, attr: { container?: boolean, movable?: boolean }) {
             if (!element) throw Errors.argumentNull('element')
             if (!attr) throw Errors.argumentNull('args')
@@ -75,48 +77,132 @@ namespace jueying {
         }
 
 
+        private static isResizeHandleClassName(className: string) {
+            let classNames = [
+                'resize_handle NE', 'resize_handle NN', 'resize_handle NW',
+                'resize_handle WW', 'resize_handle EE', 'resize_handle SW',
+                'resize_handle SS', 'resize_handle SE',
+            ]
+            return classNames.indexOf(className) >= 0
+        }
         static draggable(designer: PageDesigner, element: HTMLElement, handler?: HTMLElement) {
 
             if (!designer) throw Errors.argumentNull('designer')
             if (!element) throw Errors.argumentNull('element')
 
             handler = handler || element
-            let elementID = element.id
-            console.assert(elementID)
+            let componentId = element.id
+            console.assert(componentId)
             let startPos: JQuery.Coordinates
+            let rect: { width?: number, height?: number, left?: number, top?: number };
+            let dragStart: number
             $(handler)
                 .drag("init", function (ev) {
                     startPos = $(element).position()
                     if ($(this).is(`.${classNames.componentSelected}`))
                         return $(`.${classNames.componentSelected}`);
                 })
-                .drag(function (ev, dd) {
+                .drag('start', function (ev, dd: DragData & { attr: string }) {
+                    dd.attr = $(ev.target).prop("className");
+                    dd.width = $(this).width();
+                    dd.height = $(this).height();
+                    dragStart = Date.now()
+                })
+                .drag(function (ev, dd: DragData & { attr: string }) {
                     ev.preventDefault()
                     ev.stopPropagation()
 
-                    setPosition(ev, dd)
+                    rect = {}
+                    if (dd.attr.indexOf("E") > -1) {
+                        rect.width = Math.max(32, dd.width + dd.deltaX);
+                    }
+                    if (dd.attr.indexOf("S") > -1) {
+                        rect.height = Math.max(32, dd.height + dd.deltaY);
+                    }
+                    if (dd.attr.indexOf("W") > -1) {
+                        rect.width = Math.max(32, dd.width - dd.deltaX);
+                        // rect.left = dd.originalX + dd.width - rect.width;
+                        setLeft(dd)
+                    }
+                    if (dd.attr.indexOf("N") > -1) {
+                        rect.height = Math.max(32, dd.height - dd.deltaY);
+                        // rect.top = dd.originalY + dd.height - rect.height;
+                        setTop(dd)
+                    }
+
+                    if (dd.attr.indexOf("WW") >= 0)
+                        setLeft(dd)
+                    if (dd.attr.indexOf("NE") >= 0 || dd.attr.indexOf("NW") >= 0 || dd.attr.indexOf("SW") >= 0)
+                        setPosition(dd)
+
+                    if (dd.attr.indexOf("NN") >= 0)
+                        setTop(dd)
+
+
+                    if (dd.attr.indexOf("drag") > -1) {
+                        rect.top = dd.offsetY;
+                        rect.left = dd.offsetX;
+                    }
+
+                    if (!ComponentWrapper.isResizeHandleClassName(dd.attr)) {
+                        setPosition(dd)
+                    }
+
+                    if (dd.attr)
+                        $(this).css(rect);
 
                 }, { click: true })
-                .drag('end', function (ev, dd) {
-                    let left = startPos.left + dd.deltaX
-                    let top = startPos.top + dd.deltaY
-                    designer.setControlPosition(element.id, left, top)
-                    element.style.transform = ''
-                })
-                .click((ev) => ComponentWrapper.invokeOnClick(ev as any, designer, element))
+                .drag('end', function (ev, dd: DragData & { attr: string }) {
+                    let interval = Date.now() - dragStart
+                    ComponentWrapper.isDrag = interval >= 300
 
-            let setPosition = (ev: JQuery.Event<any>, dd: DD) => {
-                console.log(['ev.offsetX, ev.offsetY', ev.offsetX, ev.offsetY])
+                    if (!ComponentWrapper.isResizeHandleClassName(dd.attr)) {
+                        let left = startPos.left + dd.deltaX
+                        let top = startPos.top + dd.deltaY
+                        designer.setComponentPosition(element.id, { left, top })
+                        element.style.transform = ''
+                    }
+                    else {
+                        let left, top: number
+                        if (dd.attr.indexOf("W") > -1)
+                            left = startPos.left + dd.deltaX
+
+                        if (dd.attr.indexOf("N") > -1)
+                            top = startPos.top + dd.deltaY
+
+                        element.style.transform = ''
+                        designer.setComponentPosition(element.id, { left, top })
+                        designer.setComponentSize(componentId, rect)
+                    }
+                })
+                .click((ev) => {
+                    ComponentWrapper.invokeOnClick(ev as any, designer, element)
+                })
+
+            let setPosition = (dd: DragData) => {
                 console.log(['dd.offsetX, dd.offsetY', dd.offsetX, dd.offsetY])
-                console.log(ev)
                 console.log(dd)
                 element.style.transform = `translate(${dd.deltaX}px,${dd.deltaY}px)`
             }
+
+            let setTop = (dd: DragData) => {
+                element.style.transform = `translateY(${dd.deltaY}px)`
+            }
+            let setLeft = (dd: DragData) => {
+                element.style.transform = `translateX(${dd.deltaX}px)`
+            }
+
+
         }
 
         private static invokeOnClick(ev: MouseEvent, designer: PageDesigner, element: HTMLElement) {
             ev.preventDefault()
             ev.stopPropagation()
+
+            if (ComponentWrapper.isDrag) {
+                ComponentWrapper.isDrag = false
+                return
+            }
 
             let elementID = element.id
             if (!ev.ctrlKey) {
@@ -164,11 +250,22 @@ namespace jueying {
             let type = this.props.type
             let typename = typeof type == 'string' ? type : type.name
             let attr = Component.getComponentAttribute(typename)
-            let handler = this.props.selected && attr.showHandler ? <div style={{ height: 12, width: 12, top: -6, left: 8, border: 'solid 1px black', position: 'absolute' }}
+            let move_handle = this.props.selected && attr.showHandler ? <div className="move_handle" style={{}}
                 ref={e => this.handler = e || this.handler} /> : null
 
             return <div {...wrapperProps}>
-                {handler}
+                {move_handle}
+                {attr.resize ?
+                    <>
+                        <div className="resize_handle NE"></div>
+                        <div className="resize_handle NN"></div>
+                        <div className="resize_handle NW"></div>
+                        <div className="resize_handle WW"></div>
+                        <div className="resize_handle EE"></div>
+                        <div className="resize_handle SW"></div>
+                        <div className="resize_handle SS"></div>
+                        <div className="resize_handle SE"></div>
+                    </> : null}
                 {this.props.children}
             </div>
         }
@@ -181,6 +278,7 @@ namespace jueying {
         /** 表示组件可移动 */
         movable?: boolean,
         showHandler?: boolean,
+        resize?: boolean,
     }
 
 
@@ -190,16 +288,16 @@ namespace jueying {
         }
 
         private static componentAttributes: { [key: string]: ComponentAttribute } = {
-            'table': { container: false, movable: true, showHandler: true },
+            'table': { container: false, movable: true, showHandler: true, resize: true },
             'thead': { container: false, movable: false },
             'tbody': { container: false, movable: false },
             'tfoot': { container: false, movable: false },
             'tr': { container: false, movable: false },
             'td': { container: true, movable: false },
 
-            'img': { container: false, movable: true },
+            'img': { container: false, movable: true, resize: true },
 
-            'div': { container: true, movable: true, showHandler: true },
+            'div': { container: true, movable: true, showHandler: true, resize: true },
         }
 
         static setComponentAttribute(typename: string, attr: ComponentAttribute) {

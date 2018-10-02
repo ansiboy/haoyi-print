@@ -1,11 +1,14 @@
-namespace jueying.extentions {
+namespace jueying {
     export let classNames = {
-        componentSelected: `component-selected `,
+        componentSelected: `component-selected`,
         emptyTemplates: `empty-templates`,
         loadingTemplates: `loading-templates`,
         templateSelected: `template-selected`,
         templateDialog: `template-dialog`,
         emptyDocument: `empty-document`,
+
+        component: 'component',
+        componentWrapper: 'component-wrapper'
     }
 
     let templateDialog = {
@@ -51,6 +54,15 @@ namespace jueying.extentions {
             top: 4px;
             right: -6px;
         }
+        .validationMessage {
+            position: absolute;
+            margin-top: -60px;
+            background-color: red;
+            color: white;
+            padding: 4px 10px;
+        }
     `;
     document.head.appendChild(element);
+
+   
 }

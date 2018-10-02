@@ -17,15 +17,6 @@ declare namespace jueying {
         fire(args: T): void;
         static create<T>(): Callback<T>;
     }
-    let classNames: {
-        componentSelected: string;
-        emptyTemplates: string;
-        loadingTemplates: string;
-        templateSelected: string;
-        templateDialog: string;
-        component: string;
-        componentWrapper: string;
-    };
 }
 declare namespace jueying {
     interface ComponentWrapperProps {
@@ -38,6 +29,7 @@ declare namespace jueying {
     class ComponentWrapper extends React.Component<ComponentWrapperProps, any> {
         private handler;
         private element;
+        private static isDrag;
         designtimeBehavior(element: HTMLElement, attr: {
             container?: boolean;
             movable?: boolean;
@@ -46,6 +38,7 @@ declare namespace jueying {
          * 启用拖放操作，以便通过拖放图标添加控件
          */
         static enableDroppable(element: HTMLElement, designer: PageDesigner): void;
+        private static isResizeHandleClassName;
         static draggable(designer: PageDesigner, element: HTMLElement, handler?: HTMLElement): void;
         private static invokeOnClick;
         componentDidMount(): void;
@@ -57,6 +50,7 @@ declare namespace jueying {
         /** 表示组件可移动 */
         movable?: boolean;
         showHandler?: boolean;
+        resize?: boolean;
     }
     class Component {
         private static defaultComponentAttribute;
@@ -155,11 +149,6 @@ declare namespace jueying {
     function loadAllTypes(): Promise<any[]>;
 }
 declare namespace jueying {
-    class ControlEditorFactory {
-        private static controlEditorTypes;
-        static register(controlTypeName: any, editorType: React.ComponentClass<any> | string): void;
-        static hasEditor(controlTypeName: any): boolean;
-    }
     interface PropEditorInfo {
         propNames: string[];
         editorType: PropEditorConstructor;
@@ -290,11 +279,20 @@ declare namespace jueying {
         /** 添加控件 */
         appendComponent(parentId: string, childControl: ComponentData, childIds?: string[]): void;
         /** 设置控件位置 */
-        setControlPosition(controlId: string, left: number | string, top: number | string): void;
-        setControlsPosition(positions: {
-            controlId: string;
+        setComponentPosition(componentId: string, position: {
             left: number | string;
             top: number | string;
+        }): void;
+        setComponentSize(componentId: string, size: {
+            width?: number | string;
+            height?: number | string;
+        }): void;
+        setComponentsPosition(positions: {
+            componentId: string;
+            position: {
+                left: number | string;
+                top: number | string;
+            };
         }[]): void;
         /**
          * 选择指定的控件
@@ -305,6 +303,7 @@ declare namespace jueying {
         removeControl(...controlIds: string[]): void;
         /** 移动控件到另外一个控件容器 */
         moveControl(controlId: string, parentId: string, childIds: string[]): void;
+        private setComponentSelected;
         private removeControlFrom;
         findComponentData(controlId: string): ComponentData | null;
         private onKeyDown;
@@ -382,6 +381,18 @@ declare namespace jueying {
                 value: string;
             }>, nextContext: any): void;
         };
+    };
+}
+declare namespace jueying {
+    let classNames: {
+        componentSelected: string;
+        emptyTemplates: string;
+        loadingTemplates: string;
+        templateSelected: string;
+        templateDialog: string;
+        emptyDocument: string;
+        component: string;
+        componentWrapper: string;
     };
 }
 declare namespace jueying.extentions {
@@ -479,16 +490,6 @@ declare namespace jueying.extentions {
         static load(storage: DocumentStorage, fileName: string): Promise<PageDocument>;
         static new(storage: DocumentStorage, fileName: string, init: ComponentData): PageDocument;
     }
-}
-declare namespace jueying.extentions {
-    let classNames: {
-        componentSelected: string;
-        emptyTemplates: string;
-        loadingTemplates: string;
-        templateSelected: string;
-        templateDialog: string;
-        emptyDocument: string;
-    };
 }
 declare namespace jueying.extentions {
     type LoadDocuments = (pageIndex: number, pageSize: number) => Promise<{

@@ -6,18 +6,7 @@ var jueying;
         componentTypeName: 'data-component-name',
         componentData: 'component-data'
     };
-    jueying.strings = {
-    // property: '属性',
-    // style: '样式',
-    // field: '字段',
-    // fontSize: '字体大小',
-    // height: '高',
-    // left: '左边',
-    // name: '名称',
-    // top: '顶部',
-    // text: '文本',
-    // width: '宽'
-    };
+    jueying.strings = {};
     function guid() {
         function s4() {
             return Math.floor((1 + Math.random()) * 0x10000)
@@ -46,55 +35,6 @@ var jueying;
         }
     }
     jueying.Callback = Callback;
-    jueying.classNames = {
-        componentSelected: `component-selected `,
-        emptyTemplates: `empty-templates`,
-        loadingTemplates: `loading-templates`,
-        templateSelected: `template-selected`,
-        templateDialog: `template-dialog`,
-        component: 'component',
-        componentWrapper: 'component-wrapper'
-    };
-    let element = document.createElement('style');
-    element.type = 'text/css';
-    element.innerHTML = `
-        .${jueying.classNames.componentSelected} {
-            border: solid 1px #337ab7!important;
-        }
-        .${jueying.classNames.emptyTemplates} {
-            padding:50px 0;
-            text-align: center;
-        }
-        .${jueying.classNames.loadingTemplates} {
-            padding:50px 0;
-            text-align: center;
-        }
-        .${jueying.classNames.templateSelected} .page-view {
-            border: solid 1px #337ab7!important;
-        }
-        .${jueying.classNames.templateDialog} .name span {
-            color: white;
-        }
-        .validationMessage {
-            position: absolute;
-            margin-top: -60px;
-            background-color: red;
-            color: white;
-            padding: 4px 10px;
-        }
-    `;
-    /*
-        .${classNames.templateDialog} .name {
-            margin-top: -${templateDialog.nameHeight}px;
-            height: ${templateDialog.nameHeight}px;
-            font-size: ${templateDialog.fontSize}px;
-            text-align: center;
-            padding-top: 6px;
-            background-color: black;
-            opacity: 0.5;
-        }
-    */
-    document.head.appendChild(element);
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -155,44 +95,115 @@ var jueying;
                 designer.appendComponent(element.id, ctrl);
             };
         }
+        static isResizeHandleClassName(className) {
+            let classNames = [
+                'resize_handle NE', 'resize_handle NN', 'resize_handle NW',
+                'resize_handle WW', 'resize_handle EE', 'resize_handle SW',
+                'resize_handle SS', 'resize_handle SE',
+            ];
+            return classNames.indexOf(className) >= 0;
+        }
         static draggable(designer, element, handler) {
             if (!designer)
                 throw jueying.Errors.argumentNull('designer');
             if (!element)
                 throw jueying.Errors.argumentNull('element');
             handler = handler || element;
-            let elementID = element.id;
-            console.assert(elementID);
+            let componentId = element.id;
+            console.assert(componentId);
             let startPos;
+            let rect;
+            let dragStart;
             $(handler)
                 .drag("init", function (ev) {
                 startPos = $(element).position();
                 if ($(this).is(`.${jueying.classNames.componentSelected}`))
                     return $(`.${jueying.classNames.componentSelected}`);
             })
+                .drag('start', function (ev, dd) {
+                dd.attr = $(ev.target).prop("className");
+                dd.width = $(this).width();
+                dd.height = $(this).height();
+                dragStart = Date.now();
+            })
                 .drag(function (ev, dd) {
                 ev.preventDefault();
                 ev.stopPropagation();
-                setPosition(ev, dd);
+                rect = {};
+                if (dd.attr.indexOf("E") > -1) {
+                    rect.width = Math.max(32, dd.width + dd.deltaX);
+                }
+                if (dd.attr.indexOf("S") > -1) {
+                    rect.height = Math.max(32, dd.height + dd.deltaY);
+                }
+                if (dd.attr.indexOf("W") > -1) {
+                    rect.width = Math.max(32, dd.width - dd.deltaX);
+                    // rect.left = dd.originalX + dd.width - rect.width;
+                    setLeft(dd);
+                }
+                if (dd.attr.indexOf("N") > -1) {
+                    rect.height = Math.max(32, dd.height - dd.deltaY);
+                    // rect.top = dd.originalY + dd.height - rect.height;
+                    setTop(dd);
+                }
+                if (dd.attr.indexOf("WW") >= 0)
+                    setLeft(dd);
+                if (dd.attr.indexOf("NE") >= 0 || dd.attr.indexOf("NW") >= 0 || dd.attr.indexOf("SW") >= 0)
+                    setPosition(dd);
+                if (dd.attr.indexOf("NN") >= 0)
+                    setTop(dd);
+                if (dd.attr.indexOf("drag") > -1) {
+                    rect.top = dd.offsetY;
+                    rect.left = dd.offsetX;
+                }
+                if (!ComponentWrapper.isResizeHandleClassName(dd.attr)) {
+                    setPosition(dd);
+                }
+                if (dd.attr)
+                    $(this).css(rect);
             }, { click: true })
                 .drag('end', function (ev, dd) {
-                let left = startPos.left + dd.deltaX;
-                let top = startPos.top + dd.deltaY;
-                designer.setControlPosition(element.id, left, top);
-                element.style.transform = '';
+                let interval = Date.now() - dragStart;
+                ComponentWrapper.isDrag = interval >= 300;
+                if (!ComponentWrapper.isResizeHandleClassName(dd.attr)) {
+                    let left = startPos.left + dd.deltaX;
+                    let top = startPos.top + dd.deltaY;
+                    designer.setComponentPosition(element.id, { left, top });
+                    element.style.transform = '';
+                }
+                else {
+                    let left, top;
+                    if (dd.attr.indexOf("W") > -1)
+                        left = startPos.left + dd.deltaX;
+                    if (dd.attr.indexOf("N") > -1)
+                        top = startPos.top + dd.deltaY;
+                    element.style.transform = '';
+                    designer.setComponentPosition(element.id, { left, top });
+                    designer.setComponentSize(componentId, rect);
+                }
             })
-                .click((ev) => ComponentWrapper.invokeOnClick(ev, designer, element));
-            let setPosition = (ev, dd) => {
-                console.log(['ev.offsetX, ev.offsetY', ev.offsetX, ev.offsetY]);
+                .click((ev) => {
+                ComponentWrapper.invokeOnClick(ev, designer, element);
+            });
+            let setPosition = (dd) => {
                 console.log(['dd.offsetX, dd.offsetY', dd.offsetX, dd.offsetY]);
-                console.log(ev);
                 console.log(dd);
                 element.style.transform = `translate(${dd.deltaX}px,${dd.deltaY}px)`;
+            };
+            let setTop = (dd) => {
+                element.style.transform = `translateY(${dd.deltaY}px)`;
+            };
+            let setLeft = (dd) => {
+                element.style.transform = `translateX(${dd.deltaX}px)`;
             };
         }
         static invokeOnClick(ev, designer, element) {
             ev.preventDefault();
             ev.stopPropagation();
+            if (ComponentWrapper.isDrag) {
+                ComponentWrapper.isDrag = false;
+                return;
+            }
             let elementID = element.id;
             if (!ev.ctrlKey) {
                 designer.selectComponent(element.id);
@@ -231,12 +242,23 @@ var jueying;
             let type = this.props.type;
             let typename = typeof type == 'string' ? type : type.name;
             let attr = Component.getComponentAttribute(typename);
-            let handler = this.props.selected && attr.showHandler ? React.createElement("div", { style: { height: 12, width: 12, top: -6, left: 8, border: 'solid 1px black', position: 'absolute' }, ref: e => this.handler = e || this.handler }) : null;
+            let move_handle = this.props.selected && attr.showHandler ? React.createElement("div", { className: "move_handle", style: {}, ref: e => this.handler = e || this.handler }) : null;
             return React.createElement("div", Object.assign({}, wrapperProps),
-                handler,
+                move_handle,
+                attr.resize ?
+                    React.createElement(React.Fragment, null,
+                        React.createElement("div", { className: "resize_handle NE" }),
+                        React.createElement("div", { className: "resize_handle NN" }),
+                        React.createElement("div", { className: "resize_handle NW" }),
+                        React.createElement("div", { className: "resize_handle WW" }),
+                        React.createElement("div", { className: "resize_handle EE" }),
+                        React.createElement("div", { className: "resize_handle SW" }),
+                        React.createElement("div", { className: "resize_handle SS" }),
+                        React.createElement("div", { className: "resize_handle SE" })) : null,
                 this.props.children);
         }
     }
+    ComponentWrapper.isDrag = false;
     jueying.ComponentWrapper = ComponentWrapper;
     class Component {
         static setComponentAttribute(typename, attr) {
@@ -251,14 +273,14 @@ var jueying;
         container: false, movable: true, showHandler: false
     };
     Component.componentAttributes = {
-        'table': { container: false, movable: true, showHandler: true },
+        'table': { container: false, movable: true, showHandler: true, resize: true },
         'thead': { container: false, movable: false },
         'tbody': { container: false, movable: false },
         'tfoot': { container: false, movable: false },
         'tr': { container: false, movable: false },
         'td': { container: true, movable: false },
-        'img': { container: false, movable: true },
-        'div': { container: true, movable: true, showHandler: true },
+        'img': { container: false, movable: true, resize: true },
+        'div': { container: true, movable: true, showHandler: true, resize: true },
     };
     jueying.Component = Component;
 })(jueying || (jueying = {}));
@@ -509,16 +531,6 @@ var jueying;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
-    class ControlEditorFactory {
-        static register(controlTypeName, editorType) {
-            this.controlEditorTypes[controlTypeName] = editorType;
-        }
-        static hasEditor(controlTypeName) {
-            return this.controlEditorTypes[controlTypeName] != null;
-        }
-    }
-    ControlEditorFactory.controlEditorTypes = {};
-    jueying.ControlEditorFactory = ControlEditorFactory;
     /** 组件属性编辑器，为组件的属性提供可视化的编辑器 */
     class ComponentPropEditor {
         static getControlPropEditors(controlClassName) {
@@ -535,6 +547,7 @@ var jueying;
             return editor;
         }
         static setControlPropEditor(componentType, propName, editorType, group) {
+            group = group || '';
             let propNames = propName.split('.');
             let className = typeof componentType == 'string' ? componentType : componentType.prototype.typename || componentType.name;
             let classProps = ComponentPropEditor.controlPropEditors[className] = ComponentPropEditor.controlPropEditors[className] || [];
@@ -748,25 +761,36 @@ var jueying;
             this.selectComponent(childControl.props.id);
         }
         /** 设置控件位置 */
-        setControlPosition(controlId, left, top) {
-            let controlData = this.findComponentData(controlId);
-            if (!controlData)
-                throw new Error(`Control ${controlId} is not exits.`);
-            let style = controlData.props.style = (controlData.props.style || {});
-            style.left = left;
-            style.top = top;
+        setComponentPosition(componentId, position) {
+            return this.setComponentsPosition([{ componentId, position }]);
+        }
+        setComponentSize(componentId, size) {
+            // return this.setComponentsPosition([{ componentId, left, top }])
+            console.assert(componentId);
+            console.assert(size);
+            let componentData = this.findComponentData(componentId);
+            if (!componentData)
+                throw new Error(`Control ${componentId} is not exits.`);
+            let style = componentData.props.style = (componentData.props.style || {});
+            if (size.height)
+                style.height = size.height;
+            if (size.width)
+                style.width = size.width;
             let { pageData } = this.state;
             this.setState({ pageData });
         }
-        setControlsPosition(positions) {
+        setComponentsPosition(positions) {
             positions.forEach(o => {
-                let { controlId, left, top } = o;
-                let controlData = this.findComponentData(controlId);
-                if (!controlData)
-                    throw new Error(`Control ${controlId} is not exits.`);
-                let style = controlData.props.style = (controlData.props.style || {});
-                style.left = left;
-                style.top = top;
+                let { componentId } = o;
+                let { left, top } = o.position;
+                let componentData = this.findComponentData(componentId);
+                if (!componentData)
+                    throw new Error(`Control ${componentId} is not exits.`);
+                let style = componentData.props.style = (componentData.props.style || {});
+                if (left)
+                    style.left = left;
+                if (top)
+                    style.top = top;
                 let { pageData } = this.state;
                 this.setState({ pageData });
             });
@@ -783,7 +807,7 @@ var jueying;
             while (stack.length > 0) {
                 let item = stack.pop();
                 let isSelectedControl = componentIds.indexOf(item.props.id) >= 0;
-                item.props.selected = isSelectedControl;
+                this.setComponentSelected(item, isSelectedControl);
                 let children = item.children || [];
                 for (let i = 0; i < children.length; i++) {
                     stack.push(children[i]);
@@ -792,8 +816,11 @@ var jueying;
             this._selectedControlIds = componentIds;
             componentIds.map(id => this.findComponentData(id)).forEach(o => {
                 console.assert(o != null);
-                let props = o.props;
-                props.selected = true;
+                // let props = o.props as ComponentProps<any>
+                // props.selected = true
+                // let arr = (props.className || '').split(' ').filter(O => o) //= (props.className || '') + ' ' + classNames.componentSelected
+                // if (props.selected)
+                this.setComponentSelected(o, true);
             });
             this.setState({ pageData: this.pageData });
             this.componentSelected.fire(this.selectedComponentIds);
@@ -824,6 +851,16 @@ var jueying;
             console.assert(pageData.children);
             this.removeControlFrom(controlId, pageData.children);
             this.appendComponent(parentId, control, childIds);
+        }
+        setComponentSelected(component, value) {
+            component.props.selected = value;
+            component.props.className = component.props.className || '';
+            let arr = component.props.className.split(' ') || [];
+            arr = arr.filter(a => a != '' && a != jueying.classNames.componentSelected);
+            if (value == true) {
+                arr.push(jueying.classNames.componentSelected);
+            }
+            component.props.className = arr.join(' ').trim();
         }
         removeControlFrom(controlId, collection) {
             let controlIndex = null;
@@ -906,6 +943,8 @@ var jueying;
                 delete style.left;
                 delete style.top;
                 delete style.position;
+                style.width = '100%';
+                style.height = '100%';
                 return React.createElement(jueying.ComponentWrapper, { id: props.id, style: { top, left, position, width, height }, type: type, selected: props.selected, designer: this }, React.createElement(type, props, ...children));
             }
             props.ref = (e) => {
@@ -984,6 +1023,70 @@ var jueying;
         };
     }
     jueying.dropdown = dropdown;
+})(jueying || (jueying = {}));
+var jueying;
+(function (jueying) {
+    jueying.classNames = {
+        componentSelected: `component-selected`,
+        emptyTemplates: `empty-templates`,
+        loadingTemplates: `loading-templates`,
+        templateSelected: `template-selected`,
+        templateDialog: `template-dialog`,
+        emptyDocument: `empty-document`,
+        component: 'component',
+        componentWrapper: 'component-wrapper'
+    };
+    let templateDialog = {
+        nameHeight: 40,
+        fontSize: 22
+    };
+    let element = document.createElement('style');
+    element.type = 'text/css';
+    element.innerHTML = `
+        .${jueying.classNames.componentSelected} {
+            border: solid 1px #337ab7!important;
+        }
+        .${jueying.classNames.emptyTemplates} {
+            padding:50px 0;
+            text-align: center;
+        }
+        .${jueying.classNames.loadingTemplates} {
+            padding:50px 0;
+            text-align: center;
+        }
+        .${jueying.classNames.templateSelected} .page-view {
+            border: solid 1px #337ab7!important;
+        }
+        .${jueying.classNames.templateDialog} .name {
+            margin-top: -${templateDialog.nameHeight}px;
+            height: ${templateDialog.nameHeight}px;
+            font-size: ${templateDialog.fontSize}px;
+            text-align: center;
+            padding-top: 6px;
+            background-color: black;
+            opacity: 0.5;
+        }
+        .${jueying.classNames.templateDialog} .name span {
+            color: white;
+        }
+        .${jueying.classNames.emptyDocument} {
+            text-align: center;
+            padding: 100px 0;
+        }
+        ul.nav-tabs li i {
+            position: relative;
+            top: 4px;
+            right: -6px;
+        }
+        .validationMessage {
+            position: absolute;
+            margin-top: -60px;
+            background-color: red;
+            color: white;
+            padding: 4px 10px;
+        }
+    `;
+    document.head.appendChild(element);
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -1543,64 +1646,6 @@ var jueying;
         extentions.PageDocument = PageDocument;
     })(extentions = jueying.extentions || (jueying.extentions = {}));
 })(jueying || (jueying = {}));
-var jueying;
-(function (jueying) {
-    var extentions;
-    (function (extentions) {
-        extentions.classNames = {
-            componentSelected: `component-selected `,
-            emptyTemplates: `empty-templates`,
-            loadingTemplates: `loading-templates`,
-            templateSelected: `template-selected`,
-            templateDialog: `template-dialog`,
-            emptyDocument: `empty-document`,
-        };
-        let templateDialog = {
-            nameHeight: 40,
-            fontSize: 22
-        };
-        let element = document.createElement('style');
-        element.type = 'text/css';
-        element.innerHTML = `
-        .${extentions.classNames.componentSelected} {
-            border: solid 1px #337ab7!important;
-        }
-        .${extentions.classNames.emptyTemplates} {
-            padding:50px 0;
-            text-align: center;
-        }
-        .${extentions.classNames.loadingTemplates} {
-            padding:50px 0;
-            text-align: center;
-        }
-        .${extentions.classNames.templateSelected} .page-view {
-            border: solid 1px #337ab7!important;
-        }
-        .${extentions.classNames.templateDialog} .name {
-            margin-top: -${templateDialog.nameHeight}px;
-            height: ${templateDialog.nameHeight}px;
-            font-size: ${templateDialog.fontSize}px;
-            text-align: center;
-            padding-top: 6px;
-            background-color: black;
-            opacity: 0.5;
-        }
-        .${extentions.classNames.templateDialog} .name span {
-            color: white;
-        }
-        .${extentions.classNames.emptyDocument} {
-            text-align: center;
-            padding: 100px 0;
-        }
-        ul.nav-tabs li i {
-            position: relative;
-            top: 4px;
-            right: -6px;
-        }
-    `;
-        document.head.appendChild(element);
-    })(extentions = jueying.extentions || (jueying.extentions = {}));
-})(jueying || (jueying = {}));
 /// <reference path="comon.tsx"/>
 var jueying;
 (function (jueying) {
@@ -1688,11 +1733,11 @@ var jueying;
                             React.createElement("h4", { className: "modal-title" }, "\u9009\u62E9\u6A21\u677F")),
                         React.createElement("div", { className: "modal-body clearfix" },
                             React.createElement("div", { className: "form-group" }, templates == null ?
-                                React.createElement("div", { className: extentions.classNames.loadingTemplates }, "\u6570\u636E\u6B63\u5728\u52A0\u8F7D\u4E2D") :
+                                React.createElement("div", { className: jueying.classNames.loadingTemplates }, "\u6570\u636E\u6B63\u5728\u52A0\u8F7D\u4E2D") :
                                 templates.length == 0 ?
-                                    React.createElement("div", { className: extentions.classNames.emptyTemplates }, "\u6682\u65E0\u6A21\u7248\u6570\u636E") :
+                                    React.createElement("div", { className: jueying.classNames.emptyTemplates }, "\u6682\u65E0\u6A21\u7248\u6570\u636E") :
                                     React.createElement(React.Fragment, null,
-                                        templates.map((o, i) => React.createElement("div", { key: i, style: { width, height, float: i == 2 ? 'right' : 'left', margin: i == 1 ? '0 0 0 15px' : null }, onClick: () => this.selectTemplate(i), className: i == selectedTemplateIndex ? extentions.classNames.templateSelected : null },
+                                        templates.map((o, i) => React.createElement("div", { key: i, style: { width, height, float: i == 2 ? 'right' : 'left', margin: i == 1 ? '0 0 0 15px' : null }, onClick: () => this.selectTemplate(i), className: i == selectedTemplateIndex ? jueying.classNames.templateSelected : null },
                                             React.createElement(PageViewContainer, null,
                                                 jueying.core.createElement(o.pageData),
                                                 React.createElement("div", { className: "name" },
@@ -1734,7 +1779,7 @@ var jueying;
         }
         extentions.TemplateDialog = TemplateDialog;
         let dialog_element = document.createElement('div');
-        dialog_element.className = `modal fade ${extentions.classNames.templateDialog}`;
+        dialog_element.className = `modal fade ${jueying.classNames.templateDialog}`;
         document.body.appendChild(dialog_element);
         let defaultInstance;
         ReactDOM.render(React.createElement(TemplateDialog, { ref: (e) => defaultInstance = e || defaultInstance }), dialog_element);

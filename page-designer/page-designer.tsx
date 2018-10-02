@@ -185,29 +185,44 @@ namespace jueying {
         }
 
         /** 设置控件位置 */
-        setControlPosition(controlId: string, left: number | string, top: number | string) {
-            let controlData = this.findComponentData(controlId);
-            if (!controlData)
-                throw new Error(`Control ${controlId} is not exits.`);
+        setComponentPosition(componentId: string, position: { left: number | string, top: number | string }) {
+            return this.setComponentsPosition([{ componentId, position }])
+        }
 
-            let style = controlData.props.style = (controlData.props.style || {});
-            style.left = left;
-            style.top = top;
+        setComponentSize(componentId: string, size: { width?: number | string, height?: number | string }) {
+            // return this.setComponentsPosition([{ componentId, left, top }])
+            console.assert(componentId)
+            console.assert(size)
+
+            let componentData = this.findComponentData(componentId);
+            if (!componentData)
+                throw new Error(`Control ${componentId} is not exits.`);
+
+            let style = componentData.props.style = (componentData.props.style || {});
+            if (size.height)
+                style.height = size.height
+
+            if (size.width)
+                style.width = size.width
 
             let { pageData } = this.state;
             this.setState({ pageData });
         }
 
-        setControlsPosition(positions: { controlId: string, left: number | string, top: number | string }[]) {
+        setComponentsPosition(positions: { componentId: string, position: { left: number | string, top: number | string } }[]) {
             positions.forEach(o => {
-                let { controlId, left, top } = o
-                let controlData = this.findComponentData(controlId);
-                if (!controlData)
-                    throw new Error(`Control ${controlId} is not exits.`);
+                let { componentId } = o
+                let { left, top } = o.position
+                let componentData = this.findComponentData(componentId);
+                if (!componentData)
+                    throw new Error(`Control ${componentId} is not exits.`);
 
-                let style = controlData.props.style = (controlData.props.style || {});
-                style.left = left;
-                style.top = top;
+                let style = componentData.props.style = (componentData.props.style || {});
+                if (left)
+                    style.left = left;
+
+                if (top)
+                    style.top = top;
 
                 let { pageData } = this.state;
                 this.setState({ pageData });
@@ -229,7 +244,8 @@ namespace jueying {
             while (stack.length > 0) {
                 let item = stack.pop()
                 let isSelectedControl = componentIds.indexOf(item.props.id) >= 0
-                item.props.selected = isSelectedControl
+                this.setComponentSelected(item, isSelectedControl)
+
                 let children = item.children || []
                 for (let i = 0; i < children.length; i++) {
                     stack.push(children[i])
@@ -239,8 +255,11 @@ namespace jueying {
             this._selectedControlIds = componentIds
             componentIds.map(id => this.findComponentData(id)).forEach(o => {
                 console.assert(o != null)
-                let props = o.props as ComponentProps<any>
-                props.selected = true
+                // let props = o.props as ComponentProps<any>
+                // props.selected = true
+                // let arr = (props.className || '').split(' ').filter(O => o) //= (props.className || '') + ' ' + classNames.componentSelected
+                // if (props.selected)
+                this.setComponentSelected(o, true)
             })
             this.setState({ pageData: this.pageData })
             this.componentSelected.fire(this.selectedComponentIds)
@@ -279,6 +298,18 @@ namespace jueying {
             console.assert(pageData.children);
             this.removeControlFrom(controlId, pageData.children);
             this.appendComponent(parentId, control, childIds);
+        }
+
+        private setComponentSelected(component: ComponentData, value: boolean) {
+            component.props.selected = value
+            component.props.className = component.props.className || ''
+            let arr = component.props.className.split(' ') || []
+            arr = arr.filter(a => a != '' && a != classNames.componentSelected)
+            if (value == true) {
+                arr.push(classNames.componentSelected)
+            }
+
+            component.props.className = arr.join(' ').trim()
         }
 
         private removeControlFrom(controlId: string, collection: ComponentData[]): boolean {
@@ -381,6 +412,8 @@ namespace jueying {
                 delete style.top
                 delete style.position
 
+                style.width = '100%'
+                style.height = '100%'
                 return <ComponentWrapper id={props.id} style={{ top, left, position, width, height }} type={type}
                     selected={props.selected} designer={this}>
                     {React.createElement(type, props, ...children)}

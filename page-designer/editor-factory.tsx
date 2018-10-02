@@ -1,17 +1,5 @@
 namespace jueying {
 
-    export class ControlEditorFactory {
-        private static controlEditorTypes: { [key: string]: React.ComponentClass<any> | string } = {}
-        static register(controlTypeName, editorType: React.ComponentClass<any> | string) {
-            this.controlEditorTypes[controlTypeName] = editorType;
-        }
-
-        static hasEditor(controlTypeName) {
-            return this.controlEditorTypes[controlTypeName] != null;
-        }
-
-    }
-
     export interface PropEditorInfo {
         propNames: string[],
         editorType: PropEditorConstructor, group: string
@@ -42,7 +30,7 @@ namespace jueying {
         }
 
         static setControlPropEditor(componentType: React.ComponentClass | string, propName: string, editorType: PropEditorConstructor, group?: string, ): void {
-
+            group = group || ''
             let propNames = (propName as string).split('.')
 
             let className = typeof componentType == 'string' ? componentType : componentType.prototype.typename || componentType.name

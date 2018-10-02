@@ -1,18 +1,15 @@
 @import "../lib/bootstrap-3.3.7/less/variables.less";
-
 //=======================================================
 // PageDesigner
-
 @title-color: white;
 @body-border-width: 1px;
 @title-font-size: 14px;
-@dark-text-color:black;
+@dark-text-color: black;
 @toolbar-height: 42px;
 @panel-top: @toolbar-height + 4px;
 @panel-bottom: 40px;
 @component-panel-width: 90px;
 @editor-panel-width: 300px;
-
 .component-panel {
     position: absolute;
     background: white;
@@ -48,7 +45,6 @@
     font-size: @title-font-size;
     z-index: 100;
     overflow: auto;
-
     label {
         width: 80px;
         float: left;
@@ -72,13 +68,12 @@
     right: @editor-panel-width + 4px;
     position: absolute;
     overflow: auto;
-
-    @nav-height:42px;
+    @nav-height: 42px;
     .nav-tabs {
         height: @nav-height;
-        li.active > a,
-        li.active > a:hover, 
-        li.active > a:focus{
+        li.active>a,
+        li.active>a:hover,
+        li.active>a:focus {
             background-color: @brand-primary;
             color: @title-color;
             border-color: @brand-primary;
@@ -94,7 +89,7 @@
 }
 
 .editor-panel.panel.panel-primary {
-    > .panel-body {
+    >.panel-body {
         padding: 0;
     }
 }
@@ -111,7 +106,7 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    background:  rgb(41,58,68);
+    background: rgb(41, 58, 68);
 }
 
 .toolbar {
@@ -126,7 +121,7 @@
     z-index: 100;
     h3 {
         margin: 0;
-        padding: 8px 0 0 10px;   
+        padding: 8px 0 0 10px;
         font-size: @title-font-size;
     }
     .btn {
@@ -136,22 +131,124 @@
     }
 }
 
-.designer
-.component-panel {
+.designer .component-panel {
     -moz-user-select: none;
     -webkit-user-select: none;
-    -ms-user-select:none;
-    user-select:none;
-    -o-user-select:none;
+    -ms-user-select: none;
+    user-select: none;
+    -o-user-select: none;
 }
 
 .component-selected {
     :first-child {
         border-color: blue;
     }
+
+    .resize_handle {
+        position: absolute;
+        height: 6px;
+        width: 6px;
+        border: 1px solid #89B;
+        background: #9AC;
+    }
+
+    .move_handle {
+        height: 12px;
+        width: 12px;
+        top: -6px; 
+        left: 8px; 
+        border: solid 1px black;
+        position: absolute;
+    }
+    
+    .NW,
+    .NN,
+    .NE {
+        top: -4px;
+    }
+    
+    .NE,
+    .EE,
+    .SE {
+        right: -4px;
+    }
+    
+    .SW,
+    .SS,
+    .SE {
+        bottom: -4px;
+    }
+    
+    .NW,
+    .WW,
+    .SW {
+        left: -4px;
+    }
+    
+    .SE,
+    .NW {
+        cursor: nw-resize;
+    }
+    
+    .SW,
+    .NE {
+        cursor: ne-resize;
+    }
+    
+    .NN,
+    .SS {
+        cursor: n-resize;
+        left: 50%;
+        margin-left: -4px;
+    }
+    
+    .EE,
+    .WW {
+        cursor: e-resize;
+        top: 50%;
+        margin-top: -4px;
+    }
 }
+
+.NW,
+.NN,
+.NE,
+.EE,
+.SE,
+.SW,
+.SS,
+.WW {
+    .component >& {
+        display: none;
+        .component-selected& {
+            display: block;
+        }
+    }
+}
+
 .component-wrapper {
     border-width: 1px;
     border-style: dotted;
 }
+
+// .drag {
+//     position: absolute;
+//     border: 1px solid #89B;
+//     background: #BCE;
+//     height: 58px;
+//     width: 58px;
+//     top: 120px;
+//     cursor: move;
+// }
+
+
+
+// .selected {
+//     background-color: #ECB;
+//     border-color: #B98;
+// }
+// .component-selected .resize_handle {
+//     background-color: #CA9;
+//     border-color: #B98;
+// }
 //=======================================================
