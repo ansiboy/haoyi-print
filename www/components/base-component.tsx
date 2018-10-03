@@ -1,4 +1,4 @@
-import { ComponentProps, Component, TextInput, PropEditorConstructor, dropdown } from "jueying";
+import { ComponentProps } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
 import { PageViewContext, PageView } from "./page-view";

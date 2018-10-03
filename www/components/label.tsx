@@ -1,6 +1,6 @@
 import { component, Component } from "jueying";
 import React = require("react");
-import { BaseControl, BaseControlProps, compoentStyleEditors } from "./baseControl";
+import { BaseControl, BaseControlProps, compoentStyleEditors } from "./base-component";
 
 export interface Props extends BaseControlProps<Label> {
     text: string,

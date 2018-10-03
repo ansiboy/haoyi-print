@@ -1,13 +1,11 @@
 import * as React from 'react';
 import 'qrcode'
-import { BaseControlProps, BaseControl } from "./baseControl";
+import { BaseControlProps, BaseControl } from "./base-component";
 import { ControlSize } from "./controls/controlSize";
 import { component } from 'jueying';
 
 export interface Props extends BaseControlProps<SquareCode> {
-    // value: string,
     size: string,
-    // field?: string,
 }
 
 @(component() as any)

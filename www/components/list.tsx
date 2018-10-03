@@ -1,6 +1,6 @@
 import { component } from "jueying";
 import React = require("react");
-import { BaseControl, setStyleEditor } from "./baseControl";
+import { BaseControl, setStyleEditor } from "./base-component";
 
 @(component({ container: true, movable: false }) as any)
 class ListHeader extends React.Component<any, any>{

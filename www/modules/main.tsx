@@ -1,5 +1,5 @@
 import { DesignerFramework, DocumentStorage, PageDocument } from 'jueying.extentions'
-import { components, templates } from "components/componenDefines";
+import { componentDefines, templates } from "components/componenDefines";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { showPrintDialog, generatePrintHTML } from 'print'
@@ -156,7 +156,7 @@ class MainPage extends DesignerFramework {
 export default function (page: chitu.Page) {
     // jueying.core.loadAllTypes().then(o => {
     ReactDOM.render(<MainPage {...{
-        components, templates, title: '好易标签打印'
+        componentDefines, templates, title: '好易标签打印'
     }} />, page.element)
     // })
 }

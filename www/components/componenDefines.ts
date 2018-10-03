@@ -6,7 +6,7 @@ let componentsDirectory = 'components';
 let SquareCode = 'SquareCode'
 let Label = 'Label'
 let List = 'List'
-export let components: Array<ComponentDefine> = [
+export let componentDefines: Array<ComponentDefine> = [
     {
         componentData: {
             type: 'Label',
