@@ -1,7 +1,7 @@
 import { component, Component, TextInput } from "jueying";
 import React = require("react");
+import { setStyleEditor } from "./_component-editors";
 import { BaseControlProps } from "./baseControl";
-import { ControlSize } from "./controls/controlSize";
 
 export interface PageViewProps extends BaseControlProps<PageView> {
     data?: any,
@@ -29,9 +29,10 @@ export class PageView extends React.Component<PageViewProps, State>{
 }
 
 if (jueying.PageDesigner) {
-    Component.setPropEditor(PageView, "name", TextInput)
-    Component.setPropEditor(PageView, "style.width", ControlSize)
+    Component.setPropEditor(PageView, "name", TextInput, 'design')
+    setStyleEditor(PageView)
 }
+
 
 
 

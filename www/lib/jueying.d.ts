@@ -51,6 +51,22 @@ declare namespace jueying {
     }
 }
 declare namespace jueying {
+    interface ComponentToolbarProps extends React.Props<ComponentToolbar> {
+        componetDefines: ComponentDefine[];
+        style?: React.CSSProperties;
+        className?: string;
+    }
+    interface ComponentToolbarState {
+    }
+    class ComponentToolbar extends React.Component<ComponentToolbarProps, ComponentToolbarState> {
+        designer: PageDesigner;
+        private toolbarElement;
+        componentDidMount(): void;
+        private componentDraggable;
+        render(): JSX.Element;
+    }
+}
+declare namespace jueying {
     type ComponentWrapperProps = {
         designer: PageDesigner;
         type: string | React.ComponentClass;
@@ -109,22 +125,6 @@ declare namespace jueying {
         /** 通过属性数组获取属性的编辑器 */
         static getPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
         static setPropEditor(componentType: React.ComponentClass | string, propName: string, editorType: PropEditorConstructor, group?: string): void;
-    }
-}
-declare namespace jueying {
-    interface ComponentToolbarProps extends React.Props<ComponentToolbar> {
-        componetDefines: ComponentDefine[];
-        style?: React.CSSProperties;
-        className?: string;
-    }
-    interface ComponentToolbarState {
-    }
-    class ComponentToolbar extends React.Component<ComponentToolbarProps, ComponentToolbarState> {
-        designer: PageDesigner;
-        private toolbarElement;
-        componentDidMount(): void;
-        private componentDraggable;
-        render(): JSX.Element;
     }
 }
 /*******************************************************************************

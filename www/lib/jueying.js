@@ -166,6 +166,45 @@ var jueying;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
+    class ComponentToolbar extends React.Component {
+        componentDidMount() {
+        }
+        componentDraggable(toolItemElement, componentData) {
+            console.assert(toolItemElement != null);
+            toolItemElement.draggable = true;
+            toolItemElement.addEventListener('dragstart', function (ev) {
+                componentData.props = componentData.props || {};
+                ev.dataTransfer.setData(jueying.constants.componentData, JSON.stringify(componentData));
+            });
+        }
+        render() {
+            let props = Object.assign({}, this.props);
+            delete props.componetDefines;
+            let componets = this.props.componetDefines;
+            return React.createElement(jueying.DesignerContext.Consumer, null, context => {
+                this.designer = context.designer;
+                return React.createElement("div", Object.assign({}, props, { className: "component-panel panel panel-primary" }),
+                    React.createElement("div", { className: "panel-heading" }, "\u5DE5\u5177\u680F"),
+                    React.createElement("div", { className: "panel-body" },
+                        React.createElement("ul", { ref: (e) => this.toolbarElement = this.toolbarElement || e }, componets.map((c, i) => {
+                            let props = { key: i };
+                            return React.createElement("li", Object.assign({}, props, { ref: e => {
+                                    if (!e)
+                                        return;
+                                    let ctrl = c.componentData;
+                                    this.componentDraggable(e, ctrl);
+                                } }),
+                                React.createElement("div", { className: "btn-link" },
+                                    React.createElement("i", { className: c.icon, style: { fontSize: 44, color: 'black' } })),
+                                React.createElement("div", null, c.displayName));
+                        }))));
+            });
+        }
+    }
+    jueying.ComponentToolbar = ComponentToolbar;
+})(jueying || (jueying = {}));
+var jueying;
+(function (jueying) {
     class ComponentWrapper extends React.Component {
         designtimeBehavior(element, attr) {
             if (!element)
@@ -452,45 +491,6 @@ var jueying;
     };
     Component.controlPropEditors = {};
     jueying.Component = Component;
-})(jueying || (jueying = {}));
-var jueying;
-(function (jueying) {
-    class ComponentToolbar extends React.Component {
-        componentDidMount() {
-        }
-        componentDraggable(toolItemElement, componentData) {
-            console.assert(toolItemElement != null);
-            toolItemElement.draggable = true;
-            toolItemElement.addEventListener('dragstart', function (ev) {
-                componentData.props = componentData.props || {};
-                ev.dataTransfer.setData(jueying.constants.componentData, JSON.stringify(componentData));
-            });
-        }
-        render() {
-            let props = Object.assign({}, this.props);
-            delete props.componetDefines;
-            let componets = this.props.componetDefines;
-            return React.createElement(jueying.DesignerContext.Consumer, null, context => {
-                this.designer = context.designer;
-                return React.createElement("div", Object.assign({}, props, { className: "component-panel panel panel-primary" }),
-                    React.createElement("div", { className: "panel-heading" }, "\u5DE5\u5177\u680F"),
-                    React.createElement("div", { className: "panel-body" },
-                        React.createElement("ul", { ref: (e) => this.toolbarElement = this.toolbarElement || e }, componets.map((c, i) => {
-                            let props = { key: i };
-                            return React.createElement("li", Object.assign({}, props, { ref: e => {
-                                    if (!e)
-                                        return;
-                                    let ctrl = c.componentData;
-                                    this.componentDraggable(e, ctrl);
-                                } }),
-                                React.createElement("div", { className: "btn-link" },
-                                    React.createElement("i", { className: c.icon, style: { fontSize: 44, color: 'black' } })),
-                                React.createElement("div", null, c.displayName));
-                        }))));
-            });
-        }
-    }
-    jueying.ComponentToolbar = ComponentToolbar;
 })(jueying || (jueying = {}));
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
