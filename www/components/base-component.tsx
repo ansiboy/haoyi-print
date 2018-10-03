@@ -2,7 +2,7 @@ import { ComponentProps } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
 import { PageViewContext, PageView } from "./page-view";
-import { setStyleEditor } from "./_component-editors";
+import { setStyleEditor } from "./component-editors";
 export { setStyleEditor }
 
 export interface BaseControlProps<T> extends ComponentProps<T> {
