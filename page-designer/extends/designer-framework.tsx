@@ -305,7 +305,7 @@ namespace jueying.extentions {
                         <PageDesigner pageData={pageDocument.pageData} ref={e => this.designerRef(e)}>
                         </PageDesigner> : null}
                 </div>
-                <ComponentToolbar className="component-panel" componets={components} />
+                <ComponentToolbar className="component-panel" componetDefines={components} />
                 <EditorPanel emptyText={"未选中控件，点击页面控件，可以编辑选中控件的属性"}
                     ref={e => this.editorPanel = e || this.editorPanel} />
 

@@ -1,5 +1,5 @@
 import { BaseControl } from "baseControl";
-import { ComponentProps, ComponentPropEditor, TextInput } from "jueying";
+import { ComponentProps, Component, TextInput } from "jueying";
 import React = require("react");
 
 export interface Props extends ComponentProps<Image> {
@@ -18,4 +18,4 @@ export default class Image extends BaseControl<Props, {}>{
     }
 }
 
-ComponentPropEditor.setControlPropEditor(Image, '', TextInput, 'name')
+Component.setPropEditor(Image, '', TextInput, 'name')

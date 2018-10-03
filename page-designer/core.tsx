@@ -28,7 +28,7 @@ namespace jueying {
     export function component<T extends React.Component>(args?: ComponentAttribute) {
         return function (constructor: { new(...args): T }) {
             if (PageDesigner) {
-                Component.setComponentAttribute(constructor.name, args)
+                Component.setAttribute(constructor.name, args)
             }
 
             core.register(constructor.name, constructor)

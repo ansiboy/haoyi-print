@@ -395,7 +395,7 @@ namespace jueying {
             }
 
             let typename = typeof type == 'string' ? type : type.name
-            let attr = Component.getComponentAttribute(typename)
+            let attr = Component.getAttribute(typename)
             let allowWrapper: boolean = true
             let tagName: keyof HTMLElementTagNameMap = type as keyof HTMLElementTagNameMap
             if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
@@ -405,17 +405,14 @@ namespace jueying {
 
             if (allowWrapper) {
 
-                let style = props.style || {}
-                let { top, left, position, width, height } = style
+                let style = Object.assign({}, props.style || {})
+                delete props.style.left
+                delete props.style.top
+                delete props.style.position
+                props.style.width = '100%'
+                props.style.height = '100%'
 
-                delete style.left
-                delete style.top
-                delete style.position
-
-                style.width = '100%'
-                style.height = '100%'
-                return <ComponentWrapper id={props.id} style={{ top, left, position, width, height }} type={type}
-                    selected={props.selected} designer={this}>
+                return <ComponentWrapper {...props} type={type} designer={this} style={style}>
                     {React.createElement(type, props, ...children)}
                 </ComponentWrapper>
             }
@@ -425,8 +422,6 @@ namespace jueying {
 
                 if ((e as HTMLElement).tagName) {
                     (e as HTMLElement).onclick = (ev) => {
-                        // ev.stopPropagation()
-                        // this.selectComponent((e as HTMLElement).id)
                         ComponentWrapper.invokeOnClick(ev, this, e as HTMLElement)
                     }
                     return

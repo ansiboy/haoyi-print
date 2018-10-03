@@ -34,10 +34,18 @@ namespace jueying {
         }
     }
 
-    export function dropdown(items: { [value: string]: string }, emptyText?: string) {
+    export function dropdown(items: { [value: string]: string } | string[], emptyText?: string) {
         return class Dropdown extends PropEditor<{ value: string }, string>{
             render() {
                 let { value } = this.state
+                if (Array.isArray(items)) {
+                    let tmp = items
+                    items = {}
+                    for (let i = 0; i < tmp.length; i++) {
+                        items[tmp[i]] = tmp[i]
+                    }
+                }
+
                 return <select className='form-control' value={value as any || ''}
                     onChange={e => {
                         value = e.target.value

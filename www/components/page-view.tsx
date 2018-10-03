@@ -1,4 +1,4 @@
-import { component, ComponentPropEditor, TextInput } from "jueying";
+import { component, Component, TextInput } from "jueying";
 import React = require("react");
 import { BaseControlProps } from "./baseControl";
 import { ControlSize } from "./controls/controlSize";
@@ -29,8 +29,8 @@ export class PageView extends React.Component<PageViewProps, State>{
 }
 
 if (jueying.PageDesigner) {
-    ComponentPropEditor.setControlPropEditor(PageView, "name", TextInput)
-    ComponentPropEditor.setControlPropEditor(PageView, "style.width", ControlSize)
+    Component.setPropEditor(PageView, "name", TextInput)
+    Component.setPropEditor(PageView, "style.width", ControlSize)
 }
 
 

@@ -154,11 +154,11 @@ class MainPage extends DesignerFramework {
 
 
 export default function (page: chitu.Page) {
-    jueying.core.loadAllTypes().then(o => {
-        ReactDOM.render(<MainPage {...{
-            components, templates, title: '好易标签打印'
-        }} />, page.element)
-    })
+    // jueying.core.loadAllTypes().then(o => {
+    ReactDOM.render(<MainPage {...{
+        components, templates, title: '好易标签打印'
+    }} />, page.element)
+    // })
 }
 
 const { ipcRenderer } = nodeRequire('electron')

@@ -1,7 +1,7 @@
 
 namespace jueying {
     export interface ComponentToolbarProps extends React.Props<ComponentToolbar> {
-        componets: ComponentDefine[],
+        componetDefines: ComponentDefine[],
         style?: React.CSSProperties,
         className?: string,
     }
@@ -26,14 +26,14 @@ namespace jueying {
         }
 
         render() {
-            let props = Object.assign({}, this.props) as any;
-            delete props.componets;
+            let props: ComponentToolbarProps = Object.assign({}, this.props);
+            delete props.componetDefines;
 
-            let componets = this.props.componets;
+            let componets = this.props.componetDefines;
             return <DesignerContext.Consumer>
                 {context => {
                     this.designer = context.designer;
-                    return <div {...props} className="component-panel panel panel-primary">
+                    return <div {...props as any} className="component-panel panel panel-primary">
                         <div className="panel-heading">工具栏</div>
                         <div className="panel-body">
                             <ul ref={(e: HTMLElement) => this.toolbarElement = this.toolbarElement || e}>

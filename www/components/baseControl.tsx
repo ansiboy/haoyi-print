@@ -1,4 +1,4 @@
-import { ComponentProps, ComponentPropEditor, TextInput, PropEditorConstructor, dropdown } from "jueying";
+import { ComponentProps, Component, TextInput, PropEditorConstructor, dropdown } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
 import { PageViewContext, PageView } from "./page-view";
@@ -58,11 +58,11 @@ export let controlSize = function () {
 
 export function setStyleEditor(componentType: React.ComponentClass | string) {
     type T = BaseControlProps<any>
-    let func = ComponentPropEditor.setControlPropEditor;
+    let func = Component.setPropEditor;
     func(componentType, 'style.width', TextInput, 'layout')
     func(componentType, 'style.height', TextInput, 'layout')
-    setStylePropEditor(componentType, 'layout', 'width', ControlSize)
-    setStylePropEditor(componentType, 'layout', 'height', ControlSize)
+    setStylePropEditor(componentType, 'layout', 'width', TextInput)
+    setStylePropEditor(componentType, 'layout', 'height', TextInput)
     setStylePropEditor(componentType, 'layout', 'padding', TextInput)
     setStylePropEditor(componentType, 'layout', 'margin', TextInput)
     setStylePropEditor(componentType, 'layout', 'left', TextInput)
@@ -72,7 +72,8 @@ export function setStyleEditor(componentType: React.ComponentClass | string) {
     setStylePropEditor(componentType, 'layout', 'minWidth', TextInput)
     setStylePropEditor(componentType, 'layout', 'minHeight', TextInput)
 
-    setStylePropEditor(componentType, 'behavior', 'display', TextInput)
+    setStylePropEditor(componentType, 'behavior', 'display', dropdown(['', 'none']))
+    setStylePropEditor(componentType, 'behavior', 'visibility', dropdown(['', 'hidden', 'visible']))
 
     setStylePropEditor(componentType, 'appearance', 'background', TextInput)
     setStylePropEditor(componentType, 'appearance', 'border', TextInput)
@@ -89,7 +90,7 @@ export function setStyleEditor(componentType: React.ComponentClass | string) {
 }
 
 function setStylePropEditor(componentType: React.ComponentClass | string, group: string, name: keyof React.CSSProperties, editorType: PropEditorConstructor) {
-    ComponentPropEditor.setControlPropEditor(componentType, `style.${name}`, editorType, group)
+    Component.setPropEditor(componentType, `style.${name}`, editorType, group)
 }
 
 jueying.strings = {

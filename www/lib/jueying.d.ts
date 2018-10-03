@@ -18,47 +18,6 @@ declare namespace jueying {
         static create<T>(): Callback<T>;
     }
 }
-declare namespace jueying {
-    interface ComponentWrapperProps {
-        id: string;
-        style: React.CSSProperties;
-        type: string | React.ComponentClass;
-        selected: boolean;
-        designer: PageDesigner;
-    }
-    class ComponentWrapper extends React.Component<ComponentWrapperProps, any> {
-        private handler;
-        private element;
-        private static isDrag;
-        designtimeBehavior(element: HTMLElement, attr: {
-            container?: boolean;
-            movable?: boolean;
-        }): void;
-        /**
-         * 启用拖放操作，以便通过拖放图标添加控件
-         */
-        static enableDroppable(element: HTMLElement, designer: PageDesigner): void;
-        private static isResizeHandleClassName;
-        static draggable(designer: PageDesigner, element: HTMLElement, handler?: HTMLElement): void;
-        private static invokeOnClick;
-        componentDidMount(): void;
-        render(): JSX.Element;
-    }
-    interface ComponentAttribute {
-        /** 表示组件为容器，可以添加组件 */
-        container?: boolean;
-        /** 表示组件可移动 */
-        movable?: boolean;
-        showHandler?: boolean;
-        resize?: boolean;
-    }
-    class Component {
-        private static defaultComponentAttribute;
-        private static componentAttributes;
-        static setComponentAttribute(typename: string, attr: ComponentAttribute): void;
-        static getComponentAttribute(typename: string): ComponentAttribute;
-    }
-}
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
  *
@@ -92,8 +51,69 @@ declare namespace jueying {
     }
 }
 declare namespace jueying {
+    type ComponentWrapperProps = {
+        designer: PageDesigner;
+        type: string | React.ComponentClass;
+    } & ComponentProps<ComponentWrapper>;
+    class ComponentWrapper extends React.Component<ComponentWrapperProps, any> {
+        private handler;
+        private element;
+        private static isDrag;
+        designtimeBehavior(element: HTMLElement, attr: {
+            container?: boolean;
+            movable?: boolean;
+        }): void;
+        /**
+         * 启用拖放操作，以便通过拖放图标添加控件
+         */
+        static enableDroppable(element: HTMLElement, designer: PageDesigner): void;
+        private static isResizeHandleClassName;
+        static draggable(designer: PageDesigner, element: HTMLElement, handler?: HTMLElement): void;
+        static invokeOnClick(ev: MouseEvent, designer: PageDesigner, element: HTMLElement): void;
+        componentDidMount(): void;
+        render(): JSX.Element;
+    }
+    interface ComponentAttribute {
+        /** 表示组件为容器，可以添加组件 */
+        container?: boolean;
+        /** 表示组件可移动 */
+        movable?: boolean;
+        showHandler?: boolean;
+        resize?: boolean;
+    }
+}
+declare namespace jueying {
+    interface PropEditorInfo {
+        propNames: string[];
+        editorType: PropEditorConstructor;
+        group: string;
+    }
+    class Component {
+        private static defaultComponentAttribute;
+        private static componentAttributes;
+        /**
+         * 设置组件特性
+         * @param typename 组件类型名称
+         * @param attr 组件特性
+         */
+        static setAttribute(typename: string, attr: ComponentAttribute): void;
+        /**
+         * 获取组件特性
+         * @param typename 组件类型名称
+         */
+        static getAttribute(typename: string): ComponentAttribute;
+        private static controlPropEditors;
+        static getPropEditors(controlClassName: string): PropEditorInfo[];
+        static getPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClassName: string, propName: K, propName1: K1): PropEditorInfo;
+        static getPropEditor<T, K extends keyof T>(controlClassName: string, propName: string): PropEditorInfo;
+        /** 通过属性数组获取属性的编辑器 */
+        static getPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
+        static setPropEditor(componentType: React.ComponentClass | string, propName: string, editorType: PropEditorConstructor, group?: string): void;
+    }
+}
+declare namespace jueying {
     interface ComponentToolbarProps extends React.Props<ComponentToolbar> {
-        componets: ComponentDefine[];
+        componetDefines: ComponentDefine[];
         style?: React.CSSProperties;
         className?: string;
     }
@@ -149,21 +169,6 @@ declare namespace jueying {
     function loadAllTypes(): Promise<any[]>;
 }
 declare namespace jueying {
-    interface PropEditorInfo {
-        propNames: string[];
-        editorType: PropEditorConstructor;
-        group: string;
-    }
-    /** 组件属性编辑器，为组件的属性提供可视化的编辑器 */
-    class ComponentPropEditor {
-        private static controlPropEditors;
-        static getControlPropEditors(controlClassName: string): PropEditorInfo[];
-        static getControlPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClassName: string, propName: K, propName1: K1): PropEditorInfo;
-        static getControlPropEditor<T, K extends keyof T>(controlClassName: string, propName: string): PropEditorInfo;
-        /** 通过属性数组获取属性的编辑器 */
-        static getControlPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
-        static setControlPropEditor(componentType: React.ComponentClass | string, propName: string, editorType: PropEditorConstructor, group?: string): void;
-    }
 }
 declare namespace jueying {
     interface EditorPanelState {
@@ -216,9 +221,6 @@ declare namespace jueying {
         displayName: string;
         icon: string;
         introduce: string;
-        target?: 'view' | 'footer' | 'header';
-        visible?: boolean;
-        controlPath: string;
     }
 }
 /*******************************************************************************
@@ -333,7 +335,7 @@ declare namespace jueying {
     }
     function dropdown(items: {
         [value: string]: string;
-    }, emptyText?: string): {
+    } | string[], emptyText?: string): {
         new (props: PropEditorProps<string>): {
             render(): JSX.Element;
             componentWillReceiveProps(props: PropEditorProps<string>): void;

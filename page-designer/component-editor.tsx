@@ -43,7 +43,7 @@ namespace jueying {
             for (let i = 0; i < controls.length; i++) {
                 let control = controls[i]
                 let className = control.type
-                let propEditorInfos = ComponentPropEditor.getControlPropEditors(className)
+                let propEditorInfos = Component.getPropEditors(className)
                 if (i == 0) {
                     commonPropEditorInfos = propEditorInfos || []
                 }

@@ -1,4 +1,4 @@
-import { component } from "jueying";
+import { component, Component } from "jueying";
 import React = require("react");
 import { BaseControl, BaseControlProps, stylePropEditors } from "./baseControl";
 
@@ -21,3 +21,4 @@ export default class Label extends BaseControl<Props, {}>{
         </div>
     }
 }
+

@@ -1,13 +1,10 @@
 namespace jueying {
-    export interface ComponentWrapperProps {
-        id: string,
-        style: React.CSSProperties,
+
+    type ComponentWrapperProps = {
+        designer: PageDesigner,
         type: string | React.ComponentClass,
-        selected: boolean,
-        designer: PageDesigner
-    }
-
-
+    } & ComponentProps<ComponentWrapper>
+    
     export class ComponentWrapper extends React.Component<ComponentWrapperProps, any>{
         private handler: HTMLElement;
         private element: HTMLElement;
@@ -230,26 +227,26 @@ namespace jueying {
             let type = this.props.type
             let typename = typeof type == 'string' ? type : type.name
 
-            let attr = Component.getComponentAttribute(typename)
+            let attr = Component.getAttribute(typename)
             this.designtimeBehavior(this.element, attr)
         }
 
         render() {
 
             let style = this.props.style || {}
-            let { top, left, position, width, height } = style
+            let { top, left, position, width, height, display, visibility } = style
 
             let props = this.props
             let wrapperProps: ComponentProps<any> & React.HTMLAttributes<any> = {
                 id: props.id,
                 className: props.selected ? `${classNames.componentSelected} ${classNames.component}` : classNames.component,
-                style: { top, left, position, width, height },
+                style: { top, left, position, width, height, display, visibility },
                 ref: (e: HTMLElement) => this.element = e || this.element
             }
 
             let type = this.props.type
             let typename = typeof type == 'string' ? type : type.name
-            let attr = Component.getComponentAttribute(typename)
+            let attr = Component.getAttribute(typename)
             let move_handle = this.props.selected && attr.showHandler ? <div className="move_handle" style={{}}
                 ref={e => this.handler = e || this.handler} /> : null
 
@@ -282,31 +279,5 @@ namespace jueying {
     }
 
 
-    export class Component {
-        private static defaultComponentAttribute: ComponentAttribute = {
-            container: false, movable: true, showHandler: false
-        }
 
-        private static componentAttributes: { [key: string]: ComponentAttribute } = {
-            'table': { container: false, movable: true, showHandler: true, resize: true },
-            'thead': { container: false, movable: false },
-            'tbody': { container: false, movable: false },
-            'tfoot': { container: false, movable: false },
-            'tr': { container: false, movable: false },
-            'td': { container: true, movable: false },
-
-            'img': { container: false, movable: true, resize: true },
-
-            'div': { container: true, movable: true, showHandler: true, resize: true },
-        }
-
-        static setComponentAttribute(typename: string, attr: ComponentAttribute) {
-            Component.componentAttributes[typename] = attr
-        }
-
-        static getComponentAttribute(typename: string) {
-            let attr = Component.componentAttributes[typename]
-            return Object.assign({}, Component.defaultComponentAttribute, attr || {})
-        }
-    }
 }

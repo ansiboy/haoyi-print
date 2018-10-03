@@ -16,44 +16,36 @@ export let components: Array<ComponentDefine> = [
                 }
             }
         },
-        controlPath: `${componentsDirectory}/label`,
         displayName: "标签",
-        icon: "icon-text-width",
+        icon: "glyphicon glyphicon-comment",
         introduce: "标签",
     },
     {
         componentData: { type: 'SquareCode' },
-        controlPath: `${componentsDirectory}/squareCode`,
         displayName: "二维码",
-        icon: "icon-barcode",
+        icon: "glyphicon glyphicon-qrcode",
         introduce: "二维码",
     },
     {
         componentData: {
             type: 'List',
+            props: { style: { width: 300 } },
             children: [
-                { type: 'ListHeader' },
-                { type: 'ListBody' },
-                { type: 'ListFooter' }
+                { type: 'ListHeader', props: { style: { height: 40 } } },
+                { type: 'ListBody', props: { style: { height: 40 } } },
+                { type: 'ListFooter', props: { style: { height: 40 } } }
             ]
         },
-        controlPath: `${componentsDirectory}/list`,
         displayName: "列表",
-        icon: "icon-barcode",
+        icon: "glyphicon glyphicon-list",
         introduce: "列表",
-    },
-    {
-        componentData: { type: 'HTMLTag' },
-        controlPath: `${componentsDirectory}/htmlTag`,
-        displayName: "HTML 标签",
-        icon: "icon-barcode",
-        introduce: "HTML 标签",
     },
     {
         componentData: {
             type: 'table',
             props: {
-                style: { width: '200px', height: '200px', border: 'solid 1px black' }
+                style: { width: '200px', height: '200px', border: 'solid 1px black' },
+                className: 'table table-bordered'
             },
             children: [
                 { type: 'thead' },
@@ -67,33 +59,31 @@ export let components: Array<ComponentDefine> = [
                                 { type: 'td', props: { style: { width: '33%' } } },
                                 { type: 'td', props: { style: { width: '33%' } } }
                             ]
+                        },
+                        {
+                            type: 'tr',
+                            children: [
+                                { type: 'td', props: { style: { width: '33%' } } },
+                                { type: 'td', props: { style: { width: '33%' } } },
+                                { type: 'td', props: { style: { width: '33%' } } }
+                            ]
+                        },
+                        {
+                            type: 'tr',
+                            children: [
+                                { type: 'td', props: { style: { width: '33%' } } },
+                                { type: 'td', props: { style: { width: '33%' } } },
+                                { type: 'td', props: { style: { width: '33%' } } }
+                            ]
                         }
                     ]
                 },
                 { type: 'tfoot' }
             ]
         },
-        controlPath: `${componentsDirectory}/htmlTag`,
         displayName: "表格",
-        icon: "icon-barcode",
+        icon: "glyphicon glyphicon-th",
         introduce: "表格",
-    },
-    {
-        componentData: {
-            type: 'div',
-            props: {
-                style: {
-                    width: '200px',
-                    height: '200px',
-                    border: 'solid 1px black',
-                    position: 'absolute'
-                }
-            }
-        },
-        controlPath: `${componentsDirectory}/htmlTag`,
-        displayName: "DIV",
-        icon: "icon-barcode",
-        introduce: "DIV",
     }
 ];
 

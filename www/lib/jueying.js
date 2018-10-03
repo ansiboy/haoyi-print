@@ -36,6 +36,134 @@ var jueying;
     }
     jueying.Callback = Callback;
 })(jueying || (jueying = {}));
+/*******************************************************************************
+ * Copyright (C) maishu All rights reserved.
+ *
+ * HTML 页面设计器
+ *
+ * 作者: 寒烟
+ * 日期: 2018/5/30
+ *
+ * 个人博客：   http://www.cnblogs.com/ansiboy/
+ * GITHUB:     http://github.com/ansiboy
+ * QQ 讨论组：  119038574
+ *
+ ********************************************************************************/
+var jueying;
+(function (jueying) {
+    class ComponentEditor extends React.Component {
+        constructor(props) {
+            super(props);
+            this._element = null;
+            this.state = { editors: [] };
+        }
+        setControls(controls, designer) {
+            if (controls.length == 0) {
+                this.setState({ editors: [] });
+                return;
+            }
+            // 各个控件相同的编辑器
+            let commonPropEditorInfos;
+            for (let i = 0; i < controls.length; i++) {
+                let control = controls[i];
+                let className = control.type;
+                let propEditorInfos = jueying.Component.getPropEditors(className);
+                if (i == 0) {
+                    commonPropEditorInfos = propEditorInfos || [];
+                }
+                else {
+                    let items = [];
+                    commonPropEditorInfos.forEach(propInfo1 => {
+                        propEditorInfos.forEach(propInfo2 => {
+                            let propName1 = propInfo1.propNames.join('.');
+                            let propName2 = propInfo2.propNames.join('.');
+                            if (propInfo1.editorType == propInfo2.editorType && propName1 == propName2) {
+                                items.push(propInfo1);
+                            }
+                        });
+                    });
+                    commonPropEditorInfos = items;
+                }
+            }
+            // 各个控件相同的属性值
+            let commonFlatProps;
+            for (let i = 0; i < controls.length; i++) {
+                let control = controls[i];
+                let controlProps = Object.assign({}, control.props);
+                delete controlProps.children;
+                controlProps = this.flatProps(controlProps);
+                if (i == 0) {
+                    commonFlatProps = controlProps;
+                }
+                else {
+                    let obj = {};
+                    for (let key in commonFlatProps) {
+                        if (commonFlatProps[key] == controlProps[key])
+                            obj[key] = controlProps[key];
+                    }
+                    commonFlatProps = obj;
+                }
+            }
+            let editors = [];
+            for (let i = 0; i < commonPropEditorInfos.length; i++) {
+                let propEditorInfo = commonPropEditorInfos[i];
+                let propName = propEditorInfo.propNames[propEditorInfo.propNames.length - 1];
+                let editorType = propEditorInfo.editorType;
+                let propNames = propEditorInfo.propNames;
+                let editor = h(editorType, {
+                    value: commonFlatProps[propNames.join('.')],
+                    onChange: (value) => {
+                        for (let i = 0; i < controls.length; i++) {
+                            let c = controls[i];
+                            console.assert(c.props.id);
+                            designer.updateControlProps(c.props.id, propNames, value);
+                        }
+                    }
+                });
+                editors.push({ prop: propName, editor, group: propEditorInfo.group });
+            }
+            this.setState({ editors });
+        }
+        flatProps(props, baseName) {
+            baseName = baseName ? baseName + '.' : '';
+            let obj = {};
+            for (let key in props) {
+                if (typeof props[key] != 'object') {
+                    obj[baseName + key] = props[key];
+                }
+                else {
+                    Object.assign(obj, this.flatProps(props[key], key));
+                }
+            }
+            return obj;
+        }
+        render() {
+            let editors = this.state.editors;
+            if (editors.length == 0) {
+                return React.createElement("div", { className: "text-center" }, "\u6682\u65E0\u53EF\u7528\u7684\u5C5E\u6027");
+            }
+            let groupEditorsArray = []; //{ [group: string]: { text: string, editor: React.ReactElement<any> }[] } = {}
+            for (let i = 0; i < editors.length; i++) {
+                let group = editors[i].group || '';
+                let groupEditors = groupEditorsArray.filter(o => o.group == group)[0]; //groupEditors[editors[i].group] = groupEditors[editors[i].group] || []
+                if (groupEditors == null) {
+                    groupEditors = { group: editors[i].group, editors: [] };
+                    groupEditorsArray.push(groupEditors);
+                }
+                groupEditors.editors.push({ prop: editors[i].prop, editor: editors[i].editor });
+            }
+            return React.createElement(React.Fragment, null, groupEditorsArray.map((g) => React.createElement("div", { key: g.group, className: "panel panel-default" },
+                g.group ? React.createElement("div", { className: "panel-heading" }, jueying.strings[g.group] || g.group) : null,
+                React.createElement("div", { className: "panel-body" }, g.editors.map((o, i) => React.createElement("div", { key: i, className: "form-group" },
+                    React.createElement("label", null, jueying.strings[o.prop] || o.prop),
+                    React.createElement("div", { className: "control" }, o.editor)))))));
+        }
+        get element() {
+            return this._element;
+        }
+    }
+    jueying.ComponentEditor = ComponentEditor;
+})(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
     class ComponentWrapper extends React.Component {
@@ -226,22 +354,22 @@ var jueying;
             this.element.setAttribute('data-behavior', 'behavior');
             let type = this.props.type;
             let typename = typeof type == 'string' ? type : type.name;
-            let attr = Component.getComponentAttribute(typename);
+            let attr = jueying.Component.getAttribute(typename);
             this.designtimeBehavior(this.element, attr);
         }
         render() {
             let style = this.props.style || {};
-            let { top, left, position, width, height } = style;
+            let { top, left, position, width, height, display, visibility } = style;
             let props = this.props;
             let wrapperProps = {
                 id: props.id,
                 className: props.selected ? `${jueying.classNames.componentSelected} ${jueying.classNames.component}` : jueying.classNames.component,
-                style: { top, left, position, width, height },
+                style: { top, left, position, width, height, display, visibility },
                 ref: (e) => this.element = e || this.element
             };
             let type = this.props.type;
             let typename = typeof type == 'string' ? type : type.name;
-            let attr = Component.getComponentAttribute(typename);
+            let attr = jueying.Component.getAttribute(typename);
             let move_handle = this.props.selected && attr.showHandler ? React.createElement("div", { className: "move_handle", style: {}, ref: e => this.handler = e || this.handler }) : null;
             return React.createElement("div", Object.assign({}, wrapperProps),
                 move_handle,
@@ -260,13 +388,53 @@ var jueying;
     }
     ComponentWrapper.isDrag = false;
     jueying.ComponentWrapper = ComponentWrapper;
+})(jueying || (jueying = {}));
+var jueying;
+(function (jueying) {
     class Component {
-        static setComponentAttribute(typename, attr) {
+        /**
+         * 设置组件特性
+         * @param typename 组件类型名称
+         * @param attr 组件特性
+         */
+        static setAttribute(typename, attr) {
             Component.componentAttributes[typename] = attr;
         }
-        static getComponentAttribute(typename) {
+        /**
+         * 获取组件特性
+         * @param typename 组件类型名称
+         */
+        static getAttribute(typename) {
             let attr = Component.componentAttributes[typename];
             return Object.assign({}, Component.defaultComponentAttribute, attr || {});
+        }
+        static getPropEditors(controlClassName) {
+            let classEditors = this.controlPropEditors[controlClassName] || [];
+            return classEditors;
+        }
+        static getPropEditor(controlClassName, ...propNames) {
+            return this.getPropEditorByArray(controlClassName, propNames);
+        }
+        /** 通过属性数组获取属性的编辑器 */
+        static getPropEditorByArray(controlClassName, propNames) {
+            let classEditors = this.controlPropEditors[controlClassName] || [];
+            let editor = classEditors.filter(o => o.propNames.join('.') == propNames.join('.'))[0];
+            return editor;
+        }
+        static setPropEditor(componentType, propName, editorType, group) {
+            group = group || '';
+            let propNames = propName.split('.');
+            let className = typeof componentType == 'string' ? componentType : componentType.prototype.typename || componentType.name;
+            let classProps = Component.controlPropEditors[className] = Component.controlPropEditors[className] || [];
+            for (let i = 0; i < classProps.length; i++) {
+                let propName1 = classProps[i].propNames.join('.');
+                let propName2 = propNames.join('.');
+                if (propName1 == propName2) {
+                    classProps[i].editorType = editorType;
+                    return;
+                }
+            }
+            classProps.push({ propNames: propNames, editorType, group });
         }
     }
     Component.defaultComponentAttribute = {
@@ -282,135 +450,8 @@ var jueying;
         'img': { container: false, movable: true, resize: true },
         'div': { container: true, movable: true, showHandler: true, resize: true },
     };
+    Component.controlPropEditors = {};
     jueying.Component = Component;
-})(jueying || (jueying = {}));
-/*******************************************************************************
- * Copyright (C) maishu All rights reserved.
- *
- * HTML 页面设计器
- *
- * 作者: 寒烟
- * 日期: 2018/5/30
- *
- * 个人博客：   http://www.cnblogs.com/ansiboy/
- * GITHUB:     http://github.com/ansiboy
- * QQ 讨论组：  119038574
- *
- ********************************************************************************/
-var jueying;
-(function (jueying) {
-    class ComponentEditor extends React.Component {
-        constructor(props) {
-            super(props);
-            this._element = null;
-            this.state = { editors: [] };
-        }
-        setControls(controls, designer) {
-            if (controls.length == 0) {
-                this.setState({ editors: [] });
-                return;
-            }
-            // 各个控件相同的编辑器
-            let commonPropEditorInfos;
-            for (let i = 0; i < controls.length; i++) {
-                let control = controls[i];
-                let className = control.type;
-                let propEditorInfos = jueying.ComponentPropEditor.getControlPropEditors(className);
-                if (i == 0) {
-                    commonPropEditorInfos = propEditorInfos || [];
-                }
-                else {
-                    let items = [];
-                    commonPropEditorInfos.forEach(propInfo1 => {
-                        propEditorInfos.forEach(propInfo2 => {
-                            let propName1 = propInfo1.propNames.join('.');
-                            let propName2 = propInfo2.propNames.join('.');
-                            if (propInfo1.editorType == propInfo2.editorType && propName1 == propName2) {
-                                items.push(propInfo1);
-                            }
-                        });
-                    });
-                    commonPropEditorInfos = items;
-                }
-            }
-            // 各个控件相同的属性值
-            let commonFlatProps;
-            for (let i = 0; i < controls.length; i++) {
-                let control = controls[i];
-                let controlProps = Object.assign({}, control.props);
-                delete controlProps.children;
-                controlProps = this.flatProps(controlProps);
-                if (i == 0) {
-                    commonFlatProps = controlProps;
-                }
-                else {
-                    let obj = {};
-                    for (let key in commonFlatProps) {
-                        if (commonFlatProps[key] == controlProps[key])
-                            obj[key] = controlProps[key];
-                    }
-                    commonFlatProps = obj;
-                }
-            }
-            let editors = [];
-            for (let i = 0; i < commonPropEditorInfos.length; i++) {
-                let propEditorInfo = commonPropEditorInfos[i];
-                let propName = propEditorInfo.propNames[propEditorInfo.propNames.length - 1];
-                let editorType = propEditorInfo.editorType;
-                let propNames = propEditorInfo.propNames;
-                let editor = h(editorType, {
-                    value: commonFlatProps[propNames.join('.')],
-                    onChange: (value) => {
-                        for (let i = 0; i < controls.length; i++) {
-                            let c = controls[i];
-                            console.assert(c.props.id);
-                            designer.updateControlProps(c.props.id, propNames, value);
-                        }
-                    }
-                });
-                editors.push({ prop: propName, editor, group: propEditorInfo.group });
-            }
-            this.setState({ editors });
-        }
-        flatProps(props, baseName) {
-            baseName = baseName ? baseName + '.' : '';
-            let obj = {};
-            for (let key in props) {
-                if (typeof props[key] != 'object') {
-                    obj[baseName + key] = props[key];
-                }
-                else {
-                    Object.assign(obj, this.flatProps(props[key], key));
-                }
-            }
-            return obj;
-        }
-        render() {
-            let editors = this.state.editors;
-            if (editors.length == 0) {
-                return React.createElement("div", { className: "text-center" }, "\u6682\u65E0\u53EF\u7528\u7684\u5C5E\u6027");
-            }
-            let groupEditorsArray = []; //{ [group: string]: { text: string, editor: React.ReactElement<any> }[] } = {}
-            for (let i = 0; i < editors.length; i++) {
-                let group = editors[i].group || '';
-                let groupEditors = groupEditorsArray.filter(o => o.group == group)[0]; //groupEditors[editors[i].group] = groupEditors[editors[i].group] || []
-                if (groupEditors == null) {
-                    groupEditors = { group: editors[i].group, editors: [] };
-                    groupEditorsArray.push(groupEditors);
-                }
-                groupEditors.editors.push({ prop: editors[i].prop, editor: editors[i].editor });
-            }
-            return React.createElement(React.Fragment, null, groupEditorsArray.map((g) => React.createElement("div", { key: g.group, className: "panel panel-default" },
-                g.group ? React.createElement("div", { className: "panel-heading" }, jueying.strings[g.group] || g.group) : null,
-                React.createElement("div", { className: "panel-body" }, g.editors.map((o, i) => React.createElement("div", { key: i, className: "form-group" },
-                    React.createElement("label", null, jueying.strings[o.prop] || o.prop),
-                    React.createElement("div", { className: "control" }, o.editor)))))));
-        }
-        get element() {
-            return this._element;
-        }
-    }
-    jueying.ComponentEditor = ComponentEditor;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -427,8 +468,8 @@ var jueying;
         }
         render() {
             let props = Object.assign({}, this.props);
-            delete props.componets;
-            let componets = this.props.componets;
+            delete props.componetDefines;
+            let componets = this.props.componetDefines;
             return React.createElement(jueying.DesignerContext.Consumer, null, context => {
                 this.designer = context.designer;
                 return React.createElement("div", Object.assign({}, props, { className: "component-panel panel panel-primary" }),
@@ -470,7 +511,7 @@ var jueying;
     function component(args) {
         return function (constructor) {
             if (jueying.PageDesigner) {
-                jueying.Component.setComponentAttribute(constructor.name, args);
+                jueying.Component.setAttribute(constructor.name, args);
             }
             jueying.core.register(constructor.name, constructor);
             return constructor;
@@ -528,42 +569,6 @@ var jueying;
         }
         return Promise.all(ps);
     }
-})(jueying || (jueying = {}));
-var jueying;
-(function (jueying) {
-    /** 组件属性编辑器，为组件的属性提供可视化的编辑器 */
-    class ComponentPropEditor {
-        static getControlPropEditors(controlClassName) {
-            let classEditors = this.controlPropEditors[controlClassName] || [];
-            return classEditors;
-        }
-        static getControlPropEditor(controlClassName, ...propNames) {
-            return this.getControlPropEditorByArray(controlClassName, propNames);
-        }
-        /** 通过属性数组获取属性的编辑器 */
-        static getControlPropEditorByArray(controlClassName, propNames) {
-            let classEditors = this.controlPropEditors[controlClassName] || [];
-            let editor = classEditors.filter(o => o.propNames.join('.') == propNames.join('.'))[0];
-            return editor;
-        }
-        static setControlPropEditor(componentType, propName, editorType, group) {
-            group = group || '';
-            let propNames = propName.split('.');
-            let className = typeof componentType == 'string' ? componentType : componentType.prototype.typename || componentType.name;
-            let classProps = ComponentPropEditor.controlPropEditors[className] = ComponentPropEditor.controlPropEditors[className] || [];
-            for (let i = 0; i < classProps.length; i++) {
-                let propName1 = classProps[i].propNames.join('.');
-                let propName2 = propNames.join('.');
-                if (propName1 == propName2) {
-                    classProps[i].editorType = editorType;
-                    return;
-                }
-            }
-            classProps.push({ propNames: propNames, editorType, group });
-        }
-    }
-    ComponentPropEditor.controlPropEditors = {};
-    jueying.ComponentPropEditor = ComponentPropEditor;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -930,7 +935,7 @@ var jueying;
                 props.readOnly = true;
             }
             let typename = typeof type == 'string' ? type : type.name;
-            let attr = jueying.Component.getComponentAttribute(typename);
+            let attr = jueying.Component.getAttribute(typename);
             let allowWrapper = true;
             let tagName = type;
             if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
@@ -938,22 +943,20 @@ var jueying;
                 allowWrapper = false;
             }
             if (allowWrapper) {
-                let style = props.style || {};
-                let { top, left, position, width, height } = style;
-                delete style.left;
-                delete style.top;
-                delete style.position;
-                style.width = '100%';
-                style.height = '100%';
-                return React.createElement(jueying.ComponentWrapper, { id: props.id, style: { top, left, position, width, height }, type: type, selected: props.selected, designer: this }, React.createElement(type, props, ...children));
+                let style = Object.assign({}, props.style || {});
+                delete props.style.left;
+                delete props.style.top;
+                delete props.style.position;
+                props.style.width = '100%';
+                props.style.height = '100%';
+                return React.createElement(jueying.ComponentWrapper, Object.assign({}, props, { type: type, designer: this, style: style }), React.createElement(type, props, ...children));
             }
             props.ref = (e) => {
                 if (!e)
                     return;
                 if (e.tagName) {
                     e.onclick = (ev) => {
-                        ev.stopPropagation();
-                        this.selectComponent(e.id);
+                        jueying.ComponentWrapper.invokeOnClick(ev, this, e);
                     };
                     return;
                 }
@@ -1012,6 +1015,13 @@ var jueying;
         return class Dropdown extends PropEditor {
             render() {
                 let { value } = this.state;
+                if (Array.isArray(items)) {
+                    let tmp = items;
+                    items = {};
+                    for (let i = 0; i < tmp.length; i++) {
+                        items[tmp[i]] = tmp[i];
+                    }
+                }
                 return React.createElement("select", { className: 'form-control', value: value || '', onChange: e => {
                         value = e.target.value;
                         this.setState({ value });
@@ -1531,7 +1541,7 @@ var jueying;
                                     } }))))),
                         pageDocument ?
                             React.createElement(jueying.PageDesigner, { pageData: pageDocument.pageData, ref: e => this.designerRef(e) }) : null),
-                    React.createElement(jueying.ComponentToolbar, { className: "component-panel", componets: components }),
+                    React.createElement(jueying.ComponentToolbar, { className: "component-panel", componetDefines: components }),
                     React.createElement(jueying.EditorPanel, { emptyText: "未选中控件，点击页面控件，可以编辑选中控件的属性", ref: e => this.editorPanel = e || this.editorPanel }));
             }
         }

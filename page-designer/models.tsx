@@ -21,11 +21,7 @@ namespace jueying {
     }
 
     export interface ComponentDefine {
-        // name: string,
         componentData: ComponentData,
         displayName: string, icon: string, introduce: string,
-        target?: 'view' | 'footer' | 'header',
-        visible?: boolean,
-        controlPath: string,
     }
 }
