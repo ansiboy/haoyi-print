@@ -1,11 +1,6 @@
 /// <reference path="../declare.d.ts" />
 
 import { ComponentDefine, guid } from "jueying";
-
-let componentsDirectory = 'components';
-let SquareCode = 'SquareCode'
-let Label = 'Label'
-let List = 'List'
 export let componentDefines: Array<ComponentDefine> = [
     {
         componentData: {
