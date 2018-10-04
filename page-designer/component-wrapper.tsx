@@ -118,12 +118,10 @@ namespace jueying {
                     }
                     if (dd.attr.indexOf("W") > -1) {
                         rect.width = Math.max(32, dd.width - dd.deltaX);
-                        // rect.left = dd.originalX + dd.width - rect.width;
                         setLeft(dd)
                     }
                     if (dd.attr.indexOf("N") > -1) {
                         rect.height = Math.max(32, dd.height - dd.deltaY);
-                        // rect.top = dd.originalY + dd.height - rect.height;
                         setTop(dd)
                     }
 

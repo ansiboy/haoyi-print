@@ -53,6 +53,9 @@
             'jquery-ui': `${lib}/jquery-ui`,
             'jquery.event.drag': `${lib}/jquery.event.drag-2.2`,
             'jquery.event.drag.live': `${lib}/jquery.event.drag.live-2.2`,
+
+            empty: `${lib}/jsondiffpatch/dist/empty`,
+            jsondiffpatch: `${lib}/jsondiffpatch/dist/jsondiffpatch.umd`,
             qrcode: `${lib}/qrcode`,
             react: `${lib}/react.development`,
             'react-dom': `${lib}/react-dom.development`,
@@ -65,11 +68,12 @@
     requirejs([`less!${lib}/bootstrap-3.3.7/less/bootstrap.less`])
     requirejs(['less!content/page-designer'])
     requirejs(['less!content/index'])
-    requirejs(['react', 'react-dom', 'jquery', 'ui', 'chitu'], function (react, reactDOM, jquery) {
+    requirejs(['react', 'react-dom', 'jquery', 'jsondiffpatch', 'ui', 'chitu'], function (react, reactDOM, jquery, jsondiffpatch) {
         (window as any)['React'] = react;
         (window as any)['ReactDOM'] = reactDOM;
         (window as any)['$'] = jquery;
         (window as any)['h'] = react.createElement;
+        (window as any)['jsondiffpatch'] = jsondiffpatch;
         requirejs(['application'], function (a: any) {
             a.app.run()
         })

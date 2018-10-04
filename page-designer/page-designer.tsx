@@ -37,14 +37,14 @@ namespace jueying {
 
 
     export class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
-        private _selectedControlIds: string[] = [];
-        element: HTMLElement;
+        private element: HTMLElement;
 
         componentSelected = Callback.create<string[]>();
-        controlRemoved = Callback.create<string[]>()
+        componentRemoved = Callback.create<string[]>()
+        componentAppend = Callback.create<PageDesigner>()
+        componentUpdated = Callback.create<ComponentData[]>()
+
         designtimeComponentDidMount = Callback.create<{ component: React.ReactElement<any>, element: HTMLElement }>();
-        componentUpdated = Callback.create<PageDesigner>()
-        // names = new Array<string>();
         namedComponents: { [key: string]: ComponentData } = {}
 
         constructor(props: PageDesignerProps) {
@@ -59,24 +59,8 @@ namespace jueying {
 
         initPageData(pageData: ComponentData) {
             if (pageData == null) {
-                this._selectedControlIds = []
                 return
             }
-
-            let stack = new Array<ComponentData>()
-            stack.push(pageData)
-            while (stack.length > 0) {
-                let item = stack.pop()
-                let props = item.props as ComponentProps<any>
-                if (props.selected) {
-                    console.assert(props.id)
-                    this._selectedControlIds.push(props.id)
-                }
-                (item.children || []).forEach(o => {
-                    stack.push(o)
-                })
-            }
-
             this.nameComponent(pageData)
         }
 
@@ -86,26 +70,44 @@ namespace jueying {
         }
 
         get selectedComponentIds() {
-            return this._selectedControlIds
+            return this.selectedComponents.map(o => o.props.id)
+        }
+
+        get selectedComponents(): ComponentData[] {
+            let arr = new Array<ComponentData>()
+            let stack = new Array<ComponentData>()
+            stack.push(this.pageData)
+            while (stack.length > 0) {
+                let item = stack.pop()
+                if (item.props.selected == true)
+                    arr.push(item)
+
+                let children = item.children || []
+                for (let i = 0; i < children.length; i++)
+                    stack.push(children[i])
+            }
+
+            return arr
         }
 
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any {
-            let controlDescription = this.findComponentData(controlId);
-            if (controlDescription == null)
+            let componentData = this.findComponentData(controlId);
+            if (componentData == null)
                 return
 
-            console.assert(controlDescription != null);
+            console.assert(componentData != null);
             console.assert(navPropsNames != null, 'props is null');
 
-            controlDescription.props = controlDescription.props || {};
+            componentData.props = componentData.props || {};
 
-            let obj = controlDescription.props
+            let obj = componentData.props
             for (let i = 0; i < navPropsNames.length - 1; i++) {
                 obj = obj[navPropsNames[i]] = obj[navPropsNames[i]] || {};
             }
 
             obj[navPropsNames[navPropsNames.length - 1]] = value
             this.setState(this.state);
+            this.componentUpdated.fire([componentData])
         }
 
         private sortChildren(parentId: string, childIds: string[]) {
@@ -181,7 +183,7 @@ namespace jueying {
             }
 
             this.selectComponent(childControl.props.id);
-
+            this.componentAppend.fire(this)
         }
 
         /** 设置控件位置 */
@@ -190,7 +192,6 @@ namespace jueying {
         }
 
         setComponentSize(componentId: string, size: { width?: number | string, height?: number | string }) {
-            // return this.setComponentsPosition([{ componentId, left, top }])
             console.assert(componentId)
             console.assert(size)
 
@@ -207,9 +208,12 @@ namespace jueying {
 
             let { pageData } = this.state;
             this.setState({ pageData });
+
+            this.componentUpdated.fire([componentData])
         }
 
         setComponentsPosition(positions: { componentId: string, position: { left: number | string, top: number | string } }[]) {
+            let componentDatas = new Array<ComponentData>()
             positions.forEach(o => {
                 let { componentId } = o
                 let { left, top } = o.position
@@ -226,8 +230,10 @@ namespace jueying {
 
                 let { pageData } = this.state;
                 this.setState({ pageData });
+                componentDatas.push(componentData)
             })
 
+            this.componentUpdated.fire(componentDatas)
         }
 
         /**
@@ -252,7 +258,7 @@ namespace jueying {
                 }
             }
 
-            this._selectedControlIds = componentIds
+            // this._selectedComponentIds = componentIds
             componentIds.map(id => this.findComponentData(id)).forEach(o => {
                 console.assert(o != null)
                 // let props = o.props as ComponentProps<any>
@@ -280,23 +286,23 @@ namespace jueying {
                 this.removeControlFrom(controlId, pageData.children);
             })
 
-            this._selectedControlIds = this._selectedControlIds.filter(id => controlIds.indexOf(id) < 0)
+            // this._selectedComponentIds = this._selectedComponentIds.filter(id => controlIds.indexOf(id) < 0)
             this.setState({ pageData });
 
-            this.controlRemoved.fire(controlIds)
+            this.componentRemoved.fire(controlIds)
         }
 
         /** 移动控件到另外一个控件容器 */
-        moveControl(controlId: string, parentId: string, childIds: string[]) {
-            let control = this.findComponentData(controlId);
+        moveControl(componentId: string, parentId: string, childIds: string[]) {
+            let control = this.findComponentData(componentId);
             if (control == null)
-                throw new Error(`Cannt find control by id ${controlId}`)
+                throw new Error(`Cannt find control by id ${componentId}`)
 
-            console.assert(control != null, `Cannt find control by id ${controlId}`);
+            console.assert(control != null, `Cannt find control by id ${componentId}`);
 
             let pageData = this.state.pageData;
             console.assert(pageData.children);
-            this.removeControlFrom(controlId, pageData.children);
+            this.removeControlFrom(componentId, pageData.children);
             this.appendComponent(parentId, control, childIds);
         }
 
@@ -373,10 +379,10 @@ namespace jueying {
         private onKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
             const DELETE_KEY_CODE = 46;
             if (e.keyCode == DELETE_KEY_CODE) {
-                if (this._selectedControlIds.length == 0)
+                if (this.selectedComponents.length == 0)
                     return
 
-                this.removeControl(...this._selectedControlIds)
+                this.removeControl(...this.selectedComponentIds)
             }
         }
 
@@ -395,7 +401,6 @@ namespace jueying {
             }
 
             let typename = typeof type == 'string' ? type : type.name
-            let attr = Component.getAttribute(typename)
             let allowWrapper: boolean = true
             let tagName: keyof HTMLElementTagNameMap = type as keyof HTMLElementTagNameMap
             if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
@@ -439,9 +444,9 @@ namespace jueying {
             this.setState({ pageData: props.pageData });
         }
 
-        componentDidUpdate() {
-            this.componentUpdated.fire(this)
-        }
+        // componentDidUpdate() {
+        //     this.componentUpdated.fire(this)
+        // }
 
         render() {
             let designer = this;

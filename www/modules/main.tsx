@@ -1,5 +1,5 @@
 import { DesignerFramework, DocumentStorage, PageDocument } from 'jueying.extentions'
-import { componentDefines, templates } from "components/componenDefines";
+import { componentDefines, templates } from "components/component-defines";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { showPrintDialog, generatePrintHTML } from 'print'
@@ -34,7 +34,7 @@ class MainPage extends DesignerFramework {
         console.assert(activeDocument != null)
 
         let doc = activeDocument
-        let name = doc.name
+        let name = doc.fileName
 
         showPrintDialog(name)
     }
@@ -56,7 +56,7 @@ class MainPage extends DesignerFramework {
     }
     createButtons(pageDocument: PageDocument) {
         let buttonClassName = 'btn btn-default btn-sm'
-        let buttons = super.createButtons(pageDocument, buttonClassName)
+        let buttons = super.renderButtons(pageDocument, buttonClassName)
         let { activeDocument, pageDocuments } = this.state
 
         pageDocuments = pageDocuments || [];

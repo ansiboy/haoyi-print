@@ -9,6 +9,7 @@ namespace jueying {
         className?: string;
         style?: React.CSSProperties;
         emptyText?: string
+        designer?: PageDesigner
     }
 
     export class EditorPanel extends React.Component<EditorPanelProps, EditorPanelState> {
@@ -20,9 +21,32 @@ namespace jueying {
             this.state = { componentDatas: [] };
         }
 
-        setDesigner(designer: PageDesigner) {
-            let controlDatas = designer.selectedComponentIds.map(o => designer.findComponentData(o))
-            this.editor.setControls(controlDatas, designer)
+        componentWillReceiveProps(props: EditorPanelProps) {
+            this.setState({ designer: props.designer })
+        }
+
+        // private update(designer: PageDesigner) {
+        //     let selectedComponentDatas = designer.selectedComponents //designer.selectedComponentIds.map(o => designer.findComponentData(o))
+        //     this.editor.setControls(selectedComponentDatas, designer)
+
+        //     let componentDatas = []
+        //     let stack = new Array<ComponentData>()
+        //     stack.push(designer.pageData)
+        //     while (stack.length > 0) {
+        //         let item = stack.pop()
+        //         componentDatas.push(item)
+        //         let children = item.children || []
+        //         for (let i = 0; i < children.length; i++) {
+        //             stack.push(children[i])
+        //         }
+        //     }
+
+        //     let selectedComponentId = selectedComponentDatas.length == 1 ? selectedComponentDatas[0].props.id : ''
+        //     this.setState({ componentDatas, designer, selectedComponentId })
+        // }
+        private getComponentData(designer: PageDesigner) {
+            // let selectedComponentDatas = designer.selectedComponents //designer.selectedComponentIds.map(o => designer.findComponentData(o))
+            // this.editor.setControls(selectedComponentDatas, designer)
 
             let componentDatas = []
             let stack = new Array<ComponentData>()
@@ -35,16 +59,18 @@ namespace jueying {
                     stack.push(children[i])
                 }
             }
-
-            let selectedComponentId = designer.selectedComponentIds.length == 1 ? designer.selectedComponentIds[0] : ''
-            this.setState({ componentDatas, designer, selectedComponentId })
+            return componentDatas
         }
         render() {
             let { emptyText } = this.props;
             emptyText = emptyText || '';
 
-            let componentDatas = this.state.componentDatas
+            let componentDatas: ComponentData[] = []//this.state.componentDatas
             let designer = this.state.designer
+            if (designer) {
+                componentDatas = this.getComponentData(designer)
+            }
+
             let selectedComponentId = this.state.selectedComponentId
             return <div className="editor-panel panel panel-primary" ref={(e: HTMLElement) => this.element = e || this.element}>
                 <div className="panel-heading">属性</div>
@@ -60,7 +86,7 @@ namespace jueying {
                             )}
                         </select>
                     </div>
-                    <ComponentEditor ref={e => this.editor = e || this.editor} />
+                    <ComponentEditor designer={designer} ref={e => this.editor = e || this.editor} />
                 </div>
 
             </div>

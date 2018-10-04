@@ -1,24 +1,28 @@
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
  *
- * HTML 页面设计器 
- * 
+ * HTML 页面设计器
+ *
  * 作者: 寒烟
  * 日期: 2018/5/30
  *
  * 个人博客：   http://www.cnblogs.com/ansiboy/
  * GITHUB:     http://github.com/ansiboy
  * QQ 讨论组：  119038574
- * 
+ *
  ********************************************************************************/
 
 namespace jueying {
 
     export interface EditorProps extends React.Props<ComponentEditor> {
+        // componentDatas: ComponentData[]
+        designer: PageDesigner
     }
 
     export interface EditorState {
         editors: { group: string, prop: string, editor: React.ReactElement<any> }[]
+        // componentDatas?: ComponentData[]
+        designer?: PageDesigner
     }
 
     export class ComponentEditor extends React.Component<EditorProps, EditorState>{
@@ -31,17 +35,22 @@ namespace jueying {
             this.state = { editors: [] }
         }
 
-        setControls(controls: ComponentData[], designer: PageDesigner) {
-            if (controls.length == 0) {
-                this.setState({ editors: [] })
-                return
+        componentWillReceiveProps(props: EditorProps) {
+            this.setState({
+                designer: props.designer,
+            })
+        }
+
+        private getEditors(designer: PageDesigner) {
+            if (designer == null) {
+                return []
             }
 
             // 各个控件相同的编辑器
-            let commonPropEditorInfos: PropEditorInfo[]
-
-            for (let i = 0; i < controls.length; i++) {
-                let control = controls[i]
+            let commonPropEditorInfos: PropEditorInfo[] = []
+            let componentDatas = designer.selectedComponents
+            for (let i = 0; i < componentDatas.length; i++) {
+                let control = componentDatas[i]
                 let className = control.type
                 let propEditorInfos = Component.getPropEditors(className)
                 if (i == 0) {
@@ -64,8 +73,8 @@ namespace jueying {
 
             // 各个控件相同的属性值
             let commonFlatProps: { [navName: string]: any }
-            for (let i = 0; i < controls.length; i++) {
-                let control = controls[i]
+            for (let i = 0; i < componentDatas.length; i++) {
+                let control = componentDatas[i]
                 let controlProps: { [key: string]: any } = Object.assign({}, control.props);
                 delete (controlProps as any).children;
                 controlProps = this.flatProps(controlProps)
@@ -91,8 +100,8 @@ namespace jueying {
                 let editor = h(editorType, {
                     value: commonFlatProps[propNames.join('.')],
                     onChange: (value) => {
-                        for (let i = 0; i < controls.length; i++) {
-                            let c = controls[i]
+                        for (let i = 0; i < componentDatas.length; i++) {
+                            let c = componentDatas[i]
                             console.assert(c.props.id)
                             designer.updateControlProps(c.props.id, propNames, value)
                         }
@@ -101,7 +110,8 @@ namespace jueying {
                 editors.push({ prop: propName, editor, group: propEditorInfo.group })
             }
 
-            this.setState({ editors })
+            // this.setState({ editors })
+            return editors
         }
 
         private flatProps(props: object, baseName?: string): { [key: string]: object } {
@@ -121,7 +131,8 @@ namespace jueying {
 
 
         render() {
-            let editors = this.state.editors
+            let { designer } = this.state
+            let editors = this.getEditors(designer) //this.state.editors
             if (editors.length == 0) {
                 return <div className="text-center">暂无可用的属性</div>
             }

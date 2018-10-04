@@ -1,84 +1,49 @@
 /// <reference path="templates.tsx"/>
 
+
 namespace jueying.extentions {
     export interface DesignerFrameworkProps {
-        components: ComponentDefine[],
+        componentDefines: ComponentDefine[],
         title?: string,
         templates?: DocumentData[]
     }
     export interface DesignerFrameworkState {
-        changed: boolean,
-        canUndo: boolean,
-        canRedo: boolean,
         pageDocuments?: PageDocument[]
         activeDocument?: PageDocument
     }
     export class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState>{
         protected pageDesigner: PageDesigner;
-        private names: string[] = [];
         private _storage: DocumentStorage;
-        private ruleElement: HTMLCanvasElement;
         private editorPanel: EditorPanel;
         private toolbarElement: HTMLElement;
+        private changedManages: { [name: string]: JSONChangedManage<ComponentData> }
+        private editorPanelElement: HTMLElement;
 
         constructor(props) {
             super(props);
 
-            this.state = {
-                changed: false,
-                canUndo: false,
-                canRedo: false
-            };
+            this.state = {};
+            this.changedManages = {}
         }
         static defaultProps: DesignerFrameworkProps = {
-            components: [], templates: templates
+            componentDefines: [], templates: templates
         }
 
-        /** 对控件进行命名 */
-        private namedControl(control: jueying.ComponentData) {
-            console.assert(control.props)
-            let props = control.props;
-            if (!props.name) {
-                let num = 0;
-                let name: string;
-                do {
-                    num = num + 1;
-                    name = `${control.type}${num}`;
-                } while (this.names.indexOf(name) >= 0);
-
-                this.names.push(name);
-                props.name = name;
-            }
-
-            if (!props.id)
-                props.id = guid();
-
-            if (!control.children || control.children.length == 0) {
-                return;
-            }
-            for (let i = 0; i < control.children.length; i++) {
-                let child = control.children[i]
-                if (typeof child != 'string')
-                    this.namedControl(child);
-            }
-        }
-
-        createButtons(pageDocument: PageDocument, buttonClassName?: string) {
-
+        renderButtons(pageDocument: PageDocument, buttonClassName?: string) {
             buttonClassName = buttonClassName || 'btn btn-default'
-            let isChanged = pageDocument ? pageDocument.isChanged : false;
+            let isChanged = pageDocument ? pageDocument.notSaved : false;
             return [
                 <button className={buttonClassName} disabled={!isChanged}
                     onClick={() => this.save()}>
                     <i className="icon-save" />
                     <span>保存</span>
                 </button>,
-                <button className={buttonClassName}
+                <button className={buttonClassName} disabled={this.changedManage == null || !this.changedManage.canRedo}
                     onClick={() => this.redo()}>
                     <i className="icon-repeat" />
                     <span>重做</span>
                 </button>,
-                <button className={buttonClassName}
+                <button className={buttonClassName} disabled={this.changedManage == null || !this.changedManage.canUndo}
                     onClick={() => this.undo()}>
                     <i className="icon-undo" />
                     <span>撤销</span>
@@ -117,15 +82,27 @@ namespace jueying.extentions {
             return element;
         }
 
+        get changedManage() {
+            let activeDocument = this.state.activeDocument
+            if (activeDocument == null)
+                return null
+
+            return this.changedManages[activeDocument.fileName]
+        }
+
         //======================================================
         // Virtual Method
-
-
         undo() {
-            // this.pageDesigner.undo();
+            let pageData = this.changedManage.undo()
+            let { activeDocument } = this.state
+            activeDocument.pageData = pageData
+            this.setState({ activeDocument })
         }
         redo() {
-            // this.pageDesigner.redo();
+            let pageData = this.changedManage.redo()
+            let { activeDocument } = this.state
+            activeDocument.pageData = pageData
+            this.setState({ activeDocument })
         }
         async save() {
             let { activeDocument, pageDocuments } = this.state;
@@ -141,8 +118,10 @@ namespace jueying.extentions {
             let pageDocument = isNew ? PageDocument.new(documentStorage, fileName, pageData) :
                 await PageDocument.load(documentStorage, fileName);
 
+            this.changedManages[fileName] = new JSONChangedManage(pageData)
             pageDocuments = pageDocuments || [];
             pageDocuments.push(pageDocument);
+
             this.setState({
                 pageDocuments,
                 activeDocument: pageDocuments[pageDocuments.length - 1]
@@ -172,7 +151,7 @@ namespace jueying.extentions {
                 callback: (tmp) => {
                     let fileName = tmp.name;
                     let docs = this.state.pageDocuments || [];
-                    let existDoc = docs.filter(o => o.name == tmp.name)[0];
+                    let existDoc = docs.filter(o => o.fileName == tmp.name)[0];
                     if (existDoc) {
                         let index = docs.indexOf(existDoc);
                         this.activeDocument(index);
@@ -219,7 +198,7 @@ namespace jueying.extentions {
                 this.setState({ pageDocuments, activeDocument });
             }
 
-            if (!doc.isChanged) {
+            if (!doc.notSaved) {
                 close();
                 return;
             }
@@ -241,23 +220,24 @@ namespace jueying.extentions {
         designerRef(e: PageDesigner) {
             if (!e) return
             this.pageDesigner = e || this.pageDesigner
-            // this.pageDesigner.componentSelected.add((controlIds) => {
-            //     let controlDatas = controlIds.map(o => this.pageDesigner.findComponentData(o))
-            //     this.editorPanel.setControls(controlDatas, this.pageDesigner)
-            // })
-            this.pageDesigner.componentUpdated.add((sender) => {
-                console.assert(this.toolbarElement)
+            let func = () => {
+                let activeDocument = this.state.activeDocument
+                this.changedManage.setChangedData(activeDocument.pageData)
                 this.renderToolbar(this.toolbarElement)
-                // let controlDatas = sender.selectedComponentIds.map(o => this.pageDesigner.findComponentData(o))
-                // this.editorPanel.setControls(controlDatas, this.pageDesigner)
-                this.editorPanel.setDesigner(this.pageDesigner)
-            })
-
-            // this.editorPanel.set
+                this.renderEditorPanel(this.editorPanelElement)
+            }
+            this.pageDesigner.componentRemoved.add(func)
+            this.pageDesigner.componentAppend.add(func)
+            this.pageDesigner.componentUpdated.add(func)
+            this.pageDesigner.componentSelected.add(func)
+            // this.pageDesigner.componentDidUpdate = () => {
+            //     this.renderToolbar(this.toolbarElement)
+            //     this.renderEditorPanel(this.editorPanelElement)
+            // }
         }
         renderToolbar(element: HTMLElement) {
             let pageDocument = this.state.activeDocument
-            let buttons = this.createButtons(pageDocument)
+            let buttons = this.renderButtons(pageDocument)
             let { title } = this.props
             ReactDOM.render(<React.Fragment>
                 <li className="pull-left">
@@ -270,9 +250,17 @@ namespace jueying.extentions {
                 )}
             </React.Fragment>, element)
         }
+        renderEditorPanel(element: HTMLElement) {
+            ReactDOM.render(
+                <EditorPanel emptyText={"未选中控件，点击页面控件，可以编辑选中控件的属性"}
+                    designer={this.pageDesigner}
+                    ref={e => this.editorPanel = e || this.editorPanel} />,
+                element
+            )
+        }
         render() {
             let { activeDocument, pageDocuments } = this.state;
-            let { components } = this.props;
+            let { componentDefines } = this.props;
 
             pageDocuments = pageDocuments || [];
             let pageDocument = activeDocument
@@ -290,7 +278,7 @@ namespace jueying.extentions {
                             <li key={i} role="presentation" className={o == activeDocument ? 'active' : null}
                                 onClick={() => this.activeDocument(i)}>
                                 <a href="javascript:">
-                                    {o.name}
+                                    {o.fileName}
                                     <i className="pull-right icon-remove" style={{ cursor: 'pointer' }}
                                         onClick={(e) => {
                                             e.cancelable = true;
@@ -305,10 +293,13 @@ namespace jueying.extentions {
                         <PageDesigner pageData={pageDocument.pageData} ref={e => this.designerRef(e)}>
                         </PageDesigner> : null}
                 </div>
-                <ComponentToolbar className="component-panel" componetDefines={components} />
-                <EditorPanel emptyText={"未选中控件，点击页面控件，可以编辑选中控件的属性"}
-                    ref={e => this.editorPanel = e || this.editorPanel} />
-
+                <ComponentToolbar className="component-panel" componetDefines={componentDefines} />
+                <div ref={e => {
+                    if (!e) return
+                    this.editorPanelElement = e || this.editorPanelElement
+                    this.renderEditorPanel(e)
+                }}>
+                </div>
             </div>
         }
     }

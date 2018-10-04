@@ -18,6 +18,20 @@ declare namespace jueying {
         static create<T>(): Callback<T>;
     }
 }
+declare namespace jueying {
+    class JSONChangedManage<T> {
+        private undoStack;
+        private redonStack;
+        private currentData;
+        constructor(initData: T);
+        readonly canUndo: boolean;
+        readonly canRedo: boolean;
+        setChangedData(changedData: ComponentData): void;
+        undo(): T;
+        redo(): T;
+        private pushDelta;
+    }
+}
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
  *
@@ -33,6 +47,7 @@ declare namespace jueying {
  ********************************************************************************/
 declare namespace jueying {
     interface EditorProps extends React.Props<ComponentEditor> {
+        designer: PageDesigner;
     }
     interface EditorState {
         editors: {
@@ -40,11 +55,13 @@ declare namespace jueying {
             prop: string;
             editor: React.ReactElement<any>;
         }[];
+        designer?: PageDesigner;
     }
     class ComponentEditor extends React.Component<EditorProps, EditorState> {
         private _element;
         constructor(props: EditorProps);
-        setControls(controls: ComponentData[], designer: PageDesigner): void;
+        componentWillReceiveProps(props: EditorProps): void;
+        private getEditors;
         private flatProps;
         render(): JSX.Element;
         readonly element: HTMLElement;
@@ -180,12 +197,14 @@ declare namespace jueying {
         className?: string;
         style?: React.CSSProperties;
         emptyText?: string;
+        designer?: PageDesigner;
     }
     class EditorPanel extends React.Component<EditorPanelProps, EditorPanelState> {
         private element;
         private editor;
         constructor(props: any);
-        setDesigner(designer: PageDesigner): void;
+        componentWillReceiveProps(props: EditorPanelProps): void;
+        private getComponentData;
         render(): JSX.Element;
     }
 }
@@ -255,15 +274,15 @@ declare namespace jueying {
         onClick?: (e: MouseEvent) => void;
     }
     class PageDesigner extends React.Component<PageDesignerProps, PageDesignerState> {
-        private _selectedControlIds;
-        element: HTMLElement;
+        private element;
         componentSelected: Callback<string[]>;
-        controlRemoved: Callback<string[]>;
+        componentRemoved: Callback<string[]>;
+        componentAppend: Callback<PageDesigner>;
+        componentUpdated: Callback<ComponentData[]>;
         designtimeComponentDidMount: Callback<{
             component: React.ReactElement<any>;
             element: HTMLElement;
         }>;
-        componentUpdated: Callback<PageDesigner>;
         namedComponents: {
             [key: string]: ComponentData;
         };
@@ -271,6 +290,7 @@ declare namespace jueying {
         initPageData(pageData: ComponentData): void;
         readonly pageData: ComponentData;
         readonly selectedComponentIds: string[];
+        readonly selectedComponents: ComponentData[];
         updateControlProps(controlId: string, navPropsNames: string[], value: any): any;
         private sortChildren;
         /**
@@ -304,14 +324,13 @@ declare namespace jueying {
         /** 移除控件 */
         removeControl(...controlIds: string[]): void;
         /** 移动控件到另外一个控件容器 */
-        moveControl(controlId: string, parentId: string, childIds: string[]): void;
+        moveControl(componentId: string, parentId: string, childIds: string[]): void;
         private setComponentSelected;
         private removeControlFrom;
         findComponentData(controlId: string): ComponentData | null;
         private onKeyDown;
         private createDesignTimeElement;
         componentWillReceiveProps(props: PageDesignerProps): void;
-        componentDidUpdate(): void;
         render(): JSX.Element;
     }
 }
@@ -411,31 +430,27 @@ declare namespace jueying.extentions {
 }
 declare namespace jueying.extentions {
     interface DesignerFrameworkProps {
-        components: ComponentDefine[];
+        componentDefines: ComponentDefine[];
         title?: string;
         templates?: DocumentData[];
     }
     interface DesignerFrameworkState {
-        changed: boolean;
-        canUndo: boolean;
-        canRedo: boolean;
         pageDocuments?: PageDocument[];
         activeDocument?: PageDocument;
     }
     class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState> {
         protected pageDesigner: PageDesigner;
-        private names;
         private _storage;
-        private ruleElement;
         private editorPanel;
         private toolbarElement;
+        private changedManages;
+        private editorPanelElement;
         constructor(props: any);
         static defaultProps: DesignerFrameworkProps;
-        /** 对控件进行命名 */
-        private namedControl;
-        createButtons(pageDocument: PageDocument, buttonClassName?: string): JSX.Element[];
+        renderButtons(pageDocument: PageDocument, buttonClassName?: string): JSX.Element[];
         readonly storage: DocumentStorage;
         static readonly dialogsElement: HTMLElement;
+        readonly changedManage: JSONChangedManage<ComponentData>;
         undo(): void;
         redo(): void;
         save(): Promise<void>;
@@ -452,6 +467,7 @@ declare namespace jueying.extentions {
         componentDidMount(): void;
         designerRef(e: PageDesigner): void;
         renderToolbar(element: HTMLElement): void;
+        renderEditorPanel(element: HTMLElement): void;
         render(): JSX.Element;
     }
 }
@@ -483,12 +499,12 @@ declare namespace jueying.extentions {
         private storage;
         private _pageData;
         private originalPageData;
-        private fileName;
+        private _fileName;
         constructor(fileName: any, storage: DocumentStorage, pageData: ComponentData, isNew?: boolean);
         save(): Promise<any>;
-        readonly isChanged: boolean;
-        readonly name: string;
-        readonly pageData: ComponentData;
+        readonly notSaved: boolean;
+        readonly fileName: string;
+        pageData: ComponentData;
         static load(storage: DocumentStorage, fileName: string): Promise<PageDocument>;
         static new(storage: DocumentStorage, fileName: string, init: ComponentData): PageDocument;
     }

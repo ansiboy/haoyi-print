@@ -1,5 +1,6 @@
 /// <reference path="../node_modules/electron/electron.d.ts"/>
 
+
 declare module 'jueying' {
 	export = jueying;
 }

@@ -5,7 +5,7 @@ namespace jueying.extentions {
         private storage: DocumentStorage;
         private _pageData: ComponentData;
         private originalPageData: ComponentData;
-        private fileName: string;
+        private _fileName: string;
 
         constructor(fileName, storage: DocumentStorage, pageData: ComponentData, isNew?: boolean) {
             this.storage = storage;
@@ -17,25 +17,28 @@ namespace jueying.extentions {
             else
                 this.originalPageData = JSON.parse(JSON.stringify(pageData));
 
-            this.fileName = fileName;
+            this._fileName = fileName;
         }
 
         save() {
             this.originalPageData = JSON.parse(JSON.stringify(this._pageData));
-            return this.storage.save(this.fileName, this.originalPageData);
+            return this.storage.save(this._fileName, this.originalPageData);
         }
 
-        get isChanged() {
+        get notSaved() {
             let equals = isEquals(this.originalPageData, this._pageData);
             return !equals;
         }
 
-        get name() {
-            return this.fileName;
+        get fileName() {
+            return this._fileName;
         }
 
         get pageData() {
             return this._pageData;
+        }
+        set pageData(value) {
+            this._pageData = value
         }
 
         static async load(storage: DocumentStorage, fileName: string) {

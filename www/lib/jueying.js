@@ -36,6 +36,66 @@ var jueying;
     }
     jueying.Callback = Callback;
 })(jueying || (jueying = {}));
+var jueying;
+(function (jueying) {
+    class JSONChangedManage {
+        constructor(initData) {
+            this.currentData = JSON.parse(JSON.stringify(initData));
+            this.undoStack = [];
+            this.redonStack = [];
+        }
+        get canUndo() {
+            return this.undoStack.length > 0;
+        }
+        get canRedo() {
+            return this.redonStack.length > 0;
+        }
+        setChangedData(changedData) {
+            if (this.redonStack.length > 0)
+                this.redonStack = [];
+            let delta = jsondiffpatch.diff(this.currentData, changedData);
+            if (delta == null)
+                return;
+            // //============================================================
+            // // 对于 delta ，必须 clone 一份数据再 push
+            // this.undoStack.push(JSON.parse(JSON.stringify(delta)))
+            // //============================================================
+            this.pushDelta(delta, this.undoStack);
+            this.currentData = JSON.parse(JSON.stringify(changedData));
+        }
+        undo() {
+            if (this.canUndo == false)
+                return;
+            let delta = this.undoStack.pop();
+            this.currentData = jsondiffpatch.unpatch(this.currentData, delta);
+            // //============================================================
+            // // 对于 delta ，必须 clone 一份数据再 push
+            // this.redonStack.push(JSON.parse(JSON.stringify(delta)))
+            // //============================================================
+            this.pushDelta(delta, this.redonStack);
+            return JSON.parse(JSON.stringify(this.currentData));
+        }
+        redo() {
+            if (this.canRedo == false)
+                return;
+            let delta = this.redonStack.pop();
+            this.currentData = jsondiffpatch.patch(this.currentData, delta);
+            // //============================================================
+            // // 对于 delta ，必须 clone 一份数据再 push
+            // this.undoStack.push(JSON.parse(JSON.stringify(delta)))
+            // //============================================================
+            this.pushDelta(delta, this.undoStack);
+            return JSON.parse(JSON.stringify(this.currentData));
+        }
+        pushDelta(delta, stack) {
+            //============================================================
+            // 对于 delta ，必须 clone 一份数据再 push
+            stack.push(JSON.parse(JSON.stringify(delta)));
+            //============================================================
+        }
+    }
+    jueying.JSONChangedManage = JSONChangedManage;
+})(jueying || (jueying = {}));
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
  *
@@ -57,15 +117,20 @@ var jueying;
             this._element = null;
             this.state = { editors: [] };
         }
-        setControls(controls, designer) {
-            if (controls.length == 0) {
-                this.setState({ editors: [] });
-                return;
+        componentWillReceiveProps(props) {
+            this.setState({
+                designer: props.designer,
+            });
+        }
+        getEditors(designer) {
+            if (designer == null) {
+                return [];
             }
             // 各个控件相同的编辑器
-            let commonPropEditorInfos;
-            for (let i = 0; i < controls.length; i++) {
-                let control = controls[i];
+            let commonPropEditorInfos = [];
+            let componentDatas = designer.selectedComponents;
+            for (let i = 0; i < componentDatas.length; i++) {
+                let control = componentDatas[i];
                 let className = control.type;
                 let propEditorInfos = jueying.Component.getPropEditors(className);
                 if (i == 0) {
@@ -87,8 +152,8 @@ var jueying;
             }
             // 各个控件相同的属性值
             let commonFlatProps;
-            for (let i = 0; i < controls.length; i++) {
-                let control = controls[i];
+            for (let i = 0; i < componentDatas.length; i++) {
+                let control = componentDatas[i];
                 let controlProps = Object.assign({}, control.props);
                 delete controlProps.children;
                 controlProps = this.flatProps(controlProps);
@@ -113,8 +178,8 @@ var jueying;
                 let editor = h(editorType, {
                     value: commonFlatProps[propNames.join('.')],
                     onChange: (value) => {
-                        for (let i = 0; i < controls.length; i++) {
-                            let c = controls[i];
+                        for (let i = 0; i < componentDatas.length; i++) {
+                            let c = componentDatas[i];
                             console.assert(c.props.id);
                             designer.updateControlProps(c.props.id, propNames, value);
                         }
@@ -122,7 +187,8 @@ var jueying;
                 });
                 editors.push({ prop: propName, editor, group: propEditorInfo.group });
             }
-            this.setState({ editors });
+            // this.setState({ editors })
+            return editors;
         }
         flatProps(props, baseName) {
             baseName = baseName ? baseName + '.' : '';
@@ -138,7 +204,8 @@ var jueying;
             return obj;
         }
         render() {
-            let editors = this.state.editors;
+            let { designer } = this.state;
+            let editors = this.getEditors(designer); //this.state.editors
             if (editors.length == 0) {
                 return React.createElement("div", { className: "text-center" }, "\u6682\u65E0\u53EF\u7528\u7684\u5C5E\u6027");
             }
@@ -305,12 +372,10 @@ var jueying;
                 }
                 if (dd.attr.indexOf("W") > -1) {
                     rect.width = Math.max(32, dd.width - dd.deltaX);
-                    // rect.left = dd.originalX + dd.width - rect.width;
                     setLeft(dd);
                 }
                 if (dd.attr.indexOf("N") > -1) {
                     rect.height = Math.max(32, dd.height - dd.deltaY);
-                    // rect.top = dd.originalY + dd.height - rect.height;
                     setTop(dd);
                 }
                 if (dd.attr.indexOf("WW") >= 0)
@@ -577,9 +642,29 @@ var jueying;
             super(props);
             this.state = { componentDatas: [] };
         }
-        setDesigner(designer) {
-            let controlDatas = designer.selectedComponentIds.map(o => designer.findComponentData(o));
-            this.editor.setControls(controlDatas, designer);
+        componentWillReceiveProps(props) {
+            this.setState({ designer: props.designer });
+        }
+        // private update(designer: PageDesigner) {
+        //     let selectedComponentDatas = designer.selectedComponents //designer.selectedComponentIds.map(o => designer.findComponentData(o))
+        //     this.editor.setControls(selectedComponentDatas, designer)
+        //     let componentDatas = []
+        //     let stack = new Array<ComponentData>()
+        //     stack.push(designer.pageData)
+        //     while (stack.length > 0) {
+        //         let item = stack.pop()
+        //         componentDatas.push(item)
+        //         let children = item.children || []
+        //         for (let i = 0; i < children.length; i++) {
+        //             stack.push(children[i])
+        //         }
+        //     }
+        //     let selectedComponentId = selectedComponentDatas.length == 1 ? selectedComponentDatas[0].props.id : ''
+        //     this.setState({ componentDatas, designer, selectedComponentId })
+        // }
+        getComponentData(designer) {
+            // let selectedComponentDatas = designer.selectedComponents //designer.selectedComponentIds.map(o => designer.findComponentData(o))
+            // this.editor.setControls(selectedComponentDatas, designer)
             let componentDatas = [];
             let stack = new Array();
             stack.push(designer.pageData);
@@ -591,14 +676,16 @@ var jueying;
                     stack.push(children[i]);
                 }
             }
-            let selectedComponentId = designer.selectedComponentIds.length == 1 ? designer.selectedComponentIds[0] : '';
-            this.setState({ componentDatas, designer, selectedComponentId });
+            return componentDatas;
         }
         render() {
             let { emptyText } = this.props;
             emptyText = emptyText || '';
-            let componentDatas = this.state.componentDatas;
+            let componentDatas = []; //this.state.componentDatas
             let designer = this.state.designer;
+            if (designer) {
+                componentDatas = this.getComponentData(designer);
+            }
             let selectedComponentId = this.state.selectedComponentId;
             return React.createElement("div", { className: "editor-panel panel panel-primary", ref: (e) => this.element = e || this.element },
                 React.createElement("div", { className: "panel-heading" }, "\u5C5E\u6027"),
@@ -608,7 +695,7 @@ var jueying;
                                 if (designer && e.target.value)
                                     designer.selectComponent(e.currentTarget.value);
                             } }, componentDatas.map(o => React.createElement("option", { key: o.props.id, id: o.props.id, value: o.props.id }, o.props.name)))),
-                    React.createElement(jueying.ComponentEditor, { ref: e => this.editor = e || this.editor })));
+                    React.createElement(jueying.ComponentEditor, { designer: designer, ref: e => this.editor = e || this.editor })));
         }
     }
     jueying.EditorPanel = EditorPanel;
@@ -646,12 +733,11 @@ var jueying;
     class PageDesigner extends React.Component {
         constructor(props) {
             super(props);
-            this._selectedControlIds = [];
             this.componentSelected = jueying.Callback.create();
-            this.controlRemoved = jueying.Callback.create();
-            this.designtimeComponentDidMount = jueying.Callback.create();
+            this.componentRemoved = jueying.Callback.create();
+            this.componentAppend = jueying.Callback.create();
             this.componentUpdated = jueying.Callback.create();
-            // names = new Array<string>();
+            this.designtimeComponentDidMount = jueying.Callback.create();
             this.namedComponents = {};
             this.initPageData(props.pageData);
             this.state = { pageData: props.pageData };
@@ -661,21 +747,7 @@ var jueying;
         }
         initPageData(pageData) {
             if (pageData == null) {
-                this._selectedControlIds = [];
                 return;
-            }
-            let stack = new Array();
-            stack.push(pageData);
-            while (stack.length > 0) {
-                let item = stack.pop();
-                let props = item.props;
-                if (props.selected) {
-                    console.assert(props.id);
-                    this._selectedControlIds.push(props.id);
-                }
-                (item.children || []).forEach(o => {
-                    stack.push(o);
-                });
             }
             this.nameComponent(pageData);
         }
@@ -683,21 +755,36 @@ var jueying;
             return this.state.pageData;
         }
         get selectedComponentIds() {
-            return this._selectedControlIds;
+            return this.selectedComponents.map(o => o.props.id);
+        }
+        get selectedComponents() {
+            let arr = new Array();
+            let stack = new Array();
+            stack.push(this.pageData);
+            while (stack.length > 0) {
+                let item = stack.pop();
+                if (item.props.selected == true)
+                    arr.push(item);
+                let children = item.children || [];
+                for (let i = 0; i < children.length; i++)
+                    stack.push(children[i]);
+            }
+            return arr;
         }
         updateControlProps(controlId, navPropsNames, value) {
-            let controlDescription = this.findComponentData(controlId);
-            if (controlDescription == null)
+            let componentData = this.findComponentData(controlId);
+            if (componentData == null)
                 return;
-            console.assert(controlDescription != null);
+            console.assert(componentData != null);
             console.assert(navPropsNames != null, 'props is null');
-            controlDescription.props = controlDescription.props || {};
-            let obj = controlDescription.props;
+            componentData.props = componentData.props || {};
+            let obj = componentData.props;
             for (let i = 0; i < navPropsNames.length - 1; i++) {
                 obj = obj[navPropsNames[i]] = obj[navPropsNames[i]] || {};
             }
             obj[navPropsNames[navPropsNames.length - 1]] = value;
             this.setState(this.state);
+            this.componentUpdated.fire([componentData]);
         }
         sortChildren(parentId, childIds) {
             if (!parentId)
@@ -764,13 +851,13 @@ var jueying;
                 this.setState({ pageData });
             }
             this.selectComponent(childControl.props.id);
+            this.componentAppend.fire(this);
         }
         /** 设置控件位置 */
         setComponentPosition(componentId, position) {
             return this.setComponentsPosition([{ componentId, position }]);
         }
         setComponentSize(componentId, size) {
-            // return this.setComponentsPosition([{ componentId, left, top }])
             console.assert(componentId);
             console.assert(size);
             let componentData = this.findComponentData(componentId);
@@ -783,8 +870,10 @@ var jueying;
                 style.width = size.width;
             let { pageData } = this.state;
             this.setState({ pageData });
+            this.componentUpdated.fire([componentData]);
         }
         setComponentsPosition(positions) {
+            let componentDatas = new Array();
             positions.forEach(o => {
                 let { componentId } = o;
                 let { left, top } = o.position;
@@ -798,7 +887,9 @@ var jueying;
                     style.top = top;
                 let { pageData } = this.state;
                 this.setState({ pageData });
+                componentDatas.push(componentData);
             });
+            this.componentUpdated.fire(componentDatas);
         }
         /**
          * 选择指定的控件
@@ -818,7 +909,7 @@ var jueying;
                     stack.push(children[i]);
                 }
             }
-            this._selectedControlIds = componentIds;
+            // this._selectedComponentIds = componentIds
             componentIds.map(id => this.findComponentData(id)).forEach(o => {
                 console.assert(o != null);
                 // let props = o.props as ComponentProps<any>
@@ -842,19 +933,19 @@ var jueying;
             controlIds.forEach(controlId => {
                 this.removeControlFrom(controlId, pageData.children);
             });
-            this._selectedControlIds = this._selectedControlIds.filter(id => controlIds.indexOf(id) < 0);
+            // this._selectedComponentIds = this._selectedComponentIds.filter(id => controlIds.indexOf(id) < 0)
             this.setState({ pageData });
-            this.controlRemoved.fire(controlIds);
+            this.componentRemoved.fire(controlIds);
         }
         /** 移动控件到另外一个控件容器 */
-        moveControl(controlId, parentId, childIds) {
-            let control = this.findComponentData(controlId);
+        moveControl(componentId, parentId, childIds) {
+            let control = this.findComponentData(componentId);
             if (control == null)
-                throw new Error(`Cannt find control by id ${controlId}`);
-            console.assert(control != null, `Cannt find control by id ${controlId}`);
+                throw new Error(`Cannt find control by id ${componentId}`);
+            console.assert(control != null, `Cannt find control by id ${componentId}`);
             let pageData = this.state.pageData;
             console.assert(pageData.children);
-            this.removeControlFrom(controlId, pageData.children);
+            this.removeControlFrom(componentId, pageData.children);
             this.appendComponent(parentId, control, childIds);
         }
         setComponentSelected(component, value) {
@@ -918,9 +1009,9 @@ var jueying;
         onKeyDown(e) {
             const DELETE_KEY_CODE = 46;
             if (e.keyCode == DELETE_KEY_CODE) {
-                if (this._selectedControlIds.length == 0)
+                if (this.selectedComponents.length == 0)
                     return;
-                this.removeControl(...this._selectedControlIds);
+                this.removeControl(...this.selectedComponentIds);
             }
         }
         createDesignTimeElement(type, props, ...children) {
@@ -935,7 +1026,6 @@ var jueying;
                 props.readOnly = true;
             }
             let typename = typeof type == 'string' ? type : type.name;
-            let attr = jueying.Component.getAttribute(typename);
             let allowWrapper = true;
             let tagName = type;
             if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
@@ -969,9 +1059,9 @@ var jueying;
             this.initPageData(props.pageData);
             this.setState({ pageData: props.pageData });
         }
-        componentDidUpdate() {
-            this.componentUpdated.fire(this);
-        }
+        // componentDidUpdate() {
+        //     this.componentUpdated.fire(this)
+        // }
         render() {
             let designer = this;
             let { pageData } = this.state;
@@ -1307,49 +1397,20 @@ var jueying;
         class DesignerFramework extends React.Component {
             constructor(props) {
                 super(props);
-                this.names = [];
-                this.state = {
-                    changed: false,
-                    canUndo: false,
-                    canRedo: false
-                };
+                this.state = {};
+                this.changedManages = {};
             }
-            /** 对控件进行命名 */
-            namedControl(control) {
-                console.assert(control.props);
-                let props = control.props;
-                if (!props.name) {
-                    let num = 0;
-                    let name;
-                    do {
-                        num = num + 1;
-                        name = `${control.type}${num}`;
-                    } while (this.names.indexOf(name) >= 0);
-                    this.names.push(name);
-                    props.name = name;
-                }
-                if (!props.id)
-                    props.id = extentions.guid();
-                if (!control.children || control.children.length == 0) {
-                    return;
-                }
-                for (let i = 0; i < control.children.length; i++) {
-                    let child = control.children[i];
-                    if (typeof child != 'string')
-                        this.namedControl(child);
-                }
-            }
-            createButtons(pageDocument, buttonClassName) {
+            renderButtons(pageDocument, buttonClassName) {
                 buttonClassName = buttonClassName || 'btn btn-default';
-                let isChanged = pageDocument ? pageDocument.isChanged : false;
+                let isChanged = pageDocument ? pageDocument.notSaved : false;
                 return [
                     React.createElement("button", { className: buttonClassName, disabled: !isChanged, onClick: () => this.save() },
                         React.createElement("i", { className: "icon-save" }),
                         React.createElement("span", null, "\u4FDD\u5B58")),
-                    React.createElement("button", { className: buttonClassName, onClick: () => this.redo() },
+                    React.createElement("button", { className: buttonClassName, disabled: this.changedManage == null || !this.changedManage.canRedo, onClick: () => this.redo() },
                         React.createElement("i", { className: "icon-repeat" }),
                         React.createElement("span", null, "\u91CD\u505A")),
-                    React.createElement("button", { className: buttonClassName, onClick: () => this.undo() },
+                    React.createElement("button", { className: buttonClassName, disabled: this.changedManage == null || !this.changedManage.canUndo, onClick: () => this.undo() },
                         React.createElement("i", { className: "icon-undo" }),
                         React.createElement("span", null, "\u64A4\u9500")),
                     React.createElement("button", { className: buttonClassName },
@@ -1378,13 +1439,25 @@ var jueying;
                 }
                 return element;
             }
+            get changedManage() {
+                let activeDocument = this.state.activeDocument;
+                if (activeDocument == null)
+                    return null;
+                return this.changedManages[activeDocument.fileName];
+            }
             //======================================================
             // Virtual Method
             undo() {
-                // this.pageDesigner.undo();
+                let pageData = this.changedManage.undo();
+                let { activeDocument } = this.state;
+                activeDocument.pageData = pageData;
+                this.setState({ activeDocument });
             }
             redo() {
-                // this.pageDesigner.redo();
+                let pageData = this.changedManage.redo();
+                let { activeDocument } = this.state;
+                activeDocument.pageData = pageData;
+                this.setState({ activeDocument });
             }
             save() {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -1402,6 +1475,7 @@ var jueying;
                     let documentStorage = this.storage;
                     let pageDocument = isNew ? extentions.PageDocument.new(documentStorage, fileName, pageData) :
                         yield extentions.PageDocument.load(documentStorage, fileName);
+                    this.changedManages[fileName] = new jueying.JSONChangedManage(pageData);
                     pageDocuments = pageDocuments || [];
                     pageDocuments.push(pageDocument);
                     this.setState({
@@ -1438,7 +1512,7 @@ var jueying;
                     callback: (tmp) => {
                         let fileName = tmp.name;
                         let docs = this.state.pageDocuments || [];
-                        let existDoc = docs.filter(o => o.name == tmp.name)[0];
+                        let existDoc = docs.filter(o => o.fileName == tmp.name)[0];
                         if (existDoc) {
                             let index = docs.indexOf(existDoc);
                             this.activeDocument(index);
@@ -1474,7 +1548,7 @@ var jueying;
                     let activeDocument = pageDocuments[activeDocumentIndex];
                     this.setState({ pageDocuments, activeDocument });
                 };
-                if (!doc.isChanged) {
+                if (!doc.notSaved) {
                     close();
                     return;
                 }
@@ -1496,31 +1570,36 @@ var jueying;
                 if (!e)
                     return;
                 this.pageDesigner = e || this.pageDesigner;
-                // this.pageDesigner.componentSelected.add((controlIds) => {
-                //     let controlDatas = controlIds.map(o => this.pageDesigner.findComponentData(o))
-                //     this.editorPanel.setControls(controlDatas, this.pageDesigner)
-                // })
-                this.pageDesigner.componentUpdated.add((sender) => {
-                    console.assert(this.toolbarElement);
+                let func = () => {
+                    let activeDocument = this.state.activeDocument;
+                    this.changedManage.setChangedData(activeDocument.pageData);
                     this.renderToolbar(this.toolbarElement);
-                    // let controlDatas = sender.selectedComponentIds.map(o => this.pageDesigner.findComponentData(o))
-                    // this.editorPanel.setControls(controlDatas, this.pageDesigner)
-                    this.editorPanel.setDesigner(this.pageDesigner);
-                });
-                // this.editorPanel.set
+                    this.renderEditorPanel(this.editorPanelElement);
+                };
+                this.pageDesigner.componentRemoved.add(func);
+                this.pageDesigner.componentAppend.add(func);
+                this.pageDesigner.componentUpdated.add(func);
+                this.pageDesigner.componentSelected.add(func);
+                // this.pageDesigner.componentDidUpdate = () => {
+                //     this.renderToolbar(this.toolbarElement)
+                //     this.renderEditorPanel(this.editorPanelElement)
+                // }
             }
             renderToolbar(element) {
                 let pageDocument = this.state.activeDocument;
-                let buttons = this.createButtons(pageDocument);
+                let buttons = this.renderButtons(pageDocument);
                 let { title } = this.props;
                 ReactDOM.render(React.createElement(React.Fragment, null,
                     React.createElement("li", { className: "pull-left" },
                         React.createElement("h3", null, title || '')),
                     buttons.map((o, i) => React.createElement("li", { key: i, className: "pull-right" }, o))), element);
             }
+            renderEditorPanel(element) {
+                ReactDOM.render(React.createElement(jueying.EditorPanel, { emptyText: "未选中控件，点击页面控件，可以编辑选中控件的属性", designer: this.pageDesigner, ref: e => this.editorPanel = e || this.editorPanel }), element);
+            }
             render() {
                 let { activeDocument, pageDocuments } = this.state;
-                let { components } = this.props;
+                let { componentDefines } = this.props;
                 pageDocuments = pageDocuments || [];
                 let pageDocument = activeDocument;
                 return React.createElement("div", { className: "designer-form" },
@@ -1533,7 +1612,7 @@ var jueying;
                     React.createElement("div", { className: "main-panel" },
                         React.createElement("ul", { className: "nav nav-tabs", style: { display: pageDocuments.length == 0 ? 'none' : null } }, pageDocuments.map((o, i) => React.createElement("li", { key: i, role: "presentation", className: o == activeDocument ? 'active' : null, onClick: () => this.activeDocument(i) },
                             React.createElement("a", { href: "javascript:" },
-                                o.name,
+                                o.fileName,
                                 React.createElement("i", { className: "pull-right icon-remove", style: { cursor: 'pointer' }, onClick: (e) => {
                                         e.cancelable = true;
                                         e.stopPropagation();
@@ -1541,12 +1620,17 @@ var jueying;
                                     } }))))),
                         pageDocument ?
                             React.createElement(jueying.PageDesigner, { pageData: pageDocument.pageData, ref: e => this.designerRef(e) }) : null),
-                    React.createElement(jueying.ComponentToolbar, { className: "component-panel", componetDefines: components }),
-                    React.createElement(jueying.EditorPanel, { emptyText: "未选中控件，点击页面控件，可以编辑选中控件的属性", ref: e => this.editorPanel = e || this.editorPanel }));
+                    React.createElement(jueying.ComponentToolbar, { className: "component-panel", componetDefines: componentDefines }),
+                    React.createElement("div", { ref: e => {
+                            if (!e)
+                                return;
+                            this.editorPanelElement = e || this.editorPanelElement;
+                            this.renderEditorPanel(e);
+                        } }));
             }
         }
         DesignerFramework.defaultProps = {
-            components: [], templates: extentions.templates
+            componentDefines: [], templates: extentions.templates
         };
         extentions.DesignerFramework = DesignerFramework;
     })(extentions = jueying.extentions || (jueying.extentions = {}));
@@ -1621,21 +1705,24 @@ var jueying;
                     this.originalPageData = { type: 'PageView', props: {} };
                 else
                     this.originalPageData = JSON.parse(JSON.stringify(pageData));
-                this.fileName = fileName;
+                this._fileName = fileName;
             }
             save() {
                 this.originalPageData = JSON.parse(JSON.stringify(this._pageData));
-                return this.storage.save(this.fileName, this.originalPageData);
+                return this.storage.save(this._fileName, this.originalPageData);
             }
-            get isChanged() {
+            get notSaved() {
                 let equals = extentions.isEquals(this.originalPageData, this._pageData);
                 return !equals;
             }
-            get name() {
-                return this.fileName;
+            get fileName() {
+                return this._fileName;
             }
             get pageData() {
                 return this._pageData;
+            }
+            set pageData(value) {
+                this._pageData = value;
             }
             static load(storage, fileName) {
                 return __awaiter(this, void 0, void 0, function* () {
