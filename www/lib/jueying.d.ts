@@ -191,7 +191,6 @@ declare namespace jueying {
     interface EditorPanelState {
         componentDatas: ComponentData[];
         designer?: PageDesigner;
-        selectedComponentId?: string;
     }
     interface EditorPanelProps {
         className?: string;

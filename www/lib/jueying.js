@@ -56,10 +56,6 @@ var jueying;
             let delta = jsondiffpatch.diff(this.currentData, changedData);
             if (delta == null)
                 return;
-            // //============================================================
-            // // 对于 delta ，必须 clone 一份数据再 push
-            // this.undoStack.push(JSON.parse(JSON.stringify(delta)))
-            // //============================================================
             this.pushDelta(delta, this.undoStack);
             this.currentData = JSON.parse(JSON.stringify(changedData));
         }
@@ -68,10 +64,6 @@ var jueying;
                 return;
             let delta = this.undoStack.pop();
             this.currentData = jsondiffpatch.unpatch(this.currentData, delta);
-            // //============================================================
-            // // 对于 delta ，必须 clone 一份数据再 push
-            // this.redonStack.push(JSON.parse(JSON.stringify(delta)))
-            // //============================================================
             this.pushDelta(delta, this.redonStack);
             return JSON.parse(JSON.stringify(this.currentData));
         }
@@ -80,10 +72,6 @@ var jueying;
                 return;
             let delta = this.redonStack.pop();
             this.currentData = jsondiffpatch.patch(this.currentData, delta);
-            // //============================================================
-            // // 对于 delta ，必须 clone 一份数据再 push
-            // this.undoStack.push(JSON.parse(JSON.stringify(delta)))
-            // //============================================================
             this.pushDelta(delta, this.undoStack);
             return JSON.parse(JSON.stringify(this.currentData));
         }
@@ -187,7 +175,6 @@ var jueying;
                 });
                 editors.push({ prop: propName, editor, group: propEditorInfo.group });
             }
-            // this.setState({ editors })
             return editors;
         }
         flatProps(props, baseName) {
@@ -205,14 +192,14 @@ var jueying;
         }
         render() {
             let { designer } = this.state;
-            let editors = this.getEditors(designer); //this.state.editors
+            let editors = this.getEditors(designer);
             if (editors.length == 0) {
                 return React.createElement("div", { className: "text-center" }, "\u6682\u65E0\u53EF\u7528\u7684\u5C5E\u6027");
             }
-            let groupEditorsArray = []; //{ [group: string]: { text: string, editor: React.ReactElement<any> }[] } = {}
+            let groupEditorsArray = [];
             for (let i = 0; i < editors.length; i++) {
                 let group = editors[i].group || '';
-                let groupEditors = groupEditorsArray.filter(o => o.group == group)[0]; //groupEditors[editors[i].group] = groupEditors[editors[i].group] || []
+                let groupEditors = groupEditorsArray.filter(o => o.group == group)[0];
                 if (groupEditors == null) {
                     groupEditors = { group: editors[i].group, editors: [] };
                     groupEditorsArray.push(groupEditors);
@@ -645,26 +632,7 @@ var jueying;
         componentWillReceiveProps(props) {
             this.setState({ designer: props.designer });
         }
-        // private update(designer: PageDesigner) {
-        //     let selectedComponentDatas = designer.selectedComponents //designer.selectedComponentIds.map(o => designer.findComponentData(o))
-        //     this.editor.setControls(selectedComponentDatas, designer)
-        //     let componentDatas = []
-        //     let stack = new Array<ComponentData>()
-        //     stack.push(designer.pageData)
-        //     while (stack.length > 0) {
-        //         let item = stack.pop()
-        //         componentDatas.push(item)
-        //         let children = item.children || []
-        //         for (let i = 0; i < children.length; i++) {
-        //             stack.push(children[i])
-        //         }
-        //     }
-        //     let selectedComponentId = selectedComponentDatas.length == 1 ? selectedComponentDatas[0].props.id : ''
-        //     this.setState({ componentDatas, designer, selectedComponentId })
-        // }
         getComponentData(designer) {
-            // let selectedComponentDatas = designer.selectedComponents //designer.selectedComponentIds.map(o => designer.findComponentData(o))
-            // this.editor.setControls(selectedComponentDatas, designer)
             let componentDatas = [];
             let stack = new Array();
             stack.push(designer.pageData);
@@ -681,19 +649,25 @@ var jueying;
         render() {
             let { emptyText } = this.props;
             emptyText = emptyText || '';
-            let componentDatas = []; //this.state.componentDatas
+            let componentDatas = [];
+            let selectedComponentIds = [];
             let designer = this.state.designer;
             if (designer) {
                 componentDatas = this.getComponentData(designer);
+                selectedComponentIds = designer.selectedComponentIds || [];
             }
-            let selectedComponentId = this.state.selectedComponentId;
             return React.createElement("div", { className: "editor-panel panel panel-primary", ref: (e) => this.element = e || this.element },
                 React.createElement("div", { className: "panel-heading" }, "\u5C5E\u6027"),
                 React.createElement("div", { className: "panel-body" },
                     React.createElement("div", { className: "form-group" },
-                        React.createElement("select", { className: "form-control", value: selectedComponentId || '', onChange: e => {
-                                if (designer && e.target.value)
-                                    designer.selectComponent(e.currentTarget.value);
+                        React.createElement("select", { className: "form-control", ref: e => {
+                                if (!e)
+                                    return;
+                                e.value = selectedComponentIds.length == 1 ? selectedComponentIds[0] : '';
+                                e.onchange = () => {
+                                    if (designer && e.value)
+                                        designer.selectComponent(e.value);
+                                };
                             } }, componentDatas.map(o => React.createElement("option", { key: o.props.id, id: o.props.id, value: o.props.id }, o.props.name)))),
                     React.createElement(jueying.ComponentEditor, { designer: designer, ref: e => this.editor = e || this.editor })));
         }

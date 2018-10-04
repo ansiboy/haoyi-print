@@ -15,13 +15,11 @@
 namespace jueying {
 
     export interface EditorProps extends React.Props<ComponentEditor> {
-        // componentDatas: ComponentData[]
         designer: PageDesigner
     }
 
     export interface EditorState {
         editors: { group: string, prop: string, editor: React.ReactElement<any> }[]
-        // componentDatas?: ComponentData[]
         designer?: PageDesigner
     }
 
@@ -110,7 +108,6 @@ namespace jueying {
                 editors.push({ prop: propName, editor, group: propEditorInfo.group })
             }
 
-            // this.setState({ editors })
             return editors
         }
 
@@ -132,15 +129,15 @@ namespace jueying {
 
         render() {
             let { designer } = this.state
-            let editors = this.getEditors(designer) //this.state.editors
+            let editors = this.getEditors(designer) 
             if (editors.length == 0) {
                 return <div className="text-center">暂无可用的属性</div>
             }
 
-            let groupEditorsArray: { group: string, editors: { prop: string, editor: React.ReactElement<any> }[] }[] = [] //{ [group: string]: { text: string, editor: React.ReactElement<any> }[] } = {}
+            let groupEditorsArray: { group: string, editors: { prop: string, editor: React.ReactElement<any> }[] }[] = [] 
             for (let i = 0; i < editors.length; i++) {
                 let group = editors[i].group || ''
-                let groupEditors = groupEditorsArray.filter(o => o.group == group)[0] //groupEditors[editors[i].group] = groupEditors[editors[i].group] || []
+                let groupEditors = groupEditorsArray.filter(o => o.group == group)[0]
                 if (groupEditors == null) {
                     groupEditors = { group: editors[i].group, editors: [] }
                     groupEditorsArray.push(groupEditors)

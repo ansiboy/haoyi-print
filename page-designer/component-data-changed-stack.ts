@@ -22,10 +22,6 @@ namespace jueying {
             if (delta == null)
                 return
 
-            // //============================================================
-            // // 对于 delta ，必须 clone 一份数据再 push
-            // this.undoStack.push(JSON.parse(JSON.stringify(delta)))
-            // //============================================================
             this.pushDelta(delta, this.undoStack)
             this.currentData = JSON.parse(JSON.stringify(changedData))
         }
@@ -35,10 +31,6 @@ namespace jueying {
 
             let delta = this.undoStack.pop()
             this.currentData = jsondiffpatch.unpatch(this.currentData, delta)
-            // //============================================================
-            // // 对于 delta ，必须 clone 一份数据再 push
-            // this.redonStack.push(JSON.parse(JSON.stringify(delta)))
-            // //============================================================
             this.pushDelta(delta, this.redonStack)
             return JSON.parse(JSON.stringify(this.currentData))
         }
@@ -48,10 +40,6 @@ namespace jueying {
 
             let delta = this.redonStack.pop()
             this.currentData = jsondiffpatch.patch(this.currentData, delta)
-            // //============================================================
-            // // 对于 delta ，必须 clone 一份数据再 push
-            // this.undoStack.push(JSON.parse(JSON.stringify(delta)))
-            // //============================================================
             this.pushDelta(delta, this.undoStack)
 
             return JSON.parse(JSON.stringify(this.currentData))
