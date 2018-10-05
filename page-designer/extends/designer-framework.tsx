@@ -1,7 +1,7 @@
 /// <reference path="templates.tsx"/>
 
 
-namespace jueying.extentions {
+namespace jueying.forms {
     export interface DesignerFrameworkProps {
         componentDefines: ComponentDefine[],
         title?: string,
@@ -16,7 +16,7 @@ namespace jueying.extentions {
         private _storage: DocumentStorage;
         private editorPanel: EditorPanel;
         private toolbarElement: HTMLElement;
-        private changedManages: { [name: string]: JSONChangedManage<ComponentData> }
+        private changedManages: { [name: string]: JSONUndoRedo<ComponentData> }
         private editorPanelElement: HTMLElement;
 
         constructor(props) {
@@ -111,14 +111,14 @@ namespace jueying.extentions {
             pageDocument.save();
             this.setState({ pageDocuments });
         }
-        async createDocuemnt(fileName: string, pageData: ComponentData, isNew: boolean) {
+        async loadDocuemnt(fileName: string, pageData: ComponentData, isNew: boolean) {
             console.assert(fileName);
             let { pageDocuments } = this.state;
             let documentStorage = this.storage
             let pageDocument = isNew ? PageDocument.new(documentStorage, fileName, pageData) :
                 await PageDocument.load(documentStorage, fileName);
 
-            this.changedManages[fileName] = new JSONChangedManage(pageData)
+            this.changedManages[fileName] = new JSONUndoRedo(pageData)
             pageDocuments = pageDocuments || [];
             pageDocuments.push(pageDocument);
 
@@ -126,6 +126,8 @@ namespace jueying.extentions {
                 pageDocuments,
                 activeDocument: pageDocuments[pageDocuments.length - 1]
             })
+
+            
         }
         async fetchTemplates() {
             let templates = this.props.templates
@@ -136,7 +138,7 @@ namespace jueying.extentions {
                 fetch: () => this.fetchTemplates(),
                 requiredFileName: true,
                 callback: (tmp, fileName) => {
-                    this.createDocuemnt(fileName, tmp.pageData, true);
+                    this.loadDocuemnt(fileName, tmp.pageData, true);
                 }
             });
         }
@@ -158,8 +160,7 @@ namespace jueying.extentions {
                         return;
                     }
 
-                    this.createDocuemnt(fileName, tmp.pageData, false);
-
+                    this.loadDocuemnt(fileName, tmp.pageData, false);
                 }
             })
         }

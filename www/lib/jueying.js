@@ -38,7 +38,10 @@ var jueying;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
-    class JSONChangedManage {
+    /**
+     * 实现 JSON 对象的 UNDO，REDO 操作
+     */
+    class JSONUndoRedo {
         constructor(initData) {
             this.currentData = JSON.parse(JSON.stringify(initData));
             this.undoStack = [];
@@ -82,7 +85,7 @@ var jueying;
             //============================================================
         }
     }
-    jueying.JSONChangedManage = JSONChangedManage;
+    jueying.JSONUndoRedo = JSONUndoRedo;
 })(jueying || (jueying = {}));
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
@@ -221,8 +224,6 @@ var jueying;
 var jueying;
 (function (jueying) {
     class ComponentToolbar extends React.Component {
-        componentDidMount() {
-        }
         componentDraggable(toolItemElement, componentData) {
             console.assert(toolItemElement != null);
             toolItemElement.draggable = true;
@@ -1164,8 +1165,8 @@ var jueying;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
-    var extentions;
-    (function (extentions) {
+    var forms;
+    (function (forms) {
         function guid() {
             function s4() {
                 return Math.floor((1 + Math.random()) * 0x10000)
@@ -1175,7 +1176,7 @@ var jueying;
             return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
                 s4() + '-' + s4() + s4() + s4();
         }
-        extentions.guid = guid;
+        forms.guid = guid;
         function isEquals(obj1, obj2) {
             if ((obj1 == null && obj2 != null) || (obj1 != null && obj2 == null))
                 return false;
@@ -1215,16 +1216,16 @@ var jueying;
             }
             return true;
         }
-        extentions.isEquals = isEquals;
+        forms.isEquals = isEquals;
         function skipField(obj, field) {
             return typeof obj[field] == 'function';
         }
-    })(extentions = jueying.extentions || (jueying.extentions = {}));
+    })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
-    var extentions;
-    (function (extentions) {
+    var forms;
+    (function (forms) {
         let style = { width: '100%', height: '100%', minWidth: 'unset' };
         // let template0: DocumentData = {
         //     pageData: {
@@ -1308,7 +1309,7 @@ var jueying;
             pageData: {
                 type: 'PageView',
                 props: {
-                    "id": extentions.guid(),
+                    "id": forms.guid(),
                     "className": "page-view",
                     style,
                     "componentName": "PageView"
@@ -1332,7 +1333,7 @@ var jueying;
             pageData: {
                 type: 'PageView',
                 props: {
-                    id: extentions.guid(),
+                    id: forms.guid(),
                     className: "page-view",
                     style,
                     componentName: "PageView",
@@ -1352,8 +1353,8 @@ var jueying;
             },
             name: '空白模板(绝对定位)'
         };
-        extentions.templates = [template1, template2,];
-    })(extentions = jueying.extentions || (jueying.extentions = {}));
+        forms.templates = [template1, template2,];
+    })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 /// <reference path="templates.tsx"/>
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -1366,8 +1367,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 var jueying;
 (function (jueying) {
-    var extentions;
-    (function (extentions) {
+    var forms;
+    (function (forms) {
         class DesignerFramework extends React.Component {
             constructor(props) {
                 super(props);
@@ -1400,7 +1401,7 @@ var jueying;
             }
             get storage() {
                 if (this._storage == null)
-                    this._storage = new extentions.LocalDocumentStorage();
+                    this._storage = new forms.LocalDocumentStorage();
                 return this._storage;
             }
             static get dialogsElement() {
@@ -1442,14 +1443,14 @@ var jueying;
                     this.setState({ pageDocuments });
                 });
             }
-            createDocuemnt(fileName, pageData, isNew) {
+            loadDocuemnt(fileName, pageData, isNew) {
                 return __awaiter(this, void 0, void 0, function* () {
                     console.assert(fileName);
                     let { pageDocuments } = this.state;
                     let documentStorage = this.storage;
-                    let pageDocument = isNew ? extentions.PageDocument.new(documentStorage, fileName, pageData) :
-                        yield extentions.PageDocument.load(documentStorage, fileName);
-                    this.changedManages[fileName] = new jueying.JSONChangedManage(pageData);
+                    let pageDocument = isNew ? forms.PageDocument.new(documentStorage, fileName, pageData) :
+                        yield forms.PageDocument.load(documentStorage, fileName);
+                    this.changedManages[fileName] = new jueying.JSONUndoRedo(pageData);
                     pageDocuments = pageDocuments || [];
                     pageDocuments.push(pageDocument);
                     this.setState({
@@ -1466,17 +1467,17 @@ var jueying;
             }
             newFile() {
                 return __awaiter(this, void 0, void 0, function* () {
-                    extentions.TemplateDialog.show({
+                    forms.TemplateDialog.show({
                         fetch: () => this.fetchTemplates(),
                         requiredFileName: true,
                         callback: (tmp, fileName) => {
-                            this.createDocuemnt(fileName, tmp.pageData, true);
+                            this.loadDocuemnt(fileName, tmp.pageData, true);
                         }
                     });
                 });
             }
             open() {
-                extentions.TemplateDialog.show({
+                forms.TemplateDialog.show({
                     fetch: (pageIndex, pageSize) => __awaiter(this, void 0, void 0, function* () {
                         let result = yield this.storage.list(pageIndex, pageSize);
                         let items = result.items.map(a => ({ name: a[0], pageData: a[1] }));
@@ -1492,7 +1493,7 @@ var jueying;
                             this.activeDocument(index);
                             return;
                         }
-                        this.createDocuemnt(fileName, tmp.pageData, false);
+                        this.loadDocuemnt(fileName, tmp.pageData, false);
                     }
                 });
             }
@@ -1604,15 +1605,15 @@ var jueying;
             }
         }
         DesignerFramework.defaultProps = {
-            componentDefines: [], templates: extentions.templates
+            componentDefines: [], templates: forms.templates
         };
-        extentions.DesignerFramework = DesignerFramework;
-    })(extentions = jueying.extentions || (jueying.extentions = {}));
+        forms.DesignerFramework = DesignerFramework;
+    })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
-    var extentions;
-    (function (extentions) {
+    var forms;
+    (function (forms) {
         class LocalDocumentStorage {
             constructor() {
                 debugger;
@@ -1663,13 +1664,13 @@ var jueying;
             }
         }
         LocalDocumentStorage.prefix = 'pdc_';
-        extentions.LocalDocumentStorage = LocalDocumentStorage;
-    })(extentions = jueying.extentions || (jueying.extentions = {}));
+        forms.LocalDocumentStorage = LocalDocumentStorage;
+    })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
-    var extentions;
-    (function (extentions) {
+    var forms;
+    (function (forms) {
         class PageDocument {
             constructor(fileName, storage, pageData, isNew) {
                 this.storage = storage;
@@ -1686,7 +1687,7 @@ var jueying;
                 return this.storage.save(this._fileName, this.originalPageData);
             }
             get notSaved() {
-                let equals = extentions.isEquals(this.originalPageData, this._pageData);
+                let equals = forms.isEquals(this.originalPageData, this._pageData);
                 return !equals;
             }
             get fileName() {
@@ -1713,15 +1714,14 @@ var jueying;
                 return new PageDocument(fileName, storage, init, true);
             }
         }
-        PageDocument.instances = {};
-        extentions.PageDocument = PageDocument;
-    })(extentions = jueying.extentions || (jueying.extentions = {}));
+        forms.PageDocument = PageDocument;
+    })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 /// <reference path="comon.tsx"/>
 var jueying;
 (function (jueying) {
-    var extentions;
-    (function (extentions) {
+    var forms;
+    (function (forms) {
         // let pd = jueying;
         class PageViewContainer extends React.Component {
             render() {
@@ -1848,12 +1848,12 @@ var jueying;
                 defaultInstance.open(requiredFileName);
             }
         }
-        extentions.TemplateDialog = TemplateDialog;
+        forms.TemplateDialog = TemplateDialog;
         let dialog_element = document.createElement('div');
         dialog_element.className = `modal fade ${jueying.classNames.templateDialog}`;
         document.body.appendChild(dialog_element);
         let defaultInstance;
         ReactDOM.render(React.createElement(TemplateDialog, { ref: (e) => defaultInstance = e || defaultInstance }), dialog_element);
-    })(extentions = jueying.extentions || (jueying.extentions = {}));
+    })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 //# sourceMappingURL=jueying.js.map

@@ -1,5 +1,3 @@
-/// <reference path="../declare.d.ts" />
-
 import { ComponentDefine, guid } from "jueying";
 export let componentDefines: Array<ComponentDefine> = [
     {

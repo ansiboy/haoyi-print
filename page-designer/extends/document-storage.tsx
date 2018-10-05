@@ -1,4 +1,4 @@
-namespace jueying.extentions {
+namespace jueying.forms {
     export interface DocumentStorage {
         list(pageIndex: number, pageSize: number): Promise<{ items: [string, ComponentData][], count: number }>;
         load(name: string): Promise<ComponentData>;

@@ -1,7 +1,6 @@
-namespace jueying.extentions {
+namespace jueying.forms {
 
     type ElementData = jueying.ComponentData;
-    type PageDesigner = jueying.PageDesigner;
 
     export interface DocumentData {
         pageData: ElementData,

@@ -19,7 +19,10 @@ declare namespace jueying {
     }
 }
 declare namespace jueying {
-    class JSONChangedManage<T> {
+    /**
+     * 实现 JSON 对象的 UNDO，REDO 操作
+     */
+    class JSONUndoRedo<T> {
         private undoStack;
         private redonStack;
         private currentData;
@@ -78,7 +81,6 @@ declare namespace jueying {
     class ComponentToolbar extends React.Component<ComponentToolbarProps, ComponentToolbarState> {
         designer: PageDesigner;
         private toolbarElement;
-        componentDidMount(): void;
         private componentDraggable;
         render(): JSX.Element;
     }
@@ -415,11 +417,11 @@ declare namespace jueying {
         componentWrapper: string;
     };
 }
-declare namespace jueying.extentions {
+declare namespace jueying.forms {
     function guid(): string;
     function isEquals(obj1: object, obj2: object): boolean;
 }
-declare namespace jueying.extentions {
+declare namespace jueying.forms {
     type ElementData = jueying.ComponentData;
     interface DocumentData {
         pageData: ElementData;
@@ -427,7 +429,7 @@ declare namespace jueying.extentions {
     }
     let templates: DocumentData[];
 }
-declare namespace jueying.extentions {
+declare namespace jueying.forms {
     interface DesignerFrameworkProps {
         componentDefines: ComponentDefine[];
         title?: string;
@@ -449,11 +451,11 @@ declare namespace jueying.extentions {
         renderButtons(pageDocument: PageDocument, buttonClassName?: string): JSX.Element[];
         readonly storage: DocumentStorage;
         static readonly dialogsElement: HTMLElement;
-        readonly changedManage: JSONChangedManage<ComponentData>;
+        readonly changedManage: JSONUndoRedo<ComponentData>;
         undo(): void;
         redo(): void;
         save(): Promise<void>;
-        createDocuemnt(fileName: string, pageData: ComponentData, isNew: boolean): Promise<void>;
+        loadDocuemnt(fileName: string, pageData: ComponentData, isNew: boolean): Promise<void>;
         fetchTemplates(): Promise<{
             items: DocumentData[];
             count: number;
@@ -470,7 +472,7 @@ declare namespace jueying.extentions {
         render(): JSX.Element;
     }
 }
-declare namespace jueying.extentions {
+declare namespace jueying.forms {
     interface DocumentStorage {
         list(pageIndex: number, pageSize: number): Promise<{
             items: [string, ComponentData][];
@@ -492,9 +494,8 @@ declare namespace jueying.extentions {
         remove(name: string): Promise<any>;
     }
 }
-declare namespace jueying.extentions {
+declare namespace jueying.forms {
     class PageDocument {
-        private static instances;
         private storage;
         private _pageData;
         private originalPageData;
@@ -508,7 +509,7 @@ declare namespace jueying.extentions {
         static new(storage: DocumentStorage, fileName: string, init: ComponentData): PageDocument;
     }
 }
-declare namespace jueying.extentions {
+declare namespace jueying.forms {
     type LoadDocuments = (pageIndex: number, pageSize: number) => Promise<{
         items: DocumentData[];
         count: number;

@@ -1,7 +1,6 @@
 
-namespace jueying.extentions {
+namespace jueying.forms {
     export class PageDocument {
-        private static instances: { [key: string]: PageDocument } = {};
         private storage: DocumentStorage;
         private _pageData: ComponentData;
         private originalPageData: ComponentData;

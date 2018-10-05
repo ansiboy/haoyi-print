@@ -1,6 +1,6 @@
 import { component, Component, TextInput } from "jueying";
 import React = require("react");
-import { setStyleEditor } from "./_component-editors";
+import { setStyleEditor } from "./component-editors";
 import { BaseControlProps } from "./base-component";
 
 export interface PageViewProps extends BaseControlProps<PageView> {

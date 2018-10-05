@@ -1,4 +1,4 @@
-import { component, Component } from "jueying";
+import { component } from "jueying";
 import React = require("react");
 import { BaseControl, BaseControlProps, compoentStyleEditors } from "./base-component";
 

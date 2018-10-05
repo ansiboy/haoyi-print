@@ -1,6 +1,6 @@
 /// <reference path="comon.tsx"/>
 
-namespace jueying.extentions {
+namespace jueying.forms {
     // let pd = jueying;
 
     class PageViewContainer extends React.Component<{}, {}>{

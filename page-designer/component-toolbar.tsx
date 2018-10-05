@@ -12,10 +12,6 @@ namespace jueying {
         designer: PageDesigner;
         private toolbarElement: HTMLElement;
 
-
-        componentDidMount() {
-        }
-
         private componentDraggable(toolItemElement: HTMLElement, componentData: ComponentData) {
             console.assert(toolItemElement != null)
             toolItemElement.draggable = true

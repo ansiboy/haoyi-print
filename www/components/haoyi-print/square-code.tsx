@@ -1,7 +1,6 @@
 import * as React from 'react';
 import 'qrcode'
 import { BaseControlProps, BaseControl } from "./base-component";
-import { ControlSize } from "./controls/controlSize";
 import { component } from 'jueying';
 
 export interface Props extends BaseControlProps<SquareCode> {
@@ -35,8 +34,7 @@ export default class SquareCode extends BaseControl<Props, {}>{
     makeQRCode(element: HTMLElement, img: HTMLImageElement, value: string) {
         console.assert(element != null);
 
-        let width = ControlSize.toPXSize(this.props.size)
-
+        let width = this.props.size
         let qrcode = new QRCode(this.element, { width, height: width, text: "" });
         let q = qrcode as any;
         q._oDrawing._elImage = img; //this.element.querySelector('img');

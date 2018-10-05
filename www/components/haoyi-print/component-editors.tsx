@@ -1,4 +1,4 @@
-import { BaseControlProps } from "./baseControl";
+import { BaseControlProps } from "./base-component";
 import { Component, TextInput, dropdown, PropEditorConstructor } from "jueying";
 
 export function setStyleEditor(componentType: React.ComponentClass | string) {

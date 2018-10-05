@@ -1,4 +1,4 @@
-namespace jueying.extentions {
+namespace jueying.forms {
 
     export function guid() {
         function s4() {

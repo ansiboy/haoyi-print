@@ -1,5 +1,8 @@
 namespace jueying {
-    export class JSONChangedManage<T> {
+    /**
+     * 实现 JSON 对象的 UNDO，REDO 操作
+     */
+    export class JSONUndoRedo<T> {
         private undoStack: Array<jsondiffpatch.Delta>
         private redonStack: Array<jsondiffpatch.Delta>
         private currentData: T
