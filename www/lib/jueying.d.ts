@@ -423,21 +423,25 @@ declare namespace jueying.forms {
 }
 declare namespace jueying.forms {
     type ElementData = jueying.ComponentData;
-    interface DocumentData {
+    /**
+     * 页面文档，定义页面文档的数据结构
+     */
+    interface PageDocument {
         pageData: ElementData;
         name: string;
+        /** 组件文件夹，该文档可用组件的文件夹名称 */
+        componentsDirectory?: string;
     }
-    let templates: DocumentData[];
 }
 declare namespace jueying.forms {
     interface DesignerFrameworkProps {
-        componentDefines: ComponentDefine[];
         title?: string;
-        templates?: DocumentData[];
+        templates: PageDocument[];
     }
     interface DesignerFrameworkState {
-        pageDocuments?: PageDocument[];
-        activeDocument?: PageDocument;
+        pageDocuments?: PageDocumentFile[];
+        activeDocument?: PageDocumentFile;
+        componentDefines: ComponentDefine[];
     }
     class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState> {
         protected pageDesigner: PageDesigner;
@@ -447,17 +451,16 @@ declare namespace jueying.forms {
         private changedManages;
         private editorPanelElement;
         constructor(props: any);
-        static defaultProps: DesignerFrameworkProps;
-        renderButtons(pageDocument: PageDocument, buttonClassName?: string): JSX.Element[];
+        renderButtons(pageDocument: PageDocumentFile, buttonClassName?: string): JSX.Element[];
         readonly storage: DocumentStorage;
         static readonly dialogsElement: HTMLElement;
         readonly changedManage: JSONUndoRedo<ComponentData>;
         undo(): void;
         redo(): void;
         save(): Promise<void>;
-        loadDocuemnt(fileName: string, pageData: ComponentData, isNew: boolean): Promise<void>;
+        loadDocument(fileName: string, template: PageDocument, isNew: boolean): Promise<void>;
         fetchTemplates(): Promise<{
-            items: DocumentData[];
+            items: PageDocument[];
             count: number;
         }>;
         newFile(): Promise<void>;
@@ -495,7 +498,7 @@ declare namespace jueying.forms {
     }
 }
 declare namespace jueying.forms {
-    class PageDocument {
+    class PageDocumentFile {
         private storage;
         private _pageData;
         private originalPageData;
@@ -505,19 +508,19 @@ declare namespace jueying.forms {
         readonly notSaved: boolean;
         readonly fileName: string;
         pageData: ComponentData;
-        static load(storage: DocumentStorage, fileName: string): Promise<PageDocument>;
-        static new(storage: DocumentStorage, fileName: string, init: ComponentData): PageDocument;
+        static load(storage: DocumentStorage, fileName: string): Promise<PageDocumentFile>;
+        static new(storage: DocumentStorage, fileName: string, init: ComponentData): PageDocumentFile;
     }
 }
 declare namespace jueying.forms {
     type LoadDocuments = (pageIndex: number, pageSize: number) => Promise<{
-        items: DocumentData[];
+        items: PageDocument[];
         count: number;
     }>;
     interface TemplateDialogProps {
     }
     interface TemplateDialogState {
-        templates: DocumentData[];
+        templates: PageDocument[];
         templatesCount?: number;
         pageIndex: number;
         selectedTemplateIndex: number;
@@ -541,7 +544,7 @@ declare namespace jueying.forms {
         static show(args: {
             fetch: LoadDocuments;
             requiredFileName?: boolean;
-            callback?: (tmp: DocumentData, fileName?: string) => void;
+            callback?: (tmp: PageDocument, fileName?: string) => void;
         }): void;
     }
 }

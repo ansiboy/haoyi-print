@@ -1222,140 +1222,6 @@ var jueying;
         }
     })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
-var jueying;
-(function (jueying) {
-    var forms;
-    (function (forms) {
-        let style = { width: '100%', height: '100%', minWidth: 'unset' };
-        // let template0: DocumentData = {
-        //     pageData: {
-        //         type: 'PageView',
-        //         props: {
-        //             id: guid(),
-        //             className: "page-view",
-        //             style,
-        //             componentName: "PageView"
-        //         },
-        //         children: [
-        //             {
-        //                 type: "ControlPlaceholder",
-        //                 props: {
-        //                     "emptyText": "页面中部，可以从工具栏拖拉控件到这里",
-        //                     id: guid(),
-        //                     htmlTag: 'section',
-        //                     style: { height: '100%', margin: 0 }
-        //                 } as any,
-        //                 children: [
-        //                     {
-        //                         type: 'TextHeader',
-        //                         props: {
-        //                             id: guid(),
-        //                             text: '商品订购',
-        //                             size: 3,
-        //                         },
-        //                     },
-        //                     {
-        //                         type: 'ValueInput',
-        //                         props: {
-        //                             id: guid(),
-        //                             dataField: '商品名称'
-        //                         }
-        //                     },
-        //                     {
-        //                         type: 'ValueInput',
-        //                         props: {
-        //                             id: guid(),
-        //                             dataField: '商品数量'
-        //                         }
-        //                     },
-        //                     {
-        //                         type: 'ValueInput',
-        //                         props: {
-        //                             id: guid(),
-        //                             dataField: '收件人'
-        //                         }
-        //                     },
-        //                     {
-        //                         type: 'ValueInput',
-        //                         props: {
-        //                             id: guid(),
-        //                             dataField: '联系电话'
-        //                         }
-        //                     },
-        //                     {
-        //                         type: 'ValueInput',
-        //                         props: {
-        //                             id: guid(),
-        //                             dataField: '收件地址'
-        //                         }
-        //                     },
-        //                     {
-        //                         type: 'SubmitButton',
-        //                         props: {
-        //                             id: guid(),
-        //                             text: '提交订单',
-        //                             style: {
-        //                                 width: '100%'
-        //                             }
-        //                         }
-        //                     },
-        //                 ]
-        //             }
-        //         ]
-        //     },
-        //     name: '商品订购'
-        // }
-        let template1 = {
-            pageData: {
-                type: 'PageView',
-                props: {
-                    "id": forms.guid(),
-                    "className": "page-view",
-                    style,
-                    "componentName": "PageView"
-                },
-                "children": [
-                    {
-                        type: "ControlPlaceholder",
-                        props: {
-                            "emptyText": "页面中部，可以从工具栏拖拉控件到这里",
-                            "key": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
-                            "id": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
-                            htmlTag: 'section',
-                            style: { height: '100%', margin: 0 }
-                        }
-                    }
-                ]
-            },
-            name: '空白模板(流式定位)'
-        };
-        let template2 = {
-            pageData: {
-                type: 'PageView',
-                props: {
-                    id: forms.guid(),
-                    className: "page-view",
-                    style,
-                    componentName: "PageView",
-                    layout: 'absolute'
-                }
-                // children: [
-                //     {
-                //         type: "ControlPlaceholder",
-                //         props: {
-                //             id: guid(),
-                //             emptyText: "页面中部，可以从工具栏拖拉控件到这里",
-                //             htmlTag: 'section',
-                //             style: { height: '100%', margin: 0 }
-                //         } as any
-                //     }
-                // ]
-            },
-            name: '空白模板(绝对定位)'
-        };
-        forms.templates = [template1, template2,];
-    })(forms = jueying.forms || (jueying.forms = {}));
-})(jueying || (jueying = {}));
 /// <reference path="templates.tsx"/>
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -1372,7 +1238,7 @@ var jueying;
         class DesignerFramework extends React.Component {
             constructor(props) {
                 super(props);
-                this.state = {};
+                this.state = { componentDefines: [] };
                 this.changedManages = {};
             }
             renderButtons(pageDocument, buttonClassName) {
@@ -1443,20 +1309,35 @@ var jueying;
                     this.setState({ pageDocuments });
                 });
             }
-            loadDocuemnt(fileName, pageData, isNew) {
+            loadDocument(fileName, template, isNew) {
                 return __awaiter(this, void 0, void 0, function* () {
                     console.assert(fileName);
+                    console.assert(template);
+                    let { pageData } = template;
                     let { pageDocuments } = this.state;
                     let documentStorage = this.storage;
-                    let pageDocument = isNew ? forms.PageDocument.new(documentStorage, fileName, pageData) :
-                        yield forms.PageDocument.load(documentStorage, fileName);
+                    let pageDocument = isNew ? forms.PageDocumentFile.new(documentStorage, fileName, pageData) :
+                        yield forms.PageDocumentFile.load(documentStorage, fileName);
                     this.changedManages[fileName] = new jueying.JSONUndoRedo(pageData);
                     pageDocuments = pageDocuments || [];
                     pageDocuments.push(pageDocument);
+                    let componentDefines = this.state.componentDefines;
+                    if (template.componentsDirectory) {
+                        let es = yield chitu.loadjs(`${template.componentsDirectory}/index`);
+                        console.assert(es.default != null);
+                        console.assert(Array.isArray(es.default));
+                        componentDefines = es.default;
+                    }
                     this.setState({
-                        pageDocuments,
+                        pageDocuments, componentDefines,
                         activeDocument: pageDocuments[pageDocuments.length - 1]
                     });
+                    // , (es) => {
+                    //     console.assert(es.default != null)
+                    //     console.assert(Array.isArray(es.default))
+                    //     let componentDefines = es.default as ComponentDefine[]
+                    //     this.setState({ componentDefines })
+                    // }
                 });
             }
             fetchTemplates() {
@@ -1471,7 +1352,7 @@ var jueying;
                         fetch: () => this.fetchTemplates(),
                         requiredFileName: true,
                         callback: (tmp, fileName) => {
-                            this.loadDocuemnt(fileName, tmp.pageData, true);
+                            this.loadDocument(fileName, tmp, true);
                         }
                     });
                 });
@@ -1493,7 +1374,7 @@ var jueying;
                             this.activeDocument(index);
                             return;
                         }
-                        this.loadDocuemnt(fileName, tmp.pageData, false);
+                        this.loadDocument(fileName, tmp, false);
                     }
                 });
             }
@@ -1573,8 +1454,8 @@ var jueying;
                 ReactDOM.render(React.createElement(jueying.EditorPanel, { emptyText: "未选中控件，点击页面控件，可以编辑选中控件的属性", designer: this.pageDesigner, ref: e => this.editorPanel = e || this.editorPanel }), element);
             }
             render() {
-                let { activeDocument, pageDocuments } = this.state;
-                let { componentDefines } = this.props;
+                let { activeDocument, pageDocuments, componentDefines } = this.state;
+                // let { componentDefines } = this.props;
                 pageDocuments = pageDocuments || [];
                 let pageDocument = activeDocument;
                 return React.createElement("div", { className: "designer-form" },
@@ -1604,9 +1485,6 @@ var jueying;
                         } }));
             }
         }
-        DesignerFramework.defaultProps = {
-            componentDefines: [], templates: forms.templates
-        };
         forms.DesignerFramework = DesignerFramework;
     })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
@@ -1671,7 +1549,7 @@ var jueying;
 (function (jueying) {
     var forms;
     (function (forms) {
-        class PageDocument {
+        class PageDocumentFile {
             constructor(fileName, storage, pageData, isNew) {
                 this.storage = storage;
                 this._pageData = pageData;
@@ -1706,15 +1584,15 @@ var jueying;
                     if (data == null) {
                         throw jueying.Errors.fileNotExists(fileName);
                     }
-                    return new PageDocument(fileName, storage, data);
+                    return new PageDocumentFile(fileName, storage, data);
                 });
             }
             static new(storage, fileName, init) {
                 // let storage = new LocalDocumentStorage()
-                return new PageDocument(fileName, storage, init, true);
+                return new PageDocumentFile(fileName, storage, init, true);
             }
         }
-        forms.PageDocument = PageDocument;
+        forms.PageDocumentFile = PageDocumentFile;
     })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 /// <reference path="comon.tsx"/>

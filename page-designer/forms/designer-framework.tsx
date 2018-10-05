@@ -3,13 +3,13 @@
 
 namespace jueying.forms {
     export interface DesignerFrameworkProps {
-        componentDefines: ComponentDefine[],
         title?: string,
-        templates?: DocumentData[]
+        templates: PageDocument[]
     }
     export interface DesignerFrameworkState {
-        pageDocuments?: PageDocument[]
-        activeDocument?: PageDocument
+        pageDocuments?: PageDocumentFile[]
+        activeDocument?: PageDocumentFile
+        componentDefines: ComponentDefine[],
     }
     export class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState>{
         protected pageDesigner: PageDesigner;
@@ -22,14 +22,11 @@ namespace jueying.forms {
         constructor(props) {
             super(props);
 
-            this.state = {};
+            this.state = { componentDefines: [] };
             this.changedManages = {}
         }
-        static defaultProps: DesignerFrameworkProps = {
-            componentDefines: [], templates: templates
-        }
 
-        renderButtons(pageDocument: PageDocument, buttonClassName?: string) {
+        renderButtons(pageDocument: PageDocumentFile, buttonClassName?: string) {
             buttonClassName = buttonClassName || 'btn btn-default'
             let isChanged = pageDocument ? pageDocument.notSaved : false;
             return [
@@ -111,23 +108,41 @@ namespace jueying.forms {
             pageDocument.save();
             this.setState({ pageDocuments });
         }
-        async loadDocuemnt(fileName: string, pageData: ComponentData, isNew: boolean) {
+        async loadDocument(fileName: string, template: PageDocument, isNew: boolean) {
             console.assert(fileName);
+            console.assert(template)
+            let { pageData } = template
             let { pageDocuments } = this.state;
             let documentStorage = this.storage
-            let pageDocument = isNew ? PageDocument.new(documentStorage, fileName, pageData) :
-                await PageDocument.load(documentStorage, fileName);
+            let pageDocument = isNew ? PageDocumentFile.new(documentStorage, fileName, pageData) :
+                await PageDocumentFile.load(documentStorage, fileName);
 
             this.changedManages[fileName] = new JSONUndoRedo(pageData)
             pageDocuments = pageDocuments || [];
             pageDocuments.push(pageDocument);
 
+
+
+            let componentDefines = this.state.componentDefines
+            if (template.componentsDirectory) {
+                let es = await chitu.loadjs(`${template.componentsDirectory}/index`)
+                console.assert(es.default != null)
+                console.assert(Array.isArray(es.default))
+                componentDefines = es.default as ComponentDefine[]
+            }
+
             this.setState({
-                pageDocuments,
+                pageDocuments, componentDefines,
                 activeDocument: pageDocuments[pageDocuments.length - 1]
             })
 
-            
+            // , (es) => {
+            //     console.assert(es.default != null)
+            //     console.assert(Array.isArray(es.default))
+            //     let componentDefines = es.default as ComponentDefine[]
+            //     this.setState({ componentDefines })
+            // }
+
         }
         async fetchTemplates() {
             let templates = this.props.templates
@@ -138,7 +153,7 @@ namespace jueying.forms {
                 fetch: () => this.fetchTemplates(),
                 requiredFileName: true,
                 callback: (tmp, fileName) => {
-                    this.loadDocuemnt(fileName, tmp.pageData, true);
+                    this.loadDocument(fileName, tmp, true);
                 }
             });
         }
@@ -160,7 +175,7 @@ namespace jueying.forms {
                         return;
                     }
 
-                    this.loadDocuemnt(fileName, tmp.pageData, false);
+                    this.loadDocument(fileName, tmp, false);
                 }
             })
         }
@@ -260,8 +275,8 @@ namespace jueying.forms {
             )
         }
         render() {
-            let { activeDocument, pageDocuments } = this.state;
-            let { componentDefines } = this.props;
+            let { activeDocument, pageDocuments, componentDefines } = this.state;
+            // let { componentDefines } = this.props;
 
             pageDocuments = pageDocuments || [];
             let pageDocument = activeDocument

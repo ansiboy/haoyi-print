@@ -79,7 +79,10 @@
         })
 
         define('jueying.extentions', ['jueying'], function () {
-            return jueying.extentions
+            return jueying.forms
+        })
+        define('jueying.forms', ['jueying'], function () {
+            return jueying.forms
         })
     });
 

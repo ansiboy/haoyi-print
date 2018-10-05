@@ -5,7 +5,10 @@ declare module 'jueying' {
 	export = jueying;
 }
 declare module 'jueying.extentions' {
-	export = jueying.extentions
+	export = jueying.forms
+}
+declare module 'jueying.forms' {
+	export = jueying.forms
 }
 
 declare namespace jueying {

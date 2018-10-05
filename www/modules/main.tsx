@@ -1,5 +1,5 @@
-import { DesignerFramework, DocumentStorage, PageDocument } from 'jueying.extentions'
-import { componentDefines, templates } from "components/component-defines";
+import { DesignerFramework, DocumentStorage, PageDocument, PageDocumentFile } from 'jueying.extentions'
+import templates from "templates";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { showPrintDialog, generatePrintHTML } from 'print'
@@ -7,10 +7,11 @@ import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
 // import '../components/placeholder'
 // import '../components/control-placeholder'
-import '../components/list'
-import '../components/label'
-import '../components/htmlTag'
-import '../components/squareCode'
+// import '../components/list'
+// import '../components/label'
+// import '../components/htmlTag'
+// import '../components/squareCode'
+import '../components/haoyi-print/index'
 
 class MainPage extends DesignerFramework {
     private _storage1: DocumentStorage;
@@ -54,7 +55,7 @@ class MainPage extends DesignerFramework {
     windowMin() {
         this.window.minimize()
     }
-    createButtons(pageDocument: PageDocument) {
+    renderButtons(pageDocument: PageDocumentFile) {
         let buttonClassName = 'btn btn-default btn-sm'
         let buttons = super.renderButtons(pageDocument, buttonClassName)
         let { activeDocument, pageDocuments } = this.state
@@ -156,7 +157,7 @@ class MainPage extends DesignerFramework {
 export default function (page: chitu.Page) {
     // jueying.core.loadAllTypes().then(o => {
     ReactDOM.render(<MainPage {...{
-        componentDefines, templates, title: '好易标签打印'
+        componentDefines: [], templates, title: '好易标签打印'
     }} />, page.element)
     // })
 }

@@ -1,9 +1,10 @@
 import { Service } from "../service";
 import { ComponentData } from "jueying";
+import { DocumentStorage } from "jueying.forms";
 
 let service = new Service()
 
-export class ServiceDocumentStorage implements jueying.extentions.DocumentStorage {
+export class ServiceDocumentStorage implements DocumentStorage {
     list(pageIndex: number, pageSize: number): Promise<{ items: [string, ComponentData][]; count: number; }> {
 
         return service.templateList().then(r => {

@@ -2,12 +2,17 @@ namespace jueying.forms {
 
     type ElementData = jueying.ComponentData;
 
-    export interface DocumentData {
+    /**
+     * 页面文档，定义页面文档的数据结构
+     */
+    export interface PageDocument {
         pageData: ElementData,
         name: string,
+        /** 组件文件夹，该文档可用组件的文件夹名称 */
+        componentsDirectory?: string,
     }
 
-    let style = { width: '100%', height: '100%', minWidth: 'unset' };
+    // let style = { width: '100%', height: '100%', minWidth: 'unset' };
 
     // let template0: DocumentData = {
     //     pageData: {
@@ -88,55 +93,55 @@ namespace jueying.forms {
     //     name: '商品订购'
     // }
 
-    let template1: DocumentData = {
-        pageData: {
-            type: 'PageView',
-            props: {
-                "id": guid(),
-                "className": "page-view",
-                style,
-                "componentName": "PageView"
-            },
-            "children": [
-                {
-                    type: "ControlPlaceholder",
-                    props: {
-                        "emptyText": "页面中部，可以从工具栏拖拉控件到这里",
-                        "key": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
-                        "id": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
-                        htmlTag: 'section',
-                        style: { height: '100%', margin: 0 }
-                    } as any
-                }
-            ]
-        },
-        name: '空白模板(流式定位)'
-    }
+    // let template1: DocumentData = {
+    //     pageData: {
+    //         type: 'PageView',
+    //         props: {
+    //             "id": guid(),
+    //             "className": "page-view",
+    //             style,
+    //             "componentName": "PageView"
+    //         },
+    //         "children": [
+    //             {
+    //                 type: "ControlPlaceholder",
+    //                 props: {
+    //                     "emptyText": "页面中部，可以从工具栏拖拉控件到这里",
+    //                     "key": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
+    //                     "id": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
+    //                     htmlTag: 'section',
+    //                     style: { height: '100%', margin: 0 }
+    //                 } as any
+    //             }
+    //         ]
+    //     },
+    //     name: '空白模板(流式定位)'
+    // }
 
-    let template2: DocumentData = {
-        pageData: {
-            type: 'PageView',
-            props: {
-                id: guid(),
-                className: "page-view",
-                style,
-                componentName: "PageView",
-                layout: 'absolute'
-            } as any
-            // children: [
-            //     {
-            //         type: "ControlPlaceholder",
-            //         props: {
-            //             id: guid(),
-            //             emptyText: "页面中部，可以从工具栏拖拉控件到这里",
-            //             htmlTag: 'section',
-            //             style: { height: '100%', margin: 0 }
-            //         } as any
-            //     }
-            // ]
-        },
-        name: '空白模板(绝对定位)'
-    }
+    // let template2: DocumentData = {
+    //     pageData: {
+    //         type: 'PageView',
+    //         props: {
+    //             id: guid(),
+    //             className: "page-view",
+    //             style,
+    //             componentName: "PageView",
+    //             layout: 'absolute'
+    //         } as any
+    //         // children: [
+    //         //     {
+    //         //         type: "ControlPlaceholder",
+    //         //         props: {
+    //         //             id: guid(),
+    //         //             emptyText: "页面中部，可以从工具栏拖拉控件到这里",
+    //         //             htmlTag: 'section',
+    //         //             style: { height: '100%', margin: 0 }
+    //         //         } as any
+    //         //     }
+    //         // ]
+    //     },
+    //     name: '空白模板(绝对定位)'
+    // }
 
-    export let templates = [template1, template2,];
+    // export let templates = [template1, template2,];
 }

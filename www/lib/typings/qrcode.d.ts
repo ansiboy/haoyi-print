@@ -8,8 +8,8 @@ declare class QRCode {
     constructor(element: HTMLElement, text: string);
     constructor(element: HTMLElement, options?: {
         text: string,
-        width: number | string,
-        height: number | string,
+        width?: number | string,
+        height?: number | string,
         typeNumber?: number,
         colorDark?: string,
         colorLight?: string,

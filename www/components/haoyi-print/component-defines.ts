@@ -1,4 +1,5 @@
 import { ComponentDefine, guid } from "jueying";
+import { PageDocument } from "jueying.forms";
 export let componentDefines: Array<ComponentDefine> = [
     {
         componentData: {
@@ -84,7 +85,7 @@ export let componentDefines: Array<ComponentDefine> = [
 
 let style: React.CSSProperties = { width: '100%', height: '100%', minWidth: 'unset', position: 'absolute' };
 
-let template1: jueying.extentions.DocumentData = {
+let template1: PageDocument = {
     pageData: {
         type: 'PageView',
         props: {
@@ -108,13 +109,16 @@ let template1: jueying.extentions.DocumentData = {
     name: '空白模板(流式定位)'
 }
 
-let template2: jueying.extentions.DocumentData = {
+let template2: PageDocument = {
     pageData: {
         type: 'PageView',
         props: {
             id: guid(),
             className: "page-view",
-            style,
+            style: {
+                width: '100%', height: '100%', minWidth: 'unset',
+                position: 'absolute'
+            },
         } as any
     },
     name: '空白模板(绝对定位)'

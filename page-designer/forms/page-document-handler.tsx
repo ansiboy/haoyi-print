@@ -1,6 +1,6 @@
 
 namespace jueying.forms {
-    export class PageDocument {
+    export class PageDocumentFile {
         private storage: DocumentStorage;
         private _pageData: ComponentData;
         private originalPageData: ComponentData;
@@ -47,12 +47,12 @@ namespace jueying.forms {
                 throw Errors.fileNotExists(fileName);
             }
 
-            return new PageDocument(fileName, storage, data);
+            return new PageDocumentFile(fileName, storage, data);
         }
 
         static new(storage: DocumentStorage, fileName: string, init: ComponentData) {
             // let storage = new LocalDocumentStorage()
-            return new PageDocument(fileName, storage, init, true);
+            return new PageDocumentFile(fileName, storage, init, true);
         }
 
     }

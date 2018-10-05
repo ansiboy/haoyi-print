@@ -22,13 +22,13 @@ namespace jueying.forms {
     }
 
     const PAGE_SIZE = 3;
-    type LoadDocuments = (pageIndex: number, pageSize: number) => Promise<{ items: DocumentData[], count: number }>;
+    type LoadDocuments = (pageIndex: number, pageSize: number) => Promise<{ items: PageDocument[], count: number }>;
 
     export interface TemplateDialogProps {
     }
 
     export interface TemplateDialogState {
-        templates: DocumentData[],
+        templates: PageDocument[],
         templatesCount?: number,
         pageIndex: number,
         selectedTemplateIndex: number,
@@ -38,7 +38,7 @@ namespace jueying.forms {
 
     export class TemplateDialog extends React.Component<TemplateDialogProps, TemplateDialogState> {
         private fetchTemplates: LoadDocuments;
-        private callback: (template: DocumentData, fileName: string) => void;
+        private callback: (template: PageDocument, fileName: string) => void;
         private currentPageIndex: number;
         private validator: dilu.FormValidator;
 
@@ -178,7 +178,7 @@ namespace jueying.forms {
         static show(args: {
             fetch: LoadDocuments,
             requiredFileName?: boolean,
-            callback?: (tmp: DocumentData, fileName?: string) => void
+            callback?: (tmp: PageDocument, fileName?: string) => void
         }) {
 
             let { fetch, callback, requiredFileName } = args;
