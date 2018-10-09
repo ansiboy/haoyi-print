@@ -1,12 +1,7 @@
-import * as React from "react";
-import * as ReactDOM from "react-dom";
-import { Service } from "../../service";
-import { ServiceDocumentStorage } from "../../designer/serviceDocumentStorage";
-
-var printDialogElement: HTMLElement = document.createElement('div')
-printDialogElement.className = 'modal fade'
-document.body.appendChild(printDialogElement)
-
+import React = require("react");
+import { Service } from "../../../service";
+import ReactDOM = require("react-dom");
+import { DocumentStorage, PageDocument } from "jueying.forms";
 
 interface PrintDialogProps {
     templateName: string,
@@ -18,7 +13,7 @@ interface PrintDialogState {
     templateDataText?: string,
 }
 
-class PrintDialog extends React.Component<PrintDialogProps, PrintDialogState>{
+export class PrintDialog extends React.Component<PrintDialogProps, PrintDialogState>{
     constructor(props: PrintDialogProps) {
         super(props)
         this.state = {
@@ -87,17 +82,14 @@ class PrintDialog extends React.Component<PrintDialogProps, PrintDialogState>{
     }
 }
 
+var printDialogElement: HTMLElement = document.createElement('div')
+printDialogElement.className = 'modal fade'
+document.body.appendChild(printDialogElement)
+
 export function showPrintDialog(templateName: string, templateData?: object) {
     ReactDOM.render(<PrintDialog {...{ templateName, templateData }} />, printDialogElement)
 
     ui.showDialog(printDialogElement)
-}
-
-export async function print(deviceName: string, name: string, data?: object) {
-    let printHTML = await generatePrintHTML(name, data);
-
-    let service = new Service()
-    service.print(deviceName, printHTML)
 }
 
 async function createTemplateElement(templateName: string, data?: object): Promise<React.ReactElement<any>> {
@@ -114,6 +106,39 @@ async function createTemplateElement(templateName: string, data?: object): Promi
 
     return reactElement
 }
+
+let service = new Service()
+class ServiceDocumentStorage implements DocumentStorage {
+    list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[]; count: number; }> {
+        return service.templateList().then(r => {
+            // let items = r.map(o => {
+            //     let b: PageDocument = [o.name, o.data]
+            //     return b
+            // })
+            return {
+                items: r,
+                count: r.length
+            }
+        })
+    }
+    load(name: string): Promise<PageDocument | null> {
+        return service.templateGet(name)
+    }
+    save(name: string, pageData: PageDocument): Promise<any> {
+        return service.templateSave(name, pageData)
+    }
+    remove(name: string): Promise<any> {
+        throw new Error("Method not implemented.");
+    }
+}
+
+export async function print(deviceName: string, name: string, data?: object) {
+    let printHTML = await generatePrintHTML(name, data);
+
+    let service = new Service()
+    service.print(deviceName, printHTML)
+}
+
 
 export async function generatePrintHTML(templateName: string, data?: object) {
 
@@ -161,4 +186,3 @@ export async function generatePrintHTML(templateName: string, data?: object) {
         });
     })
 }
-

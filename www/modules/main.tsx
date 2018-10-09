@@ -2,16 +2,8 @@ import { DesignerFramework, DocumentStorage, PageDocumentFile } from 'jueying.ex
 import templates from "templates";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import { showPrintDialog, generatePrintHTML } from '../components/haoyi-print/print'
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
-// import '../components/placeholder'
-// import '../components/control-placeholder'
-// import '../components/list'
-// import '../components/label'
-// import '../components/htmlTag'
-// import '../components/squareCode'
-import '../components/haoyi-print/index'
 
 class MainPage extends DesignerFramework {
     private _storage1: DocumentStorage;
@@ -30,15 +22,15 @@ class MainPage extends DesignerFramework {
         let win = remote.getCurrentWindow();
         return win
     }
-    print() {
-        let { activeDocument } = this.state
-        console.assert(activeDocument != null)
+    // print() {
+    //     let { activeDocument } = this.state
+    //     console.assert(activeDocument != null)
 
-        let doc = activeDocument
-        let name = doc.fileName
+    //     let doc = activeDocument
+    //     let name = doc.fileName
 
-        showPrintDialog(name)
-    }
+    //     showPrintDialog(name)
+    // }
     exit() {
         const { remote } = nodeRequire('electron')
         remote.app.exit();
@@ -151,10 +143,5 @@ export default function (page: chitu.Page) {
     // })
 }
 
-const { ipcRenderer } = nodeRequire('electron')
-ipcRenderer.on('generate-template-html', async function (event: Electron.Event, args: { templateName: string, templateData: object }) {
-    let html = await generatePrintHTML(args.templateName, args.templateData)
-    ipcRenderer.send('generate-template-html', html)
-})
 
 

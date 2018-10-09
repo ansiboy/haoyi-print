@@ -1,7 +1,13 @@
+import "./image"
+import "./label"
+import "./list"
+import "./page-view"
+import "./square-code"
+
 import { PageDocumentFile, Addon } from "jueying.forms";
 import React = require("react");
-import { showPrintDialog } from "./print";
 import { showSettingsDialog } from "../../controls/settingsDialog";
+import { showPrintDialog, generatePrintHTML } from "./dialogs/print-dialog";
 
 class PrintAddon implements Addon {
     components = [
@@ -138,16 +144,13 @@ class PrintAddon implements Addon {
     }
 }
 
-function createPrintButton() {
-    return {
-        text: '打印',
-        icon: 'icon-print',
-        disabled: true,
-        onClick() {
+const { ipcRenderer } = nodeRequire('electron')
+ipcRenderer.on('generate-template-html', async function (event: Electron.Event, args: { templateName: string, templateData: object }) {
+    let html = await generatePrintHTML(args.templateName, args.templateData)
+    ipcRenderer.send('generate-template-html', html)
+})
 
-        }
-    }
-}
+
 
 let addon = new PrintAddon()
 export default addon

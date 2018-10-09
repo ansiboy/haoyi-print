@@ -1,7 +1,7 @@
-import { BaseControlProps, PageViewProps } from "./base-component";
+import { BaseControlProps, PageViewProps } from "../base-component";
 import { Component, TextInput, dropdown, PropEditorConstructor, PropEditor } from "jueying";
 import React = require("react");
-import { Service } from "../../service";
+import { Service } from "../../../service";
 
 class PrinterDropdown extends PropEditor<{ value: string, printerNames?: string[] }, string> {
     constructor(props) {
@@ -62,17 +62,21 @@ export function setStyleEditor(componentType: React.ComponentClass | string) {
     setStylePropEditor(componentType, 'appearance', 'background', TextInput)
     setStylePropEditor(componentType, 'appearance', 'border', TextInput)
     setStylePropEditor(componentType, 'appearance', 'borderBottom', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'font', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'color', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'cursor', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'textAlign', dropdown(['', 'left', 'center', 'right']))
-
+    
     let fontSizes = {
         '8pt': '8pt', '9pt': '9pt', '10pt': '10pt',
         '11pt': '11pt', '12pt': '12pt', '13pt': '13pt',
         '14pt': '14pt'
     }
+    setStylePropEditor(componentType, 'appearance', 'font', TextInput)
     setStylePropEditor(componentType, 'appearance', "fontSize", dropdown(fontSizes, '请选择字体大小'))
+    setStylePropEditor(componentType, 'appearance', 'fontWeight', TextInput)
+
+    setStylePropEditor(componentType, 'appearance', 'color', TextInput)
+    setStylePropEditor(componentType, 'appearance', 'cursor', TextInput)
+    setStylePropEditor(componentType, 'appearance', 'textAlign', dropdown(['', 'left', 'center', 'right']))
+
+
 }
 
 function setStylePropEditor(componentType: React.ComponentClass | string, group: string, name: keyof React.CSSProperties, editorType: PropEditorConstructor) {

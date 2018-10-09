@@ -1,8 +1,7 @@
 import { ComponentProps, Component, TextInput } from "jueying";
 import * as React from 'react';
-import { ControlSize } from "components/controls/controlSize";
 import { PageView } from "./page-view";
-import { setStyleEditor } from "./component-editors";
+import { setStyleEditor } from "../editors/component-editors";
 export { setStyleEditor }
 
 export interface BaseControlProps<T> extends ComponentProps<T> {
@@ -65,8 +64,3 @@ export abstract class BaseControl<P extends BaseControlProps<any>, S> extends Re
         return this.props.name
     }
 }
-
-export let controlSize = function () {
-    return ControlSize
-}
-
