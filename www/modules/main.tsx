@@ -2,22 +2,15 @@ import { DesignerFramework, DocumentStorage, PageDocumentFile } from 'jueying.ex
 import templates from "templates";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import { showPrintDialog, generatePrintHTML } from '../components/haoyi-print/print'
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
-// import '../components/placeholder'
-// import '../components/control-placeholder'
-// import '../components/list'
-// import '../components/label'
-// import '../components/htmlTag'
-// import '../components/squareCode'
-import '../components/haoyi-print/index'
+import { ComponentData } from 'jueying';
+import '../addons/haoyi-print/index'
 
 class MainPage extends DesignerFramework {
     private _storage1: DocumentStorage;
     constructor(props) {
         super(props)
-
     }
     get storage() {
         if (this._storage1 == null)
@@ -29,15 +22,6 @@ class MainPage extends DesignerFramework {
         const { remote } = nodeRequire('electron');
         let win = remote.getCurrentWindow();
         return win
-    }
-    print() {
-        let { activeDocument } = this.state
-        console.assert(activeDocument != null)
-
-        let doc = activeDocument
-        let name = doc.fileName
-
-        showPrintDialog(name)
     }
     exit() {
         const { remote } = nodeRequire('electron')
@@ -123,6 +107,23 @@ class MainPage extends DesignerFramework {
             y = event.screenY
         }
     }
+
+    /** 用于显示绑定的字段 */
+    translatePageData(pageData: ComponentData) {
+        let stack = new Array<ComponentData>()
+        stack.push(pageData)
+        while (stack.length > 0) {
+            let item = stack.pop()
+            if (item.props.field) {
+                item.props.text = `[${item.props.field}]`
+            }
+            let children = item.children || []
+            children.forEach(child => {
+                stack.push(child)
+            })
+        }
+    }
+
     componentDidMount() {
         if (super.componentDidMount)
             super.componentDidMount()
@@ -131,30 +132,20 @@ class MainPage extends DesignerFramework {
         if (toolbarElement) {
             this.enableMove(toolbarElement, this.window)
         }
+    }
 
-        // ControlPropEditors.setControlPropEditor<PageViewProps, "style", "width">(PageView, "宽", controlSize(), "style", "width")
+    render() {
+        return super.render()
     }
 }
-
-// components.forEach(o => {
-//     ControlFactory.register(o.name, o.controlPath);
-//     EditorFactory.register(o.name, o.editorPath);
-// })
 
 
 
 export default function (page: chitu.Page) {
-    // jueying.core.loadAllTypes().then(o => {
     ReactDOM.render(<MainPage {...{
         componentDefines: [], templates, title: '好易标签打印'
     }} />, page.element)
-    // })
 }
 
-const { ipcRenderer } = nodeRequire('electron')
-ipcRenderer.on('generate-template-html', async function (event: Electron.Event, args: { templateName: string, templateData: object }) {
-    let html = await generatePrintHTML(args.templateName, args.templateData)
-    ipcRenderer.send('generate-template-html', html)
-})
 
 

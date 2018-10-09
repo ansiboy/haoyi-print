@@ -400,14 +400,17 @@ namespace jueying {
                 (props as any).readOnly = true;
             }
 
-            let allowWrapper: boolean = true
-            let tagName: keyof HTMLElementTagNameMap = type as keyof HTMLElementTagNameMap
-            if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
-                tagName == 'thead' || tagName == 'tbody' || tagName == 'tfoot' || tagName == 'th' || tagName == 'tr' || tagName == 'td') {
-                allowWrapper = false
-            }
+            let shouldWrapper: boolean = true
+            // let tagName: keyof HTMLElementTagNameMap = type as keyof HTMLElementTagNameMap
+            // if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
+            //     tagName == 'thead' || tagName == 'tbody' || tagName == 'tfoot' || tagName == 'th' || tagName == 'tr' || tagName == 'td' ||
+            //     tagName == 'li') {
+            //     allowWrapper = false
+            // }
+            let attr = Component.getAttribute(type)
+            shouldWrapper = attr.resize || attr.movable || typeof type != 'string'
 
-            if (allowWrapper) {
+            if (shouldWrapper) {
 
                 let style = Object.assign({}, props.style || {})
                 delete props.style.left
@@ -450,10 +453,6 @@ namespace jueying {
             this.setState({ pageData: props.pageData });
         }
 
-        // componentDidUpdate() {
-        //     this.componentUpdated.fire(this)
-        // }
-
         render() {
             let designer = this;
             let { pageData } = this.state
@@ -466,7 +465,7 @@ namespace jueying {
                 onKeyDown={(e) => this.onKeyDown(e)}>
                 <DesignerContext.Provider value={{ designer }}>
                     {(() => {
-                        let pageView = pageData ? core.createElement(pageData, this.createDesignTimeElement.bind(this)) : null
+                        let pageView = pageData ? Component.createElement(pageData, this.createDesignTimeElement.bind(this)) : null
                         return pageView
                     })()}
                 </DesignerContext.Provider>

@@ -20,7 +20,6 @@ namespace jueying.forms {
         private changedManages: { [name: string]: JSONUndoRedo<ComponentData> }
         private editorPanelElement: HTMLElement;
 
-
         constructor(props) {
             super(props);
 
@@ -129,12 +128,11 @@ namespace jueying.forms {
             this.changedManages[fileName] = new JSONUndoRedo(pageData)
             pageDocuments = pageDocuments || [];
             pageDocuments.push(pageDocument);
-            // let components = this.state.componentDefines
             let addon: Addon
             if (template.addonPath) {
                 try {
-                    let es = await chitu.loadjs(`${template.addonPath}/addon`)
-                    console.log(`load addon ${template.addonPath}/addon success`)
+                    let es = await chitu.loadjs(`${template.addonPath}/index`)
+                    console.log(`load addon ${template.addonPath}/index success`)
                     console.assert(es.default != null)
                     addon = es.default
                     // components = addon.components || []
@@ -160,7 +158,7 @@ namespace jueying.forms {
             TemplateDialog.show({
                 fetch: () => this.fetchTemplates(),
                 requiredFileName: true,
-                callback: (tmp, fileName) => {
+                callback: (tmp) => {
                     this.loadDocument(tmp, true);
                 }
             });
@@ -207,7 +205,7 @@ namespace jueying.forms {
             super.setState(state);
         }
         private closeDocument(index: number) {
-            let { pageDocuments, activeDocument } = this.state;
+            let { pageDocuments } = this.state;
             console.assert(pageDocuments != null);
 
             let doc = pageDocuments[index];

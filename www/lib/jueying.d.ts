@@ -123,12 +123,31 @@ declare namespace jueying {
         resize?: boolean;
     }
 }
+/*******************************************************************************
+ * Copyright (C) maishu All rights reserved.
+ *
+ * 作者: 寒烟
+ * 日期: 2018/5/30
+ *
+ * 个人博客：   http://www.cnblogs.com/ansiboy/
+ * GITHUB:     http://github.com/ansiboy
+ * QQ 讨论组：  119038574
+ *
+ * component.tsx 文件用于运行时加载，所以要控制此文件的大小，用于在运行时创建页面
+ *
+ ********************************************************************************/
 declare namespace jueying {
+    type ReactFactory = (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element;
+    type DesignerContextValue = {
+        designer: PageDesigner | null;
+    };
+    const DesignerContext: React.Context<DesignerContextValue>;
     interface PropEditorInfo {
         propNames: string[];
         editorType: PropEditorConstructor;
         group: string;
     }
+    function component<T extends React.Component>(args?: ComponentAttribute): (constructor: new (...args: any[]) => T) => new (...args: any[]) => T;
     class Component {
         private static defaultComponentAttribute;
         private static componentAttributes;
@@ -142,7 +161,7 @@ declare namespace jueying {
          * 获取组件特性
          * @param typename 组件类型名称
          */
-        static getAttribute(typename: string): ComponentAttribute;
+        static getAttribute(type: string | React.ComponentClass<any>): ComponentAttribute;
         private static controlPropEditors;
         static getPropEditors(controlClassName: string): PropEditorInfo[];
         static getPropEditor<T, K extends keyof T, K1 extends keyof T[K]>(controlClassName: string, propName: K, propName1: K1): PropEditorInfo;
@@ -150,48 +169,14 @@ declare namespace jueying {
         /** 通过属性数组获取属性的编辑器 */
         static getPropEditorByArray(controlClassName: string, propNames: string[]): PropEditorInfo;
         static setPropEditor(componentType: React.ComponentClass | string, propName: string, editorType: PropEditorConstructor, group?: string): void;
+        /**
+         * 将持久化的元素数据转换为 ReactElement
+         * @param args 元素数据
+         */
+        static createElement(args: ComponentData, h?: ReactFactory): React.ReactElement<any> | null;
+        private static componentTypes;
+        static register(componentName: string, componentType: React.ComponentClass<any>): void;
     }
-}
-/*******************************************************************************
- * Copyright (C) maishu All rights reserved.
- *
- * 作者: 寒烟
- * 日期: 2018/5/30
- *
- * 个人博客：   http://www.cnblogs.com/ansiboy/
- * GITHUB:     http://github.com/ansiboy
- * QQ 讨论组：  119038574
- *
- * core 文件用于运行时加载，所以要控制此文件的大小，用于在运行时创建页面
- *
- ********************************************************************************/
-declare namespace jueying {
-    type DesignerContextValue = {
-        designer: PageDesigner | null;
-    };
-    const DesignerContext: React.Context<DesignerContextValue>;
-    interface DesigntimeComponent {
-        /** 运行时控件的类型名称 */
-        typename: string;
-        designer: PageDesigner;
-    }
-    function component<T extends React.Component>(args?: ComponentAttribute): (constructor: new (...args: any[]) => T) => new (...args: any[]) => T;
-    let core: {
-        createElement: typeof createElement;
-        componentTypes: {
-            [key: string]: string | React.ComponentClass<any, any>;
-        };
-        register: typeof register;
-        loadAllTypes: typeof loadAllTypes;
-    };
-    type ReactFactory = (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element;
-    /**
-     * 将持久化的元素数据转换为 ReactElement
-     * @param args 元素数据
-     */
-    function createElement(args: ComponentData, h?: ReactFactory): React.ReactElement<any> | null;
-    function register(componentName: string, componentType: React.ComponentClass<any>): void;
-    function loadAllTypes(): Promise<any[]>;
 }
 declare namespace jueying {
     interface EditorPanelState {
@@ -426,6 +411,7 @@ declare namespace jueying {
         component: string;
         componentWrapper: string;
     };
+    function appendClassName(sourceClassName: string, addonClassName: any): string;
 }
 declare namespace jueying.forms {
     interface Addon {

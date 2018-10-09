@@ -121,7 +121,7 @@ namespace jueying.forms {
                                                 onClick={() => this.selectTemplate(i)}
                                                 className={i == selectedTemplateIndex ? classNames.templateSelected : null}>
                                                 <PageViewContainer>
-                                                    {core.createElement(o.pageData)}
+                                                    {Component.createElement(o.pageData)}
                                                     <div className="name">
                                                         <span>{o.name}</span>
                                                     </div>

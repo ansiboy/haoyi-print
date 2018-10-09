@@ -15,7 +15,7 @@ namespace jueying {
         nameHeight: 40,
         fontSize: 22
     }
-    
+
     let element = document.createElement('style');
     element.type = 'text/css';
     element.innerHTML = `
@@ -64,5 +64,14 @@ namespace jueying {
     `;
     document.head.appendChild(element);
 
-   
+    export function appendClassName(sourceClassName: string, addonClassName) {
+        console.assert(sourceClassName != null)
+        console.assert(addonClassName)
+
+        if (sourceClassName.indexOf(addonClassName) >= 0)
+            return sourceClassName
+
+        return `${sourceClassName} ${addonClassName}`
+    }
+
 }

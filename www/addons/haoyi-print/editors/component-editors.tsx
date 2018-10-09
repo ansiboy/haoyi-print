@@ -1,7 +1,7 @@
-import { BaseControlProps, PageViewProps } from "./base-component";
 import { Component, TextInput, dropdown, PropEditorConstructor, PropEditor } from "jueying";
 import React = require("react");
-import { Service } from "../../service";
+import { Service } from "../../../service";
+import { PageViewProps } from "../components/page-view";
 
 class PrinterDropdown extends PropEditor<{ value: string, printerNames?: string[] }, string> {
     constructor(props) {
@@ -29,7 +29,8 @@ class PrinterDropdown extends PropEditor<{ value: string, printerNames?: string[
 
 export function setStyleEditor(componentType: React.ComponentClass | string) {
 
-    Component.setPropEditor(componentType, 'data-field', TextInput)
+    let field: keyof jueying.ComponentProps<any> = 'field'
+    Component.setPropEditor(componentType, field, TextInput, 'design')
     Component.setPropEditor(componentType, 'text', TextInput, 'appearance')
     Component.setPropEditor(componentType, 'className', TextInput, 'behavior')
     Component.setPropEditor(componentType, 'colspan', TextInput, 'behavior')
@@ -37,7 +38,6 @@ export function setStyleEditor(componentType: React.ComponentClass | string) {
     let printerProp: keyof PageViewProps = 'printer'
     Component.setPropEditor(componentType, printerProp, PrinterDropdown, 'behavior')
 
-    type T = BaseControlProps<any>
     let func = Component.setPropEditor;
     func(componentType, 'style.width', TextInput, 'layout')
     func(componentType, 'style.height', TextInput, 'layout')
@@ -62,17 +62,24 @@ export function setStyleEditor(componentType: React.ComponentClass | string) {
     setStylePropEditor(componentType, 'appearance', 'background', TextInput)
     setStylePropEditor(componentType, 'appearance', 'border', TextInput)
     setStylePropEditor(componentType, 'appearance', 'borderBottom', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'font', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'color', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'cursor', TextInput)
-    setStylePropEditor(componentType, 'appearance', 'textAlign', dropdown(['', 'left', 'center', 'right']))
+    setStylePropEditor(componentType, 'appearance', 'borderLeft', TextInput)
+    setStylePropEditor(componentType, 'appearance', 'borderRight', TextInput)
+    setStylePropEditor(componentType, 'appearance', 'borderTop', TextInput)
 
     let fontSizes = {
         '8pt': '8pt', '9pt': '9pt', '10pt': '10pt',
         '11pt': '11pt', '12pt': '12pt', '13pt': '13pt',
         '14pt': '14pt'
     }
+    setStylePropEditor(componentType, 'appearance', 'font', TextInput)
     setStylePropEditor(componentType, 'appearance', "fontSize", dropdown(fontSizes, '请选择字体大小'))
+    setStylePropEditor(componentType, 'appearance', 'fontWeight', TextInput)
+
+    setStylePropEditor(componentType, 'appearance', 'color', TextInput)
+    setStylePropEditor(componentType, 'appearance', 'cursor', TextInput)
+    setStylePropEditor(componentType, 'appearance', 'textAlign', dropdown(['', 'left', 'center', 'right']))
+
+
 }
 
 function setStylePropEditor(componentType: React.ComponentClass | string, group: string, name: keyof React.CSSProperties, editorType: PropEditorConstructor) {
@@ -87,7 +94,7 @@ jueying.strings = {
     data: '数据'
 }
 
-let htmlTypes = ['table', 'thead', 'th', 'tbody', 'tfoot', 'tr', 'td']
+let htmlTypes = ['table', 'thead', 'th', 'tbody', 'tfoot', 'tr', 'td', 'ul', 'li', 'div']
 htmlTypes.forEach(o => {
     setStyleEditor(o)
 })

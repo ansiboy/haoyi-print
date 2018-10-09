@@ -467,9 +467,13 @@ var jueying;
             let style = this.props.style || {};
             let { top, left, position, width, height, display, visibility } = style;
             let props = this.props;
+            let className = jueying.appendClassName(props.className || '', jueying.classNames.component);
+            if (props.selected) {
+                className = jueying.appendClassName(className, jueying.classNames.componentSelected);
+            }
             let wrapperProps = {
                 id: props.id,
-                className: props.selected ? `${jueying.classNames.componentSelected} ${jueying.classNames.component}` : jueying.classNames.component,
+                className: className,
                 style: { top, left, position, width, height, display, visibility },
                 ref: (e) => this.element = e || this.element
             };
@@ -495,8 +499,32 @@ var jueying;
     ComponentWrapper.isDrag = false;
     jueying.ComponentWrapper = ComponentWrapper;
 })(jueying || (jueying = {}));
+/*******************************************************************************
+ * Copyright (C) maishu All rights reserved.
+ *
+ * 作者: 寒烟
+ * 日期: 2018/5/30
+ *
+ * 个人博客：   http://www.cnblogs.com/ansiboy/
+ * GITHUB:     http://github.com/ansiboy
+ * QQ 讨论组：  119038574
+ *
+ * component.tsx 文件用于运行时加载，所以要控制此文件的大小，用于在运行时创建页面
+ *
+ ********************************************************************************/
 var jueying;
 (function (jueying) {
+    jueying.DesignerContext = React.createContext({ designer: null });
+    function component(args) {
+        return function (constructor) {
+            if (jueying.PageDesigner) {
+                Component.setAttribute(constructor.name, args);
+            }
+            Component.register(constructor.name, constructor);
+            return constructor;
+        };
+    }
+    jueying.component = component;
     class Component {
         /**
          * 设置组件特性
@@ -510,7 +538,9 @@ var jueying;
          * 获取组件特性
          * @param typename 组件类型名称
          */
-        static getAttribute(typename) {
+        // static getAttribute(typename: string)
+        static getAttribute(type) {
+            let typename = typeof type == 'string' ? type : type.name;
             let attr = Component.componentAttributes[typename];
             return Object.assign({}, Component.defaultComponentAttribute, attr || {});
         }
@@ -542,9 +572,46 @@ var jueying;
             }
             classProps.push({ propNames: propNames, editorType, group });
         }
+        /**
+         * 将持久化的元素数据转换为 ReactElement
+         * @param args 元素数据
+         */
+        static createElement(args, h) {
+            h = h || React.createElement;
+            try {
+                let type = args.type;
+                let componentName = args.type;
+                let controlType = Component.componentTypes[componentName];
+                if (controlType) {
+                    type = controlType;
+                }
+                let children = args.children ? args.children.map(o => Component.createElement(o, h)) : [];
+                console.assert(args.props);
+                let props = JSON.parse(JSON.stringify(args.props));
+                let result;
+                result = h(type, props, ...children);
+                return result;
+            }
+            catch (e) {
+                console.error(e);
+                return null;
+            }
+        }
+        static register(componentName, componentType) {
+            if (componentType == null && typeof componentName == 'function') {
+                componentType = componentName;
+                componentName = componentType.name;
+                componentType['componentName'] = componentName;
+            }
+            if (!componentName)
+                throw jueying.Errors.argumentNull('componentName');
+            if (!componentType)
+                throw jueying.Errors.argumentNull('componentType');
+            Component.componentTypes[componentName] = componentType;
+        }
     }
     Component.defaultComponentAttribute = {
-        container: false, movable: true, showHandler: false
+        container: false, movable: false, showHandler: false, resize: false
     };
     Component.componentAttributes = {
         'table': { container: false, movable: true, showHandler: true, resize: true },
@@ -553,97 +620,14 @@ var jueying;
         'tfoot': { container: false, movable: false },
         'tr': { container: false, movable: false },
         'td': { container: true, movable: false },
+        'ul': { container: false, movable: true, showHandler: true, resize: false },
+        'li': { container: true, movable: false, },
         'img': { container: false, movable: true, resize: true },
         'div': { container: true, movable: true, showHandler: true, resize: true },
     };
     Component.controlPropEditors = {};
+    Component.componentTypes = {};
     jueying.Component = Component;
-})(jueying || (jueying = {}));
-/*******************************************************************************
- * Copyright (C) maishu All rights reserved.
- *
- * 作者: 寒烟
- * 日期: 2018/5/30
- *
- * 个人博客：   http://www.cnblogs.com/ansiboy/
- * GITHUB:     http://github.com/ansiboy
- * QQ 讨论组：  119038574
- *
- * core 文件用于运行时加载，所以要控制此文件的大小，用于在运行时创建页面
- *
- ********************************************************************************/
-var jueying;
-(function (jueying) {
-    jueying.DesignerContext = React.createContext({ designer: null });
-    function component(args) {
-        return function (constructor) {
-            if (jueying.PageDesigner) {
-                jueying.Component.setAttribute(constructor.name, args);
-            }
-            jueying.core.register(constructor.name, constructor);
-            return constructor;
-        };
-    }
-    jueying.component = component;
-    jueying.core = {
-        createElement,
-        componentTypes: {},
-        register,
-        loadAllTypes
-    };
-    /**
-     * 将持久化的元素数据转换为 ReactElement
-     * @param args 元素数据
-     */
-    function createElement(args, h) {
-        h = h || React.createElement;
-        try {
-            let type = args.type;
-            let componentName = args.type;
-            let controlType = jueying.core.componentTypes[componentName];
-            if (controlType) {
-                type = controlType;
-            }
-            let children = args.children ? args.children.map(o => createElement(o, h)) : [];
-            console.assert(args.props);
-            let props = JSON.parse(JSON.stringify(args.props));
-            let result;
-            if (typeof type == 'string' && props.text) {
-                let text = props.text;
-                delete props.text;
-                result = h(type, props, text, ...children);
-            }
-            else {
-                result = h(type, props, ...children);
-            }
-            return result;
-        }
-        catch (e) {
-            console.error(e);
-            return null;
-        }
-    }
-    function register(componentName, componentType) {
-        if (componentType == null && typeof componentName == 'function') {
-            componentType = componentName;
-            componentName = componentType.name;
-            componentType['componentName'] = componentName;
-        }
-        if (!componentName)
-            throw jueying.Errors.argumentNull('componentName');
-        if (!componentType)
-            throw jueying.Errors.argumentNull('componentType');
-        jueying.core.componentTypes[componentName] = componentType;
-    }
-    function loadAllTypes() {
-        let ps = new Array();
-        for (let key in jueying.core.componentTypes) {
-            if (typeof jueying.core.componentTypes[key] == 'string') {
-                ps.push(this.getControlType(key));
-            }
-        }
-        return Promise.all(ps);
-    }
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -1022,13 +1006,16 @@ var jueying;
                 delete props.onClick;
                 props.readOnly = true;
             }
-            let allowWrapper = true;
-            let tagName = type;
-            if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
-                tagName == 'thead' || tagName == 'tbody' || tagName == 'tfoot' || tagName == 'th' || tagName == 'tr' || tagName == 'td') {
-                allowWrapper = false;
-            }
-            if (allowWrapper) {
+            let shouldWrapper = true;
+            // let tagName: keyof HTMLElementTagNameMap = type as keyof HTMLElementTagNameMap
+            // if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
+            //     tagName == 'thead' || tagName == 'tbody' || tagName == 'tfoot' || tagName == 'th' || tagName == 'tr' || tagName == 'td' ||
+            //     tagName == 'li') {
+            //     allowWrapper = false
+            // }
+            let attr = jueying.Component.getAttribute(type);
+            shouldWrapper = attr.resize || attr.movable || typeof type != 'string';
+            if (shouldWrapper) {
                 let style = Object.assign({}, props.style || {});
                 delete props.style.left;
                 delete props.style.top;
@@ -1060,9 +1047,6 @@ var jueying;
             this.initPageData(props.pageData);
             this.setState({ pageData: props.pageData });
         }
-        // componentDidUpdate() {
-        //     this.componentUpdated.fire(this)
-        // }
         render() {
             let designer = this;
             let { pageData } = this.state;
@@ -1072,7 +1056,7 @@ var jueying;
                     this.element = e || this.element;
                 }, onKeyDown: (e) => this.onKeyDown(e) },
                 React.createElement(jueying.DesignerContext.Provider, { value: { designer } }, (() => {
-                    let pageView = pageData ? jueying.core.createElement(pageData, this.createDesignTimeElement.bind(this)) : null;
+                    let pageView = pageData ? jueying.Component.createElement(pageData, this.createDesignTimeElement.bind(this)) : null;
                     return pageView;
                 })()));
             return result;
@@ -1188,6 +1172,14 @@ var jueying;
         }
     `;
     document.head.appendChild(element);
+    function appendClassName(sourceClassName, addonClassName) {
+        console.assert(sourceClassName != null);
+        console.assert(addonClassName);
+        if (sourceClassName.indexOf(addonClassName) >= 0)
+            return sourceClassName;
+        return `${sourceClassName} ${addonClassName}`;
+    }
+    jueying.appendClassName = appendClassName;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -1353,12 +1345,11 @@ var jueying;
                     this.changedManages[fileName] = new jueying.JSONUndoRedo(pageData);
                     pageDocuments = pageDocuments || [];
                     pageDocuments.push(pageDocument);
-                    // let components = this.state.componentDefines
                     let addon;
                     if (template.addonPath) {
                         try {
-                            let es = yield chitu.loadjs(`${template.addonPath}/addon`);
-                            console.log(`load addon ${template.addonPath}/addon success`);
+                            let es = yield chitu.loadjs(`${template.addonPath}/index`);
+                            console.log(`load addon ${template.addonPath}/index success`);
                             console.assert(es.default != null);
                             addon = es.default;
                             // components = addon.components || []
@@ -1385,7 +1376,7 @@ var jueying;
                     forms.TemplateDialog.show({
                         fetch: () => this.fetchTemplates(),
                         requiredFileName: true,
-                        callback: (tmp, fileName) => {
+                        callback: (tmp) => {
                             this.loadDocument(tmp, true);
                         }
                     });
@@ -1427,7 +1418,7 @@ var jueying;
                 super.setState(state);
             }
             closeDocument(index) {
-                let { pageDocuments, activeDocument } = this.state;
+                let { pageDocuments } = this.state;
                 console.assert(pageDocuments != null);
                 let doc = pageDocuments[index];
                 console.assert(doc != null);
@@ -1713,7 +1704,7 @@ var jueying;
                                     React.createElement(React.Fragment, null,
                                         templates.map((o, i) => React.createElement("div", { key: i, style: { width, height, float: i == 2 ? 'right' : 'left', margin: i == 1 ? '0 0 0 15px' : null }, onClick: () => this.selectTemplate(i), className: i == selectedTemplateIndex ? jueying.classNames.templateSelected : null },
                                             React.createElement(PageViewContainer, null,
-                                                jueying.core.createElement(o.pageData),
+                                                jueying.Component.createElement(o.pageData),
                                                 React.createElement("div", { className: "name" },
                                                     React.createElement("span", null, o.name))))),
                                         React.createElement("div", { className: "clearfix" }))),

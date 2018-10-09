@@ -234,9 +234,14 @@ namespace jueying {
             let { top, left, position, width, height, display, visibility } = style
 
             let props = this.props
+            let className = appendClassName(props.className || '', classNames.component)
+            if (props.selected) {
+                className = appendClassName(className, classNames.componentSelected)
+            }
+
             let wrapperProps: ComponentProps<any> & React.HTMLAttributes<any> = {
                 id: props.id,
-                className: props.selected ? `${classNames.componentSelected} ${classNames.component}` : classNames.component,
+                className: className,
                 style: { top, left, position, width, height, display, visibility },
                 ref: (e: HTMLElement) => this.element = e || this.element
             }

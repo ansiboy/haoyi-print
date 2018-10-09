@@ -1,11 +1,10 @@
-import { component, Component, TextInput } from "jueying";
-import { BaseControlProps, setStyleEditor, PageViewContext } from "./base-component";
+import { component, Component, TextInput, ComponentProps } from "jueying";
+import { setStyleEditor, PageViewContext } from "./base-component";
 import React = require("react");
 
-export interface PageViewProps extends BaseControlProps<PageView> {
-    data?: any,
+export interface PageViewProps extends ComponentProps<PageView> {
+    printer: string
 }
-
 
 export interface State {
 };

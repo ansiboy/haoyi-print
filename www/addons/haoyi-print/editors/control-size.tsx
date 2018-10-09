@@ -1,10 +1,6 @@
 import React = require("react");
 import { PropEditor, PropEditorProps } from "jueying";
 
-// interface Props extends PropEditorProps<string | number> {
-//     // size: string | number,
-//     onChange: (size: string) => void
-// }
 type Props = PropEditorProps<string | number>
 interface State {
     value: number,
