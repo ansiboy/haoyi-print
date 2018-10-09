@@ -400,7 +400,6 @@ namespace jueying {
                 (props as any).readOnly = true;
             }
 
-            let typename = typeof type == 'string' ? type : type.name
             let allowWrapper: boolean = true
             let tagName: keyof HTMLElementTagNameMap = type as keyof HTMLElementTagNameMap
             if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
@@ -429,6 +428,13 @@ namespace jueying {
                     (e as HTMLElement).onclick = (ev) => {
                         ComponentWrapper.invokeOnClick(ev, this, e as HTMLElement)
                     }
+
+                    let typename = typeof type == 'string' ? type : type.name
+                    let attr = Component.getAttribute(typename)
+                    if (attr != null && attr.container) {
+                        ComponentWrapper.enableDroppable(e as HTMLElement, this)
+                    }
+
                     return
                 }
 

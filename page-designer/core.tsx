@@ -24,7 +24,6 @@ namespace jueying {
         designer: PageDesigner,
     }
 
-
     export function component<T extends React.Component>(args?: ComponentAttribute) {
         return function (constructor: { new(...args): T }) {
             if (PageDesigner) {
@@ -66,7 +65,15 @@ namespace jueying {
 
             console.assert(args.props)
             let props = JSON.parse(JSON.stringify(args.props));
-            let result = h(type, props, ...children);
+            let result: JSX.Element
+            if (typeof type == 'string' && props.text) {
+                let text = props.text
+                delete props.text
+                result = h(type, props, text, ...children);
+            }
+            else {
+                result = h(type, props, ...children);
+            }
 
             return result
         }

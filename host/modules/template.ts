@@ -6,14 +6,16 @@ import * as errors from '../errors';
 import { readConfig } from '../config';
 
 let encoding = 'utf8'
-export async function list(): Promise<{ name: string, data: object }[]> {
+export async function list(): Promise<object[]> {
     let config = (await readConfig()).applicationConfig
-    return new Promise<{ name: string, data: object }[]>((resolve, reject) => {
+    return new Promise<object[]>((resolve, reject) => {
         fs.readdir(config.templatePath, async function (err, files) {
             if (err) reject(err)
             let items = await Promise.all(files.map(async filename => {
                 let data = await fileContent(filename)
-                return { name: filename, data: JSON.parse(data) }
+                let obj = JSON.parse(data)//{ name: filename, data: JSON.parse(data) }
+                obj.name = filename
+                return obj
             }))
             resolve(items)
         })

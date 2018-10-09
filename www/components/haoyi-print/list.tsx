@@ -1,9 +1,10 @@
 import { component } from "jueying";
 import React = require("react");
-import { BaseControl, setStyleEditor } from "./base-component";
+import { BaseControl, propertyEditors } from "./base-component";
 
+@propertyEditors
 @(component({ container: true, movable: false }) as any)
-class ListHeader extends React.Component<any, any>{
+export class ListHeader extends React.Component<any, any>{
     render() {
         let { style } = this.props
         return <div className='list-header' style={style}>
@@ -12,8 +13,9 @@ class ListHeader extends React.Component<any, any>{
     }
 }
 
+@propertyEditors
 @(component({ container: true, movable: false }) as any)
-class ListFooter extends React.Component<any, any>{
+export class ListFooter extends React.Component<any, any>{
     render() {
         let { style } = this.props
         return <div className='list-footer' style={style}>
@@ -22,8 +24,9 @@ class ListFooter extends React.Component<any, any>{
     }
 }
 
+@propertyEditors
 @(component({ container: true, movable: false }) as any)
-class ListBody extends React.Component<any, any>{
+export class ListBody extends React.Component<any, any>{
     render() {
         let { style } = this.props
         return <div className='list-body' style={style}>
@@ -32,6 +35,7 @@ class ListBody extends React.Component<any, any>{
     }
 }
 
+@propertyEditors
 @(component({ container: true, movable: true, showHandler: true, resize: true }) as any)
 export default class List extends BaseControl<any, any>{
     render() {
@@ -46,7 +50,7 @@ function emptyText(text: string) {
     return <div className='empty-text'>{text}</div>
 }
 
-setStyleEditor(List)
-setStyleEditor(ListHeader)
-setStyleEditor(ListBody)
-setStyleEditor(ListFooter)
+// setStyleEditor(List)
+// setStyleEditor(ListHeader)
+// setStyleEditor(ListBody)
+// setStyleEditor(ListFooter)

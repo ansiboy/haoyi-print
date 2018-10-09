@@ -1,7 +1,7 @@
-import { ComponentProps } from "jueying";
+import { ComponentProps, Component, TextInput } from "jueying";
 import * as React from 'react';
 import { ControlSize } from "components/controls/controlSize";
-import { PageViewContext, PageView } from "./page-view";
+import { PageView } from "./page-view";
 import { setStyleEditor } from "./component-editors";
 export { setStyleEditor }
 
@@ -10,10 +10,22 @@ export interface BaseControlProps<T> extends ComponentProps<T> {
     field?: string,
 }
 
-export function compoentStyleEditors<T extends { new(...args: any[]): {} }>(constructor: T) {
-    setStyleEditor(constructor as any)
+export interface PageViewProps extends BaseControlProps<PageView> {
+    printer: string
+}
+
+
+export function propertyEditors<T extends { new(...args: any[]): {} }>(constructor: T) {
+    if (!jueying.PageDesigner) {
+        return
+    }
+
+    Component.setPropEditor(constructor.name, "name", TextInput, 'design')
+    setStyleEditor(constructor.name)
     return constructor
 }
+
+export const PageViewContext = React.createContext({ pageView: null as any as PageView })
 
 export abstract class BaseControl<P extends BaseControlProps<any>, S> extends React.Component<P, S> {
     private _render: (h?: any) => React.ReactNode

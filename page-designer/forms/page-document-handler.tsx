@@ -2,30 +2,24 @@
 namespace jueying.forms {
     export class PageDocumentFile {
         private storage: DocumentStorage;
-        private _pageData: ComponentData;
-        private originalPageData: ComponentData;
+        private _document: PageDocument;
+        private originalPageData: PageDocument;
         private _fileName: string;
 
-        constructor(fileName, storage: DocumentStorage, pageData: ComponentData, isNew?: boolean) {
+        constructor(fileName: string, storage: DocumentStorage, document: PageDocument) {
             this.storage = storage;
-            this._pageData = pageData;
-
-            isNew = isNew == null ? false : isNew;
-            if (isNew)
-                this.originalPageData = { type: 'PageView', props: {} };
-            else
-                this.originalPageData = JSON.parse(JSON.stringify(pageData));
-
+            this._document = document;
+            this.originalPageData = JSON.parse(JSON.stringify(document));
             this._fileName = fileName;
         }
 
         save() {
-            this.originalPageData = JSON.parse(JSON.stringify(this._pageData));
-            return this.storage.save(this._fileName, this.originalPageData);
+            this.originalPageData = JSON.parse(JSON.stringify(this._document));
+            return this.storage.save(this._fileName, this._document);
         }
 
         get notSaved() {
-            let equals = isEquals(this.originalPageData, this._pageData);
+            let equals = isEquals(this.originalPageData, this._document);
             return !equals;
         }
 
@@ -33,11 +27,11 @@ namespace jueying.forms {
             return this._fileName;
         }
 
-        get pageData() {
-            return this._pageData;
+        get document() {
+            return this._document;
         }
-        set pageData(value) {
-            this._pageData = value
+        set document(value) {
+            this._document = value
         }
 
         static async load(storage: DocumentStorage, fileName: string) {
@@ -50,9 +44,9 @@ namespace jueying.forms {
             return new PageDocumentFile(fileName, storage, data);
         }
 
-        static new(storage: DocumentStorage, fileName: string, init: ComponentData) {
+        static new(storage: DocumentStorage, fileName: string, init: PageDocument) {
             // let storage = new LocalDocumentStorage()
-            return new PageDocumentFile(fileName, storage, init, true);
+            return new PageDocumentFile(fileName, storage, init);
         }
 
     }

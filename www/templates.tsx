@@ -143,7 +143,7 @@ let template2: PageDocument = {
         // ]
     },
     name: '空白模板(绝对定位)',
-    componentsDirectory: 'components/haoyi-print'
+    addonPath: 'components/haoyi-print'
 }
 
 export default [template2];

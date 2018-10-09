@@ -223,19 +223,33 @@ var jueying;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
-    class ComponentToolbar extends React.Component {
+    class ComponentPanel extends React.Component {
         componentDraggable(toolItemElement, componentData) {
             console.assert(toolItemElement != null);
             toolItemElement.draggable = true;
             toolItemElement.addEventListener('dragstart', function (ev) {
                 componentData.props = componentData.props || {};
                 ev.dataTransfer.setData(jueying.constants.componentData, JSON.stringify(componentData));
+                ev.dataTransfer.setData('mousePosition', JSON.stringify({ x: ev.offsetX, y: ev.offsetY }));
             });
+        }
+        static getComponentData(dataTransfer) {
+            var str = dataTransfer.getData(jueying.constants.componentData);
+            if (!str)
+                return;
+            return JSON.parse(str);
+        }
+        /** 获取光标在图标内的位置 */
+        static mouseInnerPosition(dataTransfer) {
+            let str = dataTransfer.getData('mousePosition');
+            if (!str)
+                return;
+            return JSON.parse(str);
         }
         render() {
             let props = Object.assign({}, this.props);
-            delete props.componetDefines;
-            let componets = this.props.componetDefines;
+            delete props.componets;
+            let componets = this.props.componets;
             return React.createElement(jueying.DesignerContext.Consumer, null, context => {
                 this.designer = context.designer;
                 return React.createElement("div", Object.assign({}, props, { className: "component-panel panel panel-primary" }),
@@ -243,20 +257,20 @@ var jueying;
                     React.createElement("div", { className: "panel-body" },
                         React.createElement("ul", { ref: (e) => this.toolbarElement = this.toolbarElement || e }, componets.map((c, i) => {
                             let props = { key: i };
-                            return React.createElement("li", Object.assign({}, props, { ref: e => {
-                                    if (!e)
-                                        return;
-                                    let ctrl = c.componentData;
-                                    this.componentDraggable(e, ctrl);
-                                } }),
+                            return React.createElement("li", Object.assign({}, props),
                                 React.createElement("div", { className: "btn-link" },
-                                    React.createElement("i", { className: c.icon, style: { fontSize: 44, color: 'black' } })),
+                                    React.createElement("i", { className: c.icon, style: { fontSize: 44, color: 'black' }, ref: e => {
+                                            if (!e)
+                                                return;
+                                            let ctrl = c.componentData;
+                                            this.componentDraggable(e, ctrl);
+                                        } })),
                                 React.createElement("div", null, c.displayName));
                         }))));
             });
         }
     }
-    jueying.ComponentToolbar = ComponentToolbar;
+    jueying.ComponentPanel = ComponentPanel;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -300,19 +314,19 @@ var jueying;
             element.ondrop = (event) => {
                 event.preventDefault();
                 event.stopPropagation();
-                let componentData = event.dataTransfer.getData(jueying.constants.componentData);
-                if (!componentData) {
+                let ctrl = jueying.ComponentPanel.getComponentData(event.dataTransfer);
+                if (!ctrl)
                     return;
-                }
-                let ctrl = JSON.parse(componentData);
                 ctrl.props.style = ctrl.props.style || {};
                 designer.pageData.props.style = designer.pageData.props.style || {};
                 if (!ctrl.props.style.position) {
                     ctrl.props.style.position = designer.pageData.props.style.position;
                 }
+                let pos = jueying.ComponentPanel.mouseInnerPosition(event.dataTransfer);
+                console.assert(pos != null);
                 if (ctrl.props.style.position == 'absolute') {
-                    ctrl.props.style.left = event.layerX;
-                    ctrl.props.style.top = event.layerY;
+                    ctrl.props.style.left = event.layerX - pos.x;
+                    ctrl.props.style.top = event.layerY - pos.y;
                 }
                 designer.appendComponent(element.id, ctrl);
             };
@@ -593,7 +607,15 @@ var jueying;
             let children = args.children ? args.children.map(o => createElement(o, h)) : [];
             console.assert(args.props);
             let props = JSON.parse(JSON.stringify(args.props));
-            let result = h(type, props, ...children);
+            let result;
+            if (typeof type == 'string' && props.text) {
+                let text = props.text;
+                delete props.text;
+                result = h(type, props, text, ...children);
+            }
+            else {
+                result = h(type, props, ...children);
+            }
             return result;
         }
         catch (e) {
@@ -1000,7 +1022,6 @@ var jueying;
                 delete props.onClick;
                 props.readOnly = true;
             }
-            let typename = typeof type == 'string' ? type : type.name;
             let allowWrapper = true;
             let tagName = type;
             if (tagName == 'html' || tagName == 'head' || tagName == 'body' ||
@@ -1023,6 +1044,11 @@ var jueying;
                     e.onclick = (ev) => {
                         jueying.ComponentWrapper.invokeOnClick(ev, this, e);
                     };
+                    let typename = typeof type == 'string' ? type : type.name;
+                    let attr = jueying.Component.getAttribute(typename);
+                    if (attr != null && attr.container) {
+                        jueying.ComponentWrapper.enableDroppable(e, this);
+                    }
                     return;
                 }
                 throw new Error('not implement');
@@ -1238,13 +1264,14 @@ var jueying;
         class DesignerFramework extends React.Component {
             constructor(props) {
                 super(props);
-                this.state = { componentDefines: [] };
+                this.state = {};
                 this.changedManages = {};
             }
-            renderButtons(pageDocument, buttonClassName) {
+            renderButtons(activeDocument, buttonClassName) {
                 buttonClassName = buttonClassName || 'btn btn-default';
-                let isChanged = pageDocument ? pageDocument.notSaved : false;
-                return [
+                let isChanged = activeDocument ? activeDocument.notSaved : false;
+                let addon = this.state.addon;
+                let buttons = [
                     React.createElement("button", { className: buttonClassName, disabled: !isChanged, onClick: () => this.save() },
                         React.createElement("i", { className: "icon-save" }),
                         React.createElement("span", null, "\u4FDD\u5B58")),
@@ -1262,8 +1289,12 @@ var jueying;
                         React.createElement("span", null, "\u65B0\u5EFA")),
                     React.createElement("button", { className: buttonClassName, onClick: () => this.open() },
                         React.createElement("i", { className: "icon-folder-open" }),
-                        React.createElement("span", null, "\u6253\u5F00"))
+                        React.createElement("span", null, "\u6253\u5F00")),
                 ];
+                if (addon != null && addon.renderToolbarButtons) {
+                    buttons.push(...addon.renderToolbarButtons({ activeDocument }) || []);
+                }
+                return buttons;
             }
             get storage() {
                 if (this._storage == null)
@@ -1291,53 +1322,56 @@ var jueying;
             undo() {
                 let pageData = this.changedManage.undo();
                 let { activeDocument } = this.state;
-                activeDocument.pageData = pageData;
+                activeDocument.document.pageData = pageData;
                 this.setState({ activeDocument });
             }
             redo() {
                 let pageData = this.changedManage.redo();
                 let { activeDocument } = this.state;
-                activeDocument.pageData = pageData;
+                activeDocument.document.pageData = pageData;
                 this.setState({ activeDocument });
             }
             save() {
                 return __awaiter(this, void 0, void 0, function* () {
                     let { activeDocument, pageDocuments } = this.state;
-                    let pageDocument = activeDocument; //pageDocuments[activeDocumentIndex];
+                    let pageDocument = activeDocument;
                     console.assert(pageDocument != null);
                     pageDocument.save();
                     this.setState({ pageDocuments });
                 });
             }
-            loadDocument(fileName, template, isNew) {
+            loadDocument(template, isNew) {
                 return __awaiter(this, void 0, void 0, function* () {
+                    let fileName = template.name;
                     console.assert(fileName);
                     console.assert(template);
                     let { pageData } = template;
                     let { pageDocuments } = this.state;
                     let documentStorage = this.storage;
-                    let pageDocument = isNew ? forms.PageDocumentFile.new(documentStorage, fileName, pageData) :
+                    let pageDocument = isNew ? forms.PageDocumentFile.new(documentStorage, fileName, template) :
                         yield forms.PageDocumentFile.load(documentStorage, fileName);
                     this.changedManages[fileName] = new jueying.JSONUndoRedo(pageData);
                     pageDocuments = pageDocuments || [];
                     pageDocuments.push(pageDocument);
-                    let componentDefines = this.state.componentDefines;
-                    if (template.componentsDirectory) {
-                        let es = yield chitu.loadjs(`${template.componentsDirectory}/index`);
-                        console.assert(es.default != null);
-                        console.assert(Array.isArray(es.default));
-                        componentDefines = es.default;
+                    // let components = this.state.componentDefines
+                    let addon;
+                    if (template.addonPath) {
+                        try {
+                            let es = yield chitu.loadjs(`${template.addonPath}/addon`);
+                            console.log(`load addon ${template.addonPath}/addon success`);
+                            console.assert(es.default != null);
+                            addon = es.default;
+                            // components = addon.components || []
+                            // this.setState({ addon })
+                        }
+                        catch (e) {
+                            console.log(`load addon ${template.addonPath}/addon fail`);
+                        }
                     }
                     this.setState({
-                        pageDocuments, componentDefines,
+                        pageDocuments, addon,
                         activeDocument: pageDocuments[pageDocuments.length - 1]
                     });
-                    // , (es) => {
-                    //     console.assert(es.default != null)
-                    //     console.assert(Array.isArray(es.default))
-                    //     let componentDefines = es.default as ComponentDefine[]
-                    //     this.setState({ componentDefines })
-                    // }
                 });
             }
             fetchTemplates() {
@@ -1352,7 +1386,7 @@ var jueying;
                         fetch: () => this.fetchTemplates(),
                         requiredFileName: true,
                         callback: (tmp, fileName) => {
-                            this.loadDocument(fileName, tmp, true);
+                            this.loadDocument(tmp, true);
                         }
                     });
                 });
@@ -1361,12 +1395,11 @@ var jueying;
                 forms.TemplateDialog.show({
                     fetch: (pageIndex, pageSize) => __awaiter(this, void 0, void 0, function* () {
                         let result = yield this.storage.list(pageIndex, pageSize);
-                        let items = result.items.map(a => ({ name: a[0], pageData: a[1] }));
+                        let items = result.items; //.map(a => ({ name: a[0], pageData: a[1] }));
                         let count = result.count;
-                        return { items, count };
+                        return { items: items, count };
                     }),
                     callback: (tmp) => {
-                        let fileName = tmp.name;
                         let docs = this.state.pageDocuments || [];
                         let existDoc = docs.filter(o => o.fileName == tmp.name)[0];
                         if (existDoc) {
@@ -1374,7 +1407,7 @@ var jueying;
                             this.activeDocument(index);
                             return;
                         }
-                        this.loadDocument(fileName, tmp, false);
+                        this.loadDocument(tmp, false);
                     }
                 });
             }
@@ -1384,9 +1417,9 @@ var jueying;
                 console.assert(doc != null);
                 this.setState({ activeDocument: doc });
                 setTimeout(() => {
-                    let pageViewId = doc.pageData.props.id;
+                    let pageViewId = doc.document.pageData.props.id;
                     console.assert(pageViewId != null, 'pageView id is null');
-                    console.assert(doc.pageData.type == 'PageView');
+                    console.assert(doc.document.pageData.type == 'PageView');
                     this.pageDesigner.selectComponent(pageViewId);
                 }, 50);
             }
@@ -1402,7 +1435,7 @@ var jueying;
                     pageDocuments.splice(index, 1);
                     let activeDocumentIndex = index > 0 ? index - 1 : 0;
                     let activeDocument = pageDocuments[activeDocumentIndex];
-                    this.setState({ pageDocuments, activeDocument });
+                    this.setState({ pageDocuments, activeDocument, addon: null });
                 };
                 if (!doc.notSaved) {
                     close();
@@ -1411,16 +1444,17 @@ var jueying;
                 ui.confirm({
                     title: '提示',
                     message: '该页面尚未保存，是否保存?',
+                    confirmText: '保存',
+                    cancelText: '不保存',
                     confirm: () => __awaiter(this, void 0, void 0, function* () {
                         yield doc.save();
                         close();
                     }),
                     cancle: () => {
                         close();
-                    }
+                        return Promise.resolve();
+                    },
                 });
-            }
-            componentDidMount() {
             }
             designerRef(e) {
                 if (!e)
@@ -1428,7 +1462,7 @@ var jueying;
                 this.pageDesigner = e || this.pageDesigner;
                 let func = () => {
                     let activeDocument = this.state.activeDocument;
-                    this.changedManage.setChangedData(activeDocument.pageData);
+                    this.changedManage.setChangedData(activeDocument.document.pageData);
                     this.renderToolbar(this.toolbarElement);
                     this.renderEditorPanel(this.editorPanelElement);
                 };
@@ -1436,10 +1470,6 @@ var jueying;
                 this.pageDesigner.componentAppend.add(func);
                 this.pageDesigner.componentUpdated.add(func);
                 this.pageDesigner.componentSelected.add(func);
-                // this.pageDesigner.componentDidUpdate = () => {
-                //     this.renderToolbar(this.toolbarElement)
-                //     this.renderEditorPanel(this.editorPanelElement)
-                // }
             }
             renderToolbar(element) {
                 let pageDocument = this.state.activeDocument;
@@ -1454,8 +1484,7 @@ var jueying;
                 ReactDOM.render(React.createElement(jueying.EditorPanel, { emptyText: "未选中控件，点击页面控件，可以编辑选中控件的属性", designer: this.pageDesigner, ref: e => this.editorPanel = e || this.editorPanel }), element);
             }
             render() {
-                let { activeDocument, pageDocuments, componentDefines } = this.state;
-                // let { componentDefines } = this.props;
+                let { activeDocument, pageDocuments, addon } = this.state;
                 pageDocuments = pageDocuments || [];
                 let pageDocument = activeDocument;
                 return React.createElement("div", { className: "designer-form" },
@@ -1475,8 +1504,8 @@ var jueying;
                                         this.closeDocument(i);
                                     } }))))),
                         pageDocument ?
-                            React.createElement(jueying.PageDesigner, { pageData: pageDocument.pageData, ref: e => this.designerRef(e) }) : null),
-                    React.createElement(jueying.ComponentToolbar, { className: "component-panel", componetDefines: componentDefines }),
+                            React.createElement(jueying.PageDesigner, { pageData: pageDocument.document.pageData, ref: e => this.designerRef(e) }) : null),
+                    React.createElement(jueying.ComponentPanel, { className: "component-panel", componets: addon ? addon.components : [] }),
                     React.createElement("div", { ref: e => {
                             if (!e)
                                 return;
@@ -1511,7 +1540,7 @@ var jueying;
                         let name = key.substr(LocalDocumentStorage.prefix.length);
                         let value = localStorage[key];
                         let doc = JSON.parse(value);
-                        allItems.push([name, doc]);
+                        allItems.push(doc);
                     }
                     let count = allItems.length;
                     let items = allItems.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
@@ -1550,32 +1579,28 @@ var jueying;
     var forms;
     (function (forms) {
         class PageDocumentFile {
-            constructor(fileName, storage, pageData, isNew) {
+            constructor(fileName, storage, document) {
                 this.storage = storage;
-                this._pageData = pageData;
-                isNew = isNew == null ? false : isNew;
-                if (isNew)
-                    this.originalPageData = { type: 'PageView', props: {} };
-                else
-                    this.originalPageData = JSON.parse(JSON.stringify(pageData));
+                this._document = document;
+                this.originalPageData = JSON.parse(JSON.stringify(document));
                 this._fileName = fileName;
             }
             save() {
-                this.originalPageData = JSON.parse(JSON.stringify(this._pageData));
-                return this.storage.save(this._fileName, this.originalPageData);
+                this.originalPageData = JSON.parse(JSON.stringify(this._document));
+                return this.storage.save(this._fileName, this._document);
             }
             get notSaved() {
-                let equals = forms.isEquals(this.originalPageData, this._pageData);
+                let equals = forms.isEquals(this.originalPageData, this._document);
                 return !equals;
             }
             get fileName() {
                 return this._fileName;
             }
-            get pageData() {
-                return this._pageData;
+            get document() {
+                return this._document;
             }
-            set pageData(value) {
-                this._pageData = value;
+            set document(value) {
+                this._document = value;
             }
             static load(storage, fileName) {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -1589,7 +1614,7 @@ var jueying;
             }
             static new(storage, fileName, init) {
                 // let storage = new LocalDocumentStorage()
-                return new PageDocumentFile(fileName, storage, init, true);
+                return new PageDocumentFile(fileName, storage, init);
             }
         }
         forms.PageDocumentFile = PageDocumentFile;
@@ -1600,7 +1625,6 @@ var jueying;
 (function (jueying) {
     var forms;
     (function (forms) {
-        // let pd = jueying;
         class PageViewContainer extends React.Component {
             render() {
                 let { phone_screen_width, phone_screen_height, scale } = PageViewContainer;
@@ -1632,8 +1656,10 @@ var jueying;
                     }
                     if (this.callback) {
                         let { templates, selectedTemplateIndex, fileName } = this.state;
-                        let template = templates[selectedTemplateIndex];
-                        this.callback(template, fileName);
+                        let template = JSON.parse(JSON.stringify(templates[selectedTemplateIndex]));
+                        if (fileName)
+                            template.name = fileName;
+                        this.callback(template);
                         this.close();
                     }
                 });
@@ -1645,7 +1671,6 @@ var jueying;
                     console.assert(tmps != null);
                     console.assert(tmps.count > 0);
                     this.setState({ templates: tmps.items, templatesCount: tmps.count });
-                    this.currentPageIndex = pageIndex;
                 });
             }
             componentDidMount() {
@@ -1712,7 +1737,6 @@ var jueying;
                     pageIndex: 0, selectedTemplateIndex: 0, fileName: '',
                     showFileNameInput: requiredFileName, templates: [],
                 });
-                this.currentPageIndex = null;
                 ui.showDialog(dialog_element);
                 this.loadTemplates(0);
             }

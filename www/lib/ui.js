@@ -31,7 +31,7 @@ var ui;
             try {
                 yield callback(event);
                 if (args.toast) {
-                    showToastMessage(args.toast);
+                    ui.toast(args.toast);
                 }
             }
             catch (exc) {
@@ -59,39 +59,6 @@ var ui;
         return result;
     }
     ui.buttonOnClick = buttonOnClick;
-    function showToastMessage(msg) {
-        if (!msg)
-            throw new Error('Argument msg is null.');
-        let dialogContainer = ui.dialogConfig.dialogContainer || document.body;
-        let toastDialogElement = document.createElement('div');
-        toastDialogElement.className = 'modal fade in';
-        toastDialogElement.style.marginTop = '20px';
-        console.assert(dialogContainer != null, 'dialog container is null.');
-        dialogContainer.appendChild(toastDialogElement);
-        toastDialogElement.innerHTML = `
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-body form-horizontal">
-                                </div>
-                            </div>
-                        </div>
-                    `;
-        let modalBody = toastDialogElement.querySelector('.modal-body');
-        console.assert(modalBody != null);
-        if (typeof msg == 'string')
-            modalBody.innerHTML = `<h5>${msg}</h5>`;
-        else
-            modalBody.appendChild(msg);
-        // let dialog = new Dialog(toastDialogElement);
-        // dialog.show();
-        ui.showDialog(toastDialogElement);
-        setTimeout(() => {
-            ui.hideDialog(toastDialogElement).then(() => {
-                toastDialogElement.remove();
-            });
-        }, 500);
-    }
-    ui.showToastMessage = showToastMessage;
 })(ui || (ui = {}));
 var ui;
 (function (ui) {
@@ -230,7 +197,10 @@ var ui;
         let title;
         let message;
         let execute = args.confirm;
+        let cancel = args.cancle || (() => Promise.resolve());
         let container = args.container || document.body;
+        let confirmText = args.confirmText || '确定';
+        let cancelText = args.cancelText || '取消';
         if (typeof args == 'string') {
             message = args;
         }
@@ -258,10 +228,10 @@ var ui;
                             </div>
                             <div class="modal-footer">
                                 <button name="cancel" type="button" class="btn btn-default">
-                                    取消
+                                    ${cancelText}
                                 </button>
                                 <button name="ok" type="button" class="btn btn-primary">
-                                    确定
+                                    ${confirmText}
                                 </button>
                             </div>
                         </div>
@@ -278,7 +248,9 @@ var ui;
         let okButton = modalFooter.querySelector('[name="ok"]');
         let closeButton = modalHeader.querySelector('.close');
         closeButton.onclick = cancelButton.onclick = function () {
-            ui.hideDialog(confirmDialogElment).then(() => {
+            cancel()
+                .then(() => ui.hideDialog(confirmDialogElment))
+                .then(() => {
                 confirmDialogElment.remove();
             });
         };
@@ -292,6 +264,40 @@ var ui;
         ui.showDialog(confirmDialogElment);
     }
     ui.confirm = confirm;
+    ui.showToastMessage = toast;
+    function toast(msg) {
+        if (!msg)
+            throw new Error('Argument msg is null.');
+        let dialogContainer = ui.dialogConfig.dialogContainer || document.body;
+        let toastDialogElement = document.createElement('div');
+        toastDialogElement.className = 'modal fade in';
+        toastDialogElement.style.marginTop = '20px';
+        console.assert(dialogContainer != null, 'dialog container is null.');
+        dialogContainer.appendChild(toastDialogElement);
+        toastDialogElement.innerHTML = `
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-body form-horizontal">
+                                </div>
+                            </div>
+                        </div>
+                    `;
+        let modalBody = toastDialogElement.querySelector('.modal-body');
+        console.assert(modalBody != null);
+        if (typeof msg == 'string')
+            modalBody.innerHTML = `<h5>${msg}</h5>`;
+        else
+            modalBody.appendChild(msg);
+        // let dialog = new Dialog(toastDialogElement);
+        // dialog.show();
+        ui.showDialog(toastDialogElement);
+        setTimeout(() => {
+            ui.hideDialog(toastDialogElement).then(() => {
+                toastDialogElement.remove();
+            });
+        }, 500);
+    }
+    ui.toast = toast;
     ui.showPanel = (function () {
         let panel = document.createElement('div');
         panel.className = 'mobile-page panel';

@@ -4,7 +4,7 @@ namespace jueying {
         designer: PageDesigner,
         type: string | React.ComponentClass,
     } & ComponentProps<ComponentWrapper>
-    
+
     export class ComponentWrapper extends React.Component<ComponentWrapperProps, any>{
         private handler: HTMLElement;
         private element: HTMLElement;
@@ -52,12 +52,9 @@ namespace jueying {
                 event.preventDefault()
                 event.stopPropagation()
 
-                let componentData = event.dataTransfer.getData(constants.componentData)
-                if (!componentData) {
+                let ctrl = ComponentPanel.getComponentData(event.dataTransfer)
+                if (!ctrl)
                     return
-                }
-
-                let ctrl = JSON.parse(componentData) as ComponentData
 
                 ctrl.props.style = ctrl.props.style || {}
                 designer.pageData.props.style = designer.pageData.props.style || {}
@@ -65,9 +62,11 @@ namespace jueying {
                     ctrl.props.style.position = designer.pageData.props.style.position
                 }
 
+                let pos = ComponentPanel.mouseInnerPosition(event.dataTransfer)
+                console.assert(pos != null)
                 if (ctrl.props.style.position == 'absolute') {
-                    ctrl.props.style.left = event.layerX
-                    ctrl.props.style.top = event.layerY
+                    ctrl.props.style.left = event.layerX - pos.x
+                    ctrl.props.style.top = event.layerY - pos.y
                 }
                 designer.appendComponent(element.id, ctrl);
             }

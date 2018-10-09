@@ -24,4 +24,12 @@ namespace jueying {
         componentData: ComponentData,
         displayName: string, icon: string, introduce: string,
     }
+
+
+    export interface ToolbarButton {
+        disabled?: boolean,
+        onClick: () => void,
+        text: string,
+        icon: string,
+    }
 }

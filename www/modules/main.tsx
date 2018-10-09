@@ -1,8 +1,8 @@
-import { DesignerFramework, DocumentStorage, PageDocument, PageDocumentFile } from 'jueying.extentions'
+import { DesignerFramework, DocumentStorage, PageDocumentFile } from 'jueying.extentions'
 import templates from "templates";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
-import { showPrintDialog, generatePrintHTML } from 'print'
+import { showPrintDialog, generatePrintHTML } from '../components/haoyi-print/print'
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
 // import '../components/placeholder'
@@ -58,17 +58,9 @@ class MainPage extends DesignerFramework {
     renderButtons(pageDocument: PageDocumentFile) {
         let buttonClassName = 'btn btn-default btn-sm'
         let buttons = super.renderButtons(pageDocument, buttonClassName)
-        let { activeDocument, pageDocuments } = this.state
+        let { pageDocuments } = this.state
 
         pageDocuments = pageDocuments || [];
-        buttons.push(
-            <button className={buttonClassName}
-                disabled={!activeDocument}
-                onClick={() => this.print()}>
-                <i className="icon-print" />
-                <span>打印</span>
-            </button>,
-        )
         buttons.unshift(...[
             <button className={`${buttonClassName}`}
                 onClick={e => this.exit()}>
@@ -80,11 +72,6 @@ class MainPage extends DesignerFramework {
             </button>,
             <button className={`${buttonClassName}`} onClick={e => this.windowMin()}>
                 <i className="icon-minus" />
-            </button>,
-            <button className={`${buttonClassName}`}
-                onClick={e => this.settings()}>
-                <i className="icon-cogs" />
-                <span>设置</span>
             </button>,
         ])
         return buttons
@@ -137,7 +124,9 @@ class MainPage extends DesignerFramework {
         }
     }
     componentDidMount() {
-        super.componentDidMount()
+        if (super.componentDidMount)
+            super.componentDidMount()
+
         let toolbarElement = document.querySelector('.toolbar') as HTMLElement
         if (toolbarElement) {
             this.enableMove(toolbarElement, this.window)

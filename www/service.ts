@@ -5,6 +5,7 @@ import { ComponentData } from "jueying";
 import * as chitu from 'chitu';
 import { PrintTask } from "../host/modules/printTask";
 import { UserConfig } from "../host/config";
+import { PageDocument } from "jueying.forms";
 
 
 export class Service extends chitu.Service {
@@ -31,13 +32,13 @@ export class Service extends chitu.Service {
     }
     templateList() {
         let url = this.url('template/list')
-        return this.get<{ name: string, data: ComponentData }[]>(url)
+        return this.get<PageDocument[]>(url)
     }
     templateGet(name: string) {
         let url = this.url('template/get')
-        return this.get<ComponentData>(url, { name })
+        return this.get<PageDocument>(url, { name })
     }
-    templateSave(name: string, data: ComponentData) {
+    templateSave(name: string, data: PageDocument) {
         let url = this.url('template/save')
         return this.postByJson(url, { name, item: data })
     }

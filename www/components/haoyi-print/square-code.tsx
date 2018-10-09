@@ -1,6 +1,6 @@
 import * as React from 'react';
 import 'qrcode'
-import { BaseControlProps, BaseControl } from "./base-component";
+import { BaseControlProps, BaseControl, propertyEditors } from "./base-component";
 import { component } from 'jueying';
 import { ControlSize } from '../controls/controlSize';
 
@@ -8,6 +8,7 @@ export interface Props extends BaseControlProps<SquareCode> {
     size: string,
 }
 
+// @propertyEditors
 @(component() as any)
 export default class SquareCode extends BaseControl<Props, {}>{
     private img: HTMLImageElement
@@ -43,4 +44,9 @@ export default class SquareCode extends BaseControl<Props, {}>{
         qrcode.makeCode(value);
     }
 
+}
+
+if (jueying.PageDesigner) {
+    jueying.Component.setPropEditor(SquareCode.name, "name", jueying.TextInput, 'design')
+    jueying.Component.setPropEditor(SquareCode.name, "size", jueying.TextInput, 'design')
 }

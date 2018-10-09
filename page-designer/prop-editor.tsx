@@ -17,9 +17,8 @@ namespace jueying {
             this.state = { value: props.value } as PropEditorState<T> as any
         }
 
-
         componentWillReceiveProps(props: PropEditorProps<T>) {
-            this.setState({ value: props.value })
+            this.setState({ value: props.value } as any)
         }
     }
 

@@ -6,7 +6,6 @@ declare namespace ui {
     };
     function buttonOnClick(callback: Callback, args?: Arguments): (event: Event) => void;
     function buttonOnClick(element: HTMLButtonElement, callback: Callback, args?: Arguments): any;
-    function showToastMessage(msg: string | HTMLElement): void;
 }
 declare namespace ui {
     let dialogConfig: {
@@ -24,13 +23,20 @@ declare namespace ui {
     function confirm(args: {
         title?: string;
         message: string;
-        cancle?: () => void;
+        cancle?: () => Promise<any>;
         confirm: (event: Event) => Promise<any>;
         container?: HTMLElement;
+        confirmText?: string;
+        cancelText?: string;
     }): void;
+    let showToastMessage: typeof toast;
+    function toast(msg: string | HTMLElement): void;
     let showPanel: (args: {
+        /** render header */
         header?: (headerElement: HTMLElement) => void;
+        /** render body */
         body?: (bodyElement: HTMLElement) => void;
+        /** render footer */
         footer?: (footerElement: HTMLElement) => void;
     }) => {
         hide: () => void;
@@ -43,7 +49,9 @@ declare namespace ui {
 }
 declare namespace ui {
     let loadImageConfig: {
+        /** 图片的基本路径，图片地址如果不以 http 开头，则加上该路径 */
         imageBaseUrl: string;
+        /** 图片显示的文字 */
         imageDisaplyText: string;
     };
     type CanvasDraw = (ctx: CanvasRenderingContext2D, canvasWidth: number, canvasHeight: number) => void;

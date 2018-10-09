@@ -1,27 +1,27 @@
 import { Service } from "../service";
 import { ComponentData } from "jueying";
-import { DocumentStorage } from "jueying.forms";
+import { DocumentStorage, PageDocument } from "jueying.forms";
 
 let service = new Service()
 
 export class ServiceDocumentStorage implements DocumentStorage {
-    list(pageIndex: number, pageSize: number): Promise<{ items: [string, ComponentData][]; count: number; }> {
+    list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[]; count: number; }> {
 
         return service.templateList().then(r => {
-            let items = r.map(o => {
-                let b: [string, ComponentData] = [o.name, o.data]
-                return b
-            })
+            // let items = r.map(o => {
+            //     let b: PageDocument = [o.name, o.data]
+            //     return b
+            // })
             return {
-                items,
+                items: r,
                 count: r.length
             }
         })
     }
-    load(name: string): Promise<ComponentData | null> {
+    load(name: string): Promise<PageDocument | null> {
         return service.templateGet(name)
     }
-    save(name: string, pageData: ComponentData): Promise<any> {
+    save(name: string, pageData: PageDocument): Promise<any> {
         return service.templateSave(name, pageData)
     }
     remove(name: string): Promise<any> {

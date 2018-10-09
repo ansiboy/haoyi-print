@@ -1,14 +1,14 @@
 
 namespace jueying {
-    export interface ComponentToolbarProps extends React.Props<ComponentToolbar> {
-        componetDefines: ComponentDefine[],
+    export interface ComponentToolbarProps extends React.Props<ComponentPanel> {
+        componets: ComponentDefine[],
         style?: React.CSSProperties,
         className?: string,
     }
     export interface ComponentToolbarState {
 
     }
-    export class ComponentToolbar extends React.Component<ComponentToolbarProps, ComponentToolbarState> {
+    export class ComponentPanel extends React.Component<ComponentToolbarProps, ComponentToolbarState> {
         designer: PageDesigner;
         private toolbarElement: HTMLElement;
 
@@ -18,14 +18,32 @@ namespace jueying {
             toolItemElement.addEventListener('dragstart', function (ev) {
                 componentData.props = componentData.props || {}
                 ev.dataTransfer.setData(constants.componentData, JSON.stringify(componentData))
+                ev.dataTransfer.setData('mousePosition', JSON.stringify({ x: ev.offsetX, y: ev.offsetY }))
             })
+        }
+
+        static getComponentData(dataTransfer: DataTransfer): ComponentData {
+            var str = dataTransfer.getData(constants.componentData)
+            if (!str)
+                return
+
+            return JSON.parse(str)
+        }
+
+        /** 获取光标在图标内的位置 */
+        static mouseInnerPosition(dataTransfer: DataTransfer): { x: number, y: number } {
+            let str = dataTransfer.getData('mousePosition')
+            if (!str)
+                return
+
+            return JSON.parse(str)
         }
 
         render() {
             let props: ComponentToolbarProps = Object.assign({}, this.props);
-            delete props.componetDefines;
+            delete props.componets;
 
-            let componets = this.props.componetDefines;
+            let componets = this.props.componets;
             return <DesignerContext.Consumer>
                 {context => {
                     this.designer = context.designer;
@@ -35,15 +53,15 @@ namespace jueying {
                             <ul ref={(e: HTMLElement) => this.toolbarElement = this.toolbarElement || e}>
                                 {componets.map((c, i) => {
                                     let props = { key: i };
-                                    return <li {...props}
-                                        ref={e => {
-                                            if (!e) return
-
-                                            let ctrl = c.componentData
-                                            this.componentDraggable(e, ctrl)
-                                        }}>
+                                    return <li {...props}>
                                         <div className="btn-link">
-                                            <i className={c.icon} style={{ fontSize: 44, color: 'black' }} />
+                                            <i className={c.icon} style={{ fontSize: 44, color: 'black' }}
+                                                ref={e => {
+                                                    if (!e) return
+
+                                                    let ctrl = c.componentData
+                                                    this.componentDraggable(e, ctrl)
+                                                }} />
                                         </div>
                                         <div>
                                             {c.displayName}

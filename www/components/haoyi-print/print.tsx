@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { Service } from "./service";
-import { ServiceDocumentStorage } from "./designer/serviceDocumentStorage";
+import { Service } from "../../service";
+import { ServiceDocumentStorage } from "../../designer/serviceDocumentStorage";
 
 var printDialogElement: HTMLElement = document.createElement('div')
 printDialogElement.className = 'modal fade'
@@ -40,7 +40,7 @@ class PrintDialog extends React.Component<PrintDialogProps, PrintDialogState>{
     render() {
         let { templateName } = this.props;
         let { templateData, templateDataText } = this.state
-        return <div className="modal-dialog">
+        return <div className="modal-dialog modal-lg">
             <div className="modal-content">
                 <div className="modal-header">
                     <button type="button" className="close"
@@ -50,15 +50,19 @@ class PrintDialog extends React.Component<PrintDialogProps, PrintDialogState>{
                     <h4 className="modal-title">打印</h4>
                 </div>
                 <div className="modal-body clearfix" style={{ minHeight: 200 }}>
-                    <div style={{ height: '100%' }} ref={async e => {
-                        if (!e) return;
-                        let templateElement = await createTemplateElement(templateName, templateData);
-                        ReactDOM.render(templateElement, e)
-                    }}>
+                    <div style={{
+                        height: 'calc(100% - 30px)', width: 'calc(100% - 320px)', overflow: 'auto',
+                        position: 'absolute', border: 'solid 1px'
+                    }}
+                        ref={async e => {
+                            if (!e) return;
+                            let templateElement = await createTemplateElement(templateName, templateData);
+                            ReactDOM.render(templateElement, e)
+                        }}>
 
                     </div>
                     <div className="pull-right">
-                        <textarea style={{ width: 260, height: '100%', minHeight: 200 }}
+                        <textarea style={{ width: 260, height: '100%', minHeight: 400 }}
                             value={templateDataText}
                             onChange={e => {
                                 templateDataText = e.target.value
@@ -90,8 +94,6 @@ export function showPrintDialog(templateName: string, templateData?: object) {
 }
 
 export async function print(deviceName: string, name: string, data?: object) {
-
-    // let win_name = 'print-window-' + guid()
     let printHTML = await generatePrintHTML(name, data);
 
     let service = new Service()
@@ -105,8 +107,8 @@ async function createTemplateElement(templateName: string, data?: object): Promi
         throw new Error(`Can not get template '${templateName}'`);
 
 
-    (r.props as any).data = data;
-    let reactElement = jueying.createElement(r)
+    (r.pageData.props as any).data = data;
+    let reactElement = jueying.core.createElement(r.pageData)
     if (reactElement == null)
         throw new Error('create element fail')
 

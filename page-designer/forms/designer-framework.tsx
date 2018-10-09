@@ -9,7 +9,8 @@ namespace jueying.forms {
     export interface DesignerFrameworkState {
         pageDocuments?: PageDocumentFile[]
         activeDocument?: PageDocumentFile
-        componentDefines: ComponentDefine[],
+        // componentDefines: ComponentDefine[],
+        addon?: Addon,
     }
     export class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState>{
         protected pageDesigner: PageDesigner;
@@ -19,17 +20,19 @@ namespace jueying.forms {
         private changedManages: { [name: string]: JSONUndoRedo<ComponentData> }
         private editorPanelElement: HTMLElement;
 
+
         constructor(props) {
             super(props);
 
-            this.state = { componentDefines: [] };
+            this.state = {};
             this.changedManages = {}
         }
 
-        renderButtons(pageDocument: PageDocumentFile, buttonClassName?: string) {
+        renderButtons(activeDocument: PageDocumentFile, buttonClassName?: string) {
             buttonClassName = buttonClassName || 'btn btn-default'
-            let isChanged = pageDocument ? pageDocument.notSaved : false;
-            return [
+            let isChanged = activeDocument ? activeDocument.notSaved : false;
+            let addon = this.state.addon
+            let buttons = [
                 <button className={buttonClassName} disabled={!isChanged}
                     onClick={() => this.save()}>
                     <i className="icon-save" />
@@ -56,8 +59,13 @@ namespace jueying.forms {
                 <button className={buttonClassName} onClick={() => this.open()}>
                     <i className="icon-folder-open" />
                     <span>打开</span>
-                </button>
+                </button>,
             ]
+            if (addon != null && addon.renderToolbarButtons) {
+                buttons.push(...addon.renderToolbarButtons({ activeDocument }) || [])
+            }
+
+            return buttons
         }
 
         get storage() {
@@ -92,56 +100,56 @@ namespace jueying.forms {
         undo() {
             let pageData = this.changedManage.undo()
             let { activeDocument } = this.state
-            activeDocument.pageData = pageData
+            activeDocument.document.pageData = pageData
             this.setState({ activeDocument })
         }
         redo() {
             let pageData = this.changedManage.redo()
             let { activeDocument } = this.state
-            activeDocument.pageData = pageData
+            activeDocument.document.pageData = pageData
             this.setState({ activeDocument })
         }
         async save() {
             let { activeDocument, pageDocuments } = this.state;
-            let pageDocument = activeDocument //pageDocuments[activeDocumentIndex];
+            let pageDocument = activeDocument
             console.assert(pageDocument != null);
             pageDocument.save();
             this.setState({ pageDocuments });
         }
-        async loadDocument(fileName: string, template: PageDocument, isNew: boolean) {
+        async loadDocument(template: PageDocument, isNew: boolean) {
+            let fileName= template.name
             console.assert(fileName);
             console.assert(template)
             let { pageData } = template
             let { pageDocuments } = this.state;
             let documentStorage = this.storage
-            let pageDocument = isNew ? PageDocumentFile.new(documentStorage, fileName, pageData) :
+            let pageDocument = isNew ? PageDocumentFile.new(documentStorage, fileName, template) :
                 await PageDocumentFile.load(documentStorage, fileName);
 
             this.changedManages[fileName] = new JSONUndoRedo(pageData)
             pageDocuments = pageDocuments || [];
             pageDocuments.push(pageDocument);
+            // let components = this.state.componentDefines
+            let addon: Addon
+            if (template.addonPath) {
+                try {
+                    let es = await chitu.loadjs(`${template.addonPath}/addon`)
+                    console.log(`load addon ${template.addonPath}/addon success`)
+                    console.assert(es.default != null)
+                    addon = es.default
+                    // components = addon.components || []
+                    // this.setState({ addon })
+                }
+                catch (e) {
+                    console.log(`load addon ${template.addonPath}/addon fail`)
+                }
 
-
-
-            let componentDefines = this.state.componentDefines
-            if (template.componentsDirectory) {
-                let es = await chitu.loadjs(`${template.componentsDirectory}/index`)
-                console.assert(es.default != null)
-                console.assert(Array.isArray(es.default))
-                componentDefines = es.default as ComponentDefine[]
             }
 
             this.setState({
-                pageDocuments, componentDefines,
+                pageDocuments, addon,
                 activeDocument: pageDocuments[pageDocuments.length - 1]
             })
-
-            // , (es) => {
-            //     console.assert(es.default != null)
-            //     console.assert(Array.isArray(es.default))
-            //     let componentDefines = es.default as ComponentDefine[]
-            //     this.setState({ componentDefines })
-            // }
 
         }
         async fetchTemplates() {
@@ -153,7 +161,7 @@ namespace jueying.forms {
                 fetch: () => this.fetchTemplates(),
                 requiredFileName: true,
                 callback: (tmp, fileName) => {
-                    this.loadDocument(fileName, tmp, true);
+                    this.loadDocument(tmp, true);
                 }
             });
         }
@@ -161,12 +169,11 @@ namespace jueying.forms {
             TemplateDialog.show({
                 fetch: async (pageIndex, pageSize) => {
                     let result = await this.storage.list(pageIndex, pageSize);
-                    let items = result.items.map(a => ({ name: a[0], pageData: a[1] }));
+                    let items = result.items//.map(a => ({ name: a[0], pageData: a[1] }));
                     let count = result.count;
-                    return { items, count };
+                    return { items: items as PageDocument[], count };
                 },
                 callback: (tmp) => {
-                    let fileName = tmp.name;
                     let docs = this.state.pageDocuments || [];
                     let existDoc = docs.filter(o => o.fileName == tmp.name)[0];
                     if (existDoc) {
@@ -175,7 +182,7 @@ namespace jueying.forms {
                         return;
                     }
 
-                    this.loadDocument(fileName, tmp, false);
+                    this.loadDocument(tmp, false);
                 }
             })
         }
@@ -187,9 +194,9 @@ namespace jueying.forms {
             this.setState({ activeDocument: doc });
 
             setTimeout(() => {
-                let pageViewId: string = doc.pageData.props.id;
+                let pageViewId: string = doc.document.pageData.props.id;
                 console.assert(pageViewId != null, 'pageView id is null');
-                console.assert(doc.pageData.type == 'PageView');
+                console.assert(doc.document.pageData.type == 'PageView');
 
                 this.pageDesigner.selectComponent(pageViewId);
             }, 50);
@@ -211,7 +218,7 @@ namespace jueying.forms {
 
                 let activeDocumentIndex = index > 0 ? index - 1 : 0
                 let activeDocument = pageDocuments[activeDocumentIndex]
-                this.setState({ pageDocuments, activeDocument });
+                this.setState({ pageDocuments, activeDocument, addon: null });
             }
 
             if (!doc.notSaved) {
@@ -222,23 +229,25 @@ namespace jueying.forms {
             ui.confirm({
                 title: '提示',
                 message: '该页面尚未保存，是否保存?',
+                confirmText: '保存',
+                cancelText: '不保存',
                 confirm: async () => {
                     await doc.save();
                     close();
                 },
                 cancle: () => {
                     close();
-                }
+                    return Promise.resolve()
+                },
+
             })
-        }
-        componentDidMount() {
         }
         designerRef(e: PageDesigner) {
             if (!e) return
             this.pageDesigner = e || this.pageDesigner
             let func = () => {
                 let activeDocument = this.state.activeDocument
-                this.changedManage.setChangedData(activeDocument.pageData)
+                this.changedManage.setChangedData(activeDocument.document.pageData)
                 this.renderToolbar(this.toolbarElement)
                 this.renderEditorPanel(this.editorPanelElement)
             }
@@ -246,10 +255,6 @@ namespace jueying.forms {
             this.pageDesigner.componentAppend.add(func)
             this.pageDesigner.componentUpdated.add(func)
             this.pageDesigner.componentSelected.add(func)
-            // this.pageDesigner.componentDidUpdate = () => {
-            //     this.renderToolbar(this.toolbarElement)
-            //     this.renderEditorPanel(this.editorPanelElement)
-            // }
         }
         renderToolbar(element: HTMLElement) {
             let pageDocument = this.state.activeDocument
@@ -275,10 +280,9 @@ namespace jueying.forms {
             )
         }
         render() {
-            let { activeDocument, pageDocuments, componentDefines } = this.state;
-            // let { componentDefines } = this.props;
-
+            let { activeDocument, pageDocuments, addon } = this.state;
             pageDocuments = pageDocuments || [];
+
             let pageDocument = activeDocument
             return <div className="designer-form">
                 <ul className="toolbar clearfix"
@@ -306,10 +310,10 @@ namespace jueying.forms {
                         )}
                     </ul>
                     {pageDocument ?
-                        <PageDesigner pageData={pageDocument.pageData} ref={e => this.designerRef(e)}>
+                        <PageDesigner pageData={pageDocument.document.pageData} ref={e => this.designerRef(e)}>
                         </PageDesigner> : null}
                 </div>
-                <ComponentToolbar className="component-panel" componetDefines={componentDefines} />
+                <ComponentPanel className="component-panel" componets={addon ? addon.components : []} />
                 <div ref={e => {
                     if (!e) return
                     this.editorPanelElement = e || this.editorPanelElement

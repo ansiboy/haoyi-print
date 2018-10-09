@@ -1,8 +1,6 @@
 /// <reference path="comon.tsx"/>
 
 namespace jueying.forms {
-    // let pd = jueying;
-
     class PageViewContainer extends React.Component<{}, {}>{
         private static phone_screen_width = 320;
         private static phone_screen_height = 568;
@@ -38,8 +36,7 @@ namespace jueying.forms {
 
     export class TemplateDialog extends React.Component<TemplateDialogProps, TemplateDialogState> {
         private fetchTemplates: LoadDocuments;
-        private callback: (template: PageDocument, fileName: string) => void;
-        private currentPageIndex: number;
+        private callback: (template: PageDocument) => void;
         private validator: dilu.FormValidator;
 
         constructor(props) {
@@ -58,8 +55,11 @@ namespace jueying.forms {
 
             if (this.callback) {
                 let { templates, selectedTemplateIndex, fileName } = this.state;
-                let template = templates[selectedTemplateIndex];
-                this.callback(template, fileName);
+                let template: PageDocument = JSON.parse(JSON.stringify(templates[selectedTemplateIndex]));
+                if (fileName)
+                    template.name = fileName
+
+                this.callback(template);
                 this.close();
             }
         }
@@ -69,7 +69,6 @@ namespace jueying.forms {
             console.assert(tmps != null);
             console.assert(tmps.count > 0);
             this.setState({ templates: tmps.items, templatesCount: tmps.count });
-            this.currentPageIndex = pageIndex;
         }
         componentDidMount() {
             this.validator = new dilu.FormValidator(dialog_element,
@@ -166,7 +165,6 @@ namespace jueying.forms {
                 pageIndex: 0, selectedTemplateIndex: 0, fileName: '',
                 showFileNameInput: requiredFileName, templates: [],
             });
-            this.currentPageIndex = null;
             ui.showDialog(dialog_element);
             this.loadTemplates(0);
         }

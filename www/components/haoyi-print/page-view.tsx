@@ -1,13 +1,12 @@
 import { component, Component, TextInput } from "jueying";
+import { BaseControlProps, setStyleEditor, PageViewContext } from "./base-component";
 import React = require("react");
-import { setStyleEditor } from "./component-editors";
-import { BaseControlProps } from "./base-component";
 
 export interface PageViewProps extends BaseControlProps<PageView> {
     data?: any,
 }
 
-export const PageViewContext = React.createContext({ pageView: null as any as PageView })
+
 export interface State {
 };
 
@@ -29,11 +28,6 @@ export class PageView extends React.Component<PageViewProps, State>{
 }
 
 if (jueying.PageDesigner) {
-    Component.setPropEditor(PageView, "name", TextInput, 'design')
-    setStyleEditor(PageView)
+    setStyleEditor(PageView.name)
+    Component.setPropEditor(PageView.name, "name", TextInput, 'design')
 }
-
-
-
-
-
