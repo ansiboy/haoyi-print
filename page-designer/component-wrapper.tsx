@@ -234,10 +234,10 @@ namespace jueying {
             let { top, left, position, width, height, display, visibility } = style
 
             let props = this.props
-            let className = appendClassName(props.className || '', classNames.component)
-            if (props.selected) {
-                className = appendClassName(className, classNames.componentSelected)
-            }
+            let className = props.className || ''// removeClassName(props.className || '',classNames.componentSelected)
+            // if (props.selected) {
+            //     className = appendClassName(className, classNames.componentSelected)
+            // }
 
             let wrapperProps: ComponentProps<any> & React.HTMLAttributes<any> = {
                 id: props.id,

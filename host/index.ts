@@ -38,9 +38,9 @@ function start() {
     settingsWindow = createSettingsWindow()
 
     createTray(mainWindow, {
-      // '显示': function () {
-      //   mainWindow.show()
-      // },
+      '显示': function () {
+        mainWindow.show()
+      },
       '设置': function () {
         settingsWindow.show()
       },

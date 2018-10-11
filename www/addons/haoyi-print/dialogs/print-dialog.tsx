@@ -100,7 +100,6 @@ export function showPrintDialog(templateName: string, templateData?: object) {
 
 
 
-let service = new Service()
 
 
 // export async function print({ deviceName, html }: { deviceName: string, html: string }) {

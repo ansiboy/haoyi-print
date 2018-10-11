@@ -65,13 +65,20 @@ namespace jueying {
     document.head.appendChild(element);
 
     export function appendClassName(sourceClassName: string, addonClassName) {
-        console.assert(sourceClassName != null)
+        sourceClassName = sourceClassName || ''
         console.assert(addonClassName)
 
         if (sourceClassName.indexOf(addonClassName) >= 0)
             return sourceClassName
 
         return `${sourceClassName} ${addonClassName}`
+    }
+
+    export function removeClassName(sourceClassName: string, targetClassName) {
+        sourceClassName = sourceClassName || ''
+        sourceClassName = sourceClassName.replace(new RegExp(targetClassName, 'g'), '')
+        sourceClassName = sourceClassName.trim()
+        return sourceClassName
     }
 
 }

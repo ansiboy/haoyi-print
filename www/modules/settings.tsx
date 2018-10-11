@@ -6,9 +6,6 @@ import { Service } from "../service";
 
 interface State {
     printers: Electron.PrinterInfo[],
-    // defaultPrinter?: string,
-    // bindIP?: string,
-    // port?: string,
     config?: UserConfig
 }
 
@@ -18,6 +15,16 @@ interface Props extends PageViewProps {
 }
 
 export default function (page: chitu.Page) {
+
+    let style = document.createElement('style')
+    style.innerHTML = `
+        body {
+            background: 0;
+            border: 0;
+        }
+    `
+    document.head.appendChild(style)
+
     ReactDOM.render(<SettingsView close={() => {
         const { remote } = nodeRequire('electron')
         remote.getCurrentWindow().hide()
