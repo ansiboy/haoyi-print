@@ -4,14 +4,7 @@ import { PageView } from "./page-view";
 import { setStyleEditor } from "../editors/component-editors";
 export { setStyleEditor }
 
-export interface BaseControlProps<T> extends ComponentProps<T> {
-    text?: string,
-    field?: string,
-}
 
-export interface PageViewProps extends BaseControlProps<PageView> {
-    printer: string
-}
 
 
 export function propertyEditors<T extends { new(...args: any[]): {} }>(constructor: T) {
@@ -26,36 +19,22 @@ export function propertyEditors<T extends { new(...args: any[]): {} }>(construct
 
 export const PageViewContext = React.createContext({ pageView: null as any as PageView })
 
-export abstract class BaseControl<P extends BaseControlProps<any>, S> extends React.Component<P, S> {
-    private _render: (h?: any) => React.ReactNode
-    pageView: PageView
+export const DataContext = React.createContext({ data: {} as { [key: string]: any } })
+
+export abstract class BaseControl<P extends ComponentProps<any>, S> extends React.Component<P, S> {
     constructor(props: P) {
         super(props);
 
         console.assert(this.render != null)
-        this._render = this.render
-        this.render = (h?: any) => {
-            return <PageViewContext.Consumer>
-                {c => {
-                    this.pageView = c.pageView
-                    return this._render(h)
-                }}
-            </PageViewContext.Consumer>
-        }
     }
 
     protected text(): string {
-        console.assert(this.pageView != null)
         if (this.props.text)
             return this.props.text
 
         if (this.props.field) {
             let text: string = null
-            if (this.pageView.props.data) {
-                text = this.pageView.props.data[this.props.field]
-            }
-
-            if (!text)
+            if (text == null)
                 text = `[${this.props.field}]`
 
             return text;

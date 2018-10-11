@@ -1,24 +1,24 @@
-import "./image"
-import "./label"
-import "./list"
-import "./page-view"
-import "./square-code"
+import "./components/image"
+import "./components/label"
+import "./components/list"
+import "./components/page-view"
+import "./components/square-code"
 
 import { PageDocumentFile, Addon } from "jueying.forms";
 import React = require("react");
 import { showSettingsDialog } from "../../controls/settingsDialog";
-import { showPrintDialog, generatePrintHTML } from "./dialogs/print-dialog";
+import { showPrintDialog } from "./dialogs/print-dialog";
+import { ComponentData, ReactFactory, ComponentProps } from "jueying";
+import { generatePrintHTML } from "./print";
 
 class PrintAddon implements Addon {
     components = [
         {
             componentData: {
-                type: 'Label',
+                type: 'div',
                 props: {
-                    style: {
-                        position: 'absolute'
-                    } as React.CSSProperties
-                },
+                    text: 'label'
+                }
             },
             displayName: "标签",
             icon: "glyphicon glyphicon-comment",
@@ -32,12 +32,12 @@ class PrintAddon implements Addon {
         },
         {
             componentData: {
-                type: 'List',
+                type: 'ul',
                 props: { style: { width: 300 } },
                 children: [
-                    { type: 'ListHeader', props: { style: { height: 40 } } },
-                    { type: 'ListBody', props: { style: { height: 40 } } },
-                    { type: 'ListFooter', props: { style: { height: 40 } } }
+                    { type: 'li', props: { style: { height: 40 } } },
+                    { type: 'li', props: { style: { height: 40 } } },
+                    { type: 'li', props: { style: { height: 40 } } }
                 ]
             },
             displayName: "列表",
@@ -144,13 +144,67 @@ class PrintAddon implements Addon {
     }
 }
 
+//===================================================================================
+// 通过拦截 React.createElement 函数，自定义 HTML 元素生成
+let pageDesignerRender = jueying.PageDesigner.prototype.render
+jueying.PageDesigner.prototype.render = function () {
+
+    let reactCreateElement = React.createElement;
+    (React as any).createElement = function (type: string, props: ComponentProps<any>, ...children: any[]) {
+        if (typeof type == 'string' && props) {
+
+            let text: string = props.field ? `[${props.field}]` : props.text
+            delete props.field
+            delete props.text
+
+            children = children || []
+            if (text) {
+                if (type != 'tbody') {
+                    children.push(text)
+                }
+                else {
+                    children.unshift(reactCreateElement('tr', {}, reactCreateElement('td', { colspan: 1000 } as any, text)))
+                }
+            }
+        }
+
+        return h(type, props, ...children)
+    }
+    let result = pageDesignerRender.bind(this)();
+    (React as any).createElement = reactCreateElement
+    return result
+}
+
+let componentCreateElement = jueying.Component.createElement
+jueying.Component.createElement = function (args: ComponentData, h?: ReactFactory): React.ReactElement<any> | null {
+    let reactCreateElement = React.createElement;
+    (React as any).createElement = function (type: string, props: ComponentProps<any>, ...children: any[]) {
+        if (typeof type == 'string' && props) {
+
+            let text: string = props.text
+            delete props.text
+
+            children = children || []
+            if (type != 'tbody' && text) {
+                children.push(text)
+            }
+        }
+
+        return reactCreateElement(type, props, ...children)
+    }
+    let result = componentCreateElement(args, h);
+    (React as any).createElement = reactCreateElement;
+    return result
+}
+
+//===================================================================================
+
+
 const { ipcRenderer } = nodeRequire('electron')
 ipcRenderer.on('generate-template-html', async function (event: Electron.Event, args: { templateName: string, templateData: object }) {
     let html = await generatePrintHTML(args.templateName, args.templateData)
     ipcRenderer.send('generate-template-html', html)
 })
-
-
 
 let addon = new PrintAddon()
 export default addon
