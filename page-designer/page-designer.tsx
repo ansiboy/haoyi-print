@@ -308,14 +308,14 @@ namespace jueying {
 
         private setComponentSelected(component: ComponentData, value: boolean) {
             component.props.selected = value
-            component.props.className = component.props.className || ''
-            let arr = component.props.className.split(' ') || []
-            arr = arr.filter(a => a != '' && a != classNames.componentSelected)
-            if (value == true) {
-                arr.push(classNames.componentSelected)
-            }
+            // component.props.className = component.props.className || ''
+            // let arr = component.props.className.split(' ') || []
+            // arr = arr.filter(a => a != '' && a != classNames.componentSelected)
+            // if (value == true) {
+            //     arr.push(classNames.componentSelected)
+            // }
 
-            component.props.className = arr.join(' ').trim()
+            // component.props.className = arr.join(' ').trim()
         }
 
         private removeControlFrom(controlId: string, collection: ComponentData[]): boolean {
@@ -408,10 +408,9 @@ namespace jueying {
             //     allowWrapper = false
             // }
             let attr = Component.getAttribute(type)
-            shouldWrapper = attr.resize || attr.movable || typeof type != 'string'
+            shouldWrapper = (attr.resize || attr.movable || typeof type != 'string') && props.style.position == 'absolute'
 
             if (shouldWrapper) {
-
                 let style = Object.assign({}, props.style || {})
                 delete props.style.left
                 delete props.style.top
@@ -419,7 +418,8 @@ namespace jueying {
                 props.style.width = '100%'
                 props.style.height = '100%'
 
-                return <ComponentWrapper {...props} type={type} designer={this} style={style}>
+                let className = props.selected ? appendClassName(props.className, classNames.componentSelected) : props.className
+                return <ComponentWrapper {...Object.assign({}, props, { className })} type={type} designer={this} style={style}>
                     {React.createElement(type, props, ...children)}
                 </ComponentWrapper>
             }
@@ -444,6 +444,9 @@ namespace jueying {
                 throw new Error('not implement')
             }
 
+            if (props.selected) {
+                props.className = appendClassName(props.className, classNames.componentSelected)
+            }
             let element = React.createElement(type, props, ...children)
             return element
         }

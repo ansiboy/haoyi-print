@@ -8,8 +8,7 @@ export interface Props extends ComponentProps<SquareCode> {
     size: string,
 }
 
-// @propertyEditors
-@(component() as any)
+@(component({ movable: true }) as any)
 export default class SquareCode extends BaseControl<Props, {}>{
     private img: HTMLImageElement
     element: HTMLElement;

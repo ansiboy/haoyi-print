@@ -15,7 +15,7 @@
 
 namespace jueying {
 
-    type ReactFactory = (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element
+    type ReactFactory = (type: string | React.ComponentClass<any> | React.ComponentType, props: ComponentProps<any>, ...children: any[]) => JSX.Element
 
     export type DesignerContextValue = { designer: PageDesigner | null };
     export const DesignerContext = React.createContext<DesignerContextValue>({ designer: null });
@@ -37,24 +37,33 @@ namespace jueying {
     }
 
     export class Component {
+
+        //==========================================
+        // 用于创建 React 的 React.Fragment 
+        static readonly Fragment = ""
+        //==========================================
+
         private static defaultComponentAttribute: ComponentAttribute = {
             container: false, movable: false, showHandler: false, resize: false
         }
 
         private static componentAttributes: { [key: string]: ComponentAttribute } = {
+
+            'div': { container: true, movable: true, showHandler: true, resize: true },
+
+            'img': { container: false, movable: true, resize: true },
+
+            'label': { movable: true },
+
+            'ul': { container: false, movable: true, showHandler: true, resize: false },
+            'li': { container: true, movable: false, },
+
             'table': { container: false, movable: true, showHandler: true, resize: true },
             'thead': { container: false, movable: false },
             'tbody': { container: false, movable: false },
             'tfoot': { container: false, movable: false },
             'tr': { container: false, movable: false },
             'td': { container: true, movable: false },
-
-            'ul': { container: false, movable: true, showHandler: true, resize: false },
-            'li': { container: true, movable: false, },
-
-            'img': { container: false, movable: true, resize: true },
-
-            'div': { container: true, movable: true, showHandler: true, resize: true },
         }
 
         /**
@@ -126,7 +135,7 @@ namespace jueying {
 
             try {
 
-                let type: string | React.ComponentClass = args.type;
+                let type: string | React.ComponentClass | React.ComponentType = args.type;
                 let componentName = args.type;
                 let controlType = Component.componentTypes[componentName];
                 if (controlType) {
@@ -135,9 +144,10 @@ namespace jueying {
 
                 let children = args.children ? args.children.map(o => Component.createElement(o, h)) : [];
 
-                console.assert(args.props)
-                let props = JSON.parse(JSON.stringify(args.props));
+                let props = args.props == null ? {} : JSON.parse(JSON.stringify(args.props));
                 let result: JSX.Element
+
+                type = type == Component.Fragment ? React.Fragment : type
                 result = h(type, props, ...children);
 
                 return result

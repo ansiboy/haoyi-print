@@ -137,7 +137,7 @@ declare namespace jueying {
  *
  ********************************************************************************/
 declare namespace jueying {
-    type ReactFactory = (type: string | React.ComponentClass<any>, props: ComponentProps<any>, ...children: any[]) => JSX.Element;
+    type ReactFactory = (type: string | React.ComponentClass<any> | React.ComponentType, props: ComponentProps<any>, ...children: any[]) => JSX.Element;
     type DesignerContextValue = {
         designer: PageDesigner | null;
     };
@@ -149,6 +149,7 @@ declare namespace jueying {
     }
     function component<T extends React.Component>(args?: ComponentAttribute): (constructor: new (...args: any[]) => T) => new (...args: any[]) => T;
     class Component {
+        static readonly Fragment: string;
         private static defaultComponentAttribute;
         private static componentAttributes;
         /**
@@ -412,6 +413,7 @@ declare namespace jueying {
         componentWrapper: string;
     };
     function appendClassName(sourceClassName: string, addonClassName: any): string;
+    function removeClassName(sourceClassName: string, targetClassName: any): string;
 }
 declare namespace jueying.forms {
     interface Addon {
@@ -436,7 +438,7 @@ declare namespace jueying.forms {
         pageData: ElementData;
         name: string;
         /** 组件文件夹，该文档可用组件的文件夹名称 */
-        addonPath?: string;
+        pluginPath?: string;
     }
 }
 declare namespace jueying.forms {

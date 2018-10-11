@@ -18,7 +18,7 @@ export class PageView extends React.Component<PageViewProps, State>{
         super(props);
     }
     render() {
-        return <div className={this.props.className} style={this.props.style} draggable={false}>
+        return <div className={this.props.className} style={this.props.style}>
             <PageViewContext.Provider value={{ pageView: this }}>
                 {this.props.children}
             </PageViewContext.Provider>

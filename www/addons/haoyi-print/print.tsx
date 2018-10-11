@@ -1,4 +1,4 @@
-import { ComponentData } from "jueying";
+import { ComponentData, Component, Errors } from "jueying";
 import { DocumentStorage, PageDocument } from "jueying.forms";
 import { Service } from "../../service";
 import ReactDOM = require("react-dom");
@@ -80,7 +80,8 @@ export async function createTemplateElement(templateName: string, data?: object)
         throw new Error(`Can not get template '${templateName}'`);
 
     (r.pageData.props as any).data = data;
-    let pageData = translateComponentData(r.pageData, data)
+    let pageData = JSON.parse(JSON.stringify(r.pageData))
+    pageData = data == null ? pageData : translateComponentData(pageData, data)
     //================================================
     // 移除高度
     delete pageData.props.style.height
@@ -115,43 +116,83 @@ class ServiceDocumentStorage implements DocumentStorage {
 
 
 
+const NULL_TEXT = "";
 /** 将绑定的数据转换成文本 */
-function translateComponentData(componentData: ComponentData, data: any): ComponentData {
+function translateComponentData(componentData: ComponentData, data: object | Array<any>): ComponentData {
 
-    componentData = JSON.parse(JSON.stringify(componentData))
-    if (data == null)
-        return componentData
-
-    console.assert(componentData.props)
-    let field = componentData.props.field
-    let dataValue: any
+    let field = (componentData.props.field || '').trim()
     if (field) {
-        dataValue = data[field]
-        if (!Array.isArray(dataValue)) {
-            componentData.props.text = dataValue || ' '
-        }
+        data = data[componentData.props.field]
+    }
+
+    if (data == null || typeof data != 'object') {
+        componentData.props.text = formatValue(data)
+        return componentData
+    }
+
+    if (Array.isArray(data)) {
+        let newNode: ComponentData = { type: Component.Fragment, children: [] }
+        data.forEach(dataItem => {
+            let child: ComponentData = JSON.parse(JSON.stringify(componentData))
+            delete child.props.field
+            child = translateComponentData(child, dataItem)
+            newNode.children.push(child)
+        })
+
+        return newNode
     }
 
     // 转换子元素
     let children = componentData.children || []
-    let newChildren = []
-    if (Array.isArray(dataValue)) {
-        dataValue.forEach(dataItem => {
-            children.forEach(child => {
-                let newChild = translateComponentData(child, dataItem)
-                newChildren.push(newChild)
-            })
-        })
-    }
-    else {
-        children.forEach(child => {
-            let dataItem = dataValue || data
-            let newChild = translateComponentData(child, dataItem)
-            newChildren.push(newChild)
-        })
-    }
-
+    let newChildren = children.map(o => translateComponentData(o, data))
     componentData.children = newChildren
     return componentData
+
+
+
+    // if (componentData == null)
+    //     throw Errors.argumentNull('componentData')
+
+    // if (data == null)
+    //     throw Errors.argumentNull('data')
+
+    // if (Array.isArray(data)) {
+    //     let newNode: ComponentData = { type: Component.Fragment, children: [] }
+    //     data.forEach(dataItem => {
+    //         let child = translateComponentData(componentData, dataItem)
+    //         newNode.children.push(child)
+    //     })
+
+    //     return newNode
+    // }
+
+    // console.assert(componentData.props)
+    // let field = componentData.props.field
+    // let dataValue: any
+    // if (field) {
+    //     dataValue = data[field]
+    //     if (dataValue == null) {
+    //         componentData.props.text = NULL_TEXT
+    //         return componentData
+    //     }
+    //     else if (typeof dataValue != 'object') {
+    //         componentData.props.text = formatValue(dataValue)
+    //         return componentData
+    //     }
+    //     else if (Array.isArray(dataValue)) {
+    //         componentData = translateComponentData(componentData, dataValue)
+    //         return componentData
+    //     }
+    // }
+
+    // // 转换子元素
+    // let children = componentData.children || []
+    // let newChildren = children.map(o => translateComponentData(o, data))
+    // componentData.children = newChildren
+    // return componentData
 }
 
+//TODO: formatValue
+function formatValue(value) {
+    return value
+}

@@ -129,17 +129,17 @@ namespace jueying.forms {
             pageDocuments = pageDocuments || [];
             pageDocuments.push(pageDocument);
             let addon: Addon
-            if (template.addonPath) {
+            if (template.pluginPath) {
                 try {
-                    let es = await chitu.loadjs(`${template.addonPath}/index`)
-                    console.log(`load addon ${template.addonPath}/index success`)
+                    let es = await chitu.loadjs(`${template.pluginPath}`)
+                    console.log(`load addon ${template.pluginPath} success`)
                     console.assert(es.default != null)
                     addon = es.default
                     // components = addon.components || []
                     // this.setState({ addon })
                 }
                 catch (e) {
-                    console.log(`load addon ${template.addonPath}/addon fail`)
+                    console.log(`load addon ${template.pluginPath} fail`)
                 }
 
             }

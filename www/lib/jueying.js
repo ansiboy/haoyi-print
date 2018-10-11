@@ -467,10 +467,7 @@ var jueying;
             let style = this.props.style || {};
             let { top, left, position, width, height, display, visibility } = style;
             let props = this.props;
-            let className = jueying.appendClassName(props.className || '', jueying.classNames.component);
-            if (props.selected) {
-                className = jueying.appendClassName(className, jueying.classNames.componentSelected);
-            }
+            let className = props.className || '';
             let wrapperProps = {
                 id: props.id,
                 className: className,
@@ -483,7 +480,7 @@ var jueying;
             let move_handle = this.props.selected && attr.showHandler ? React.createElement("div", { className: "move_handle", style: {}, ref: e => this.handler = e || this.handler }) : null;
             return React.createElement("div", Object.assign({}, wrapperProps),
                 move_handle,
-                attr.resize ?
+                attr.resize && this.props.selected ?
                     React.createElement(React.Fragment, null,
                         React.createElement("div", { className: "resize_handle NE" }),
                         React.createElement("div", { className: "resize_handle NN" }),
@@ -586,9 +583,9 @@ var jueying;
                     type = controlType;
                 }
                 let children = args.children ? args.children.map(o => Component.createElement(o, h)) : [];
-                console.assert(args.props);
-                let props = JSON.parse(JSON.stringify(args.props));
+                let props = args.props == null ? {} : JSON.parse(JSON.stringify(args.props));
                 let result;
+                type = type == Component.Fragment ? React.Fragment : type;
                 result = h(type, props, ...children);
                 return result;
             }
@@ -610,20 +607,25 @@ var jueying;
             Component.componentTypes[componentName] = componentType;
         }
     }
+    //==========================================
+    // 用于创建 React 的 React.Fragment 
+    Component.Fragment = "";
+    //==========================================
     Component.defaultComponentAttribute = {
         container: false, movable: false, showHandler: false, resize: false
     };
     Component.componentAttributes = {
+        'div': { container: true, movable: true, showHandler: true, resize: true },
+        'img': { container: false, movable: true, resize: true },
+        'label': { movable: true },
+        'ul': { container: false, movable: true, showHandler: true, resize: false },
+        'li': { container: true, movable: false, },
         'table': { container: false, movable: true, showHandler: true, resize: true },
         'thead': { container: false, movable: false },
         'tbody': { container: false, movable: false },
         'tfoot': { container: false, movable: false },
         'tr': { container: false, movable: false },
         'td': { container: true, movable: false },
-        'ul': { container: false, movable: true, showHandler: true, resize: false },
-        'li': { container: true, movable: false, },
-        'img': { container: false, movable: true, resize: true },
-        'div': { container: true, movable: true, showHandler: true, resize: true },
     };
     Component.controlPropEditors = {};
     Component.componentTypes = {};
@@ -931,13 +933,13 @@ var jueying;
         }
         setComponentSelected(component, value) {
             component.props.selected = value;
-            component.props.className = component.props.className || '';
-            let arr = component.props.className.split(' ') || [];
-            arr = arr.filter(a => a != '' && a != jueying.classNames.componentSelected);
-            if (value == true) {
-                arr.push(jueying.classNames.componentSelected);
-            }
-            component.props.className = arr.join(' ').trim();
+            // component.props.className = component.props.className || ''
+            // let arr = component.props.className.split(' ') || []
+            // arr = arr.filter(a => a != '' && a != classNames.componentSelected)
+            // if (value == true) {
+            //     arr.push(classNames.componentSelected)
+            // }
+            // component.props.className = arr.join(' ').trim()
         }
         removeControlFrom(controlId, collection) {
             let controlIndex = null;
@@ -1014,7 +1016,7 @@ var jueying;
             //     allowWrapper = false
             // }
             let attr = jueying.Component.getAttribute(type);
-            shouldWrapper = attr.resize || attr.movable || typeof type != 'string';
+            shouldWrapper = (attr.resize || attr.movable || typeof type != 'string') && props.style.position == 'absolute';
             if (shouldWrapper) {
                 let style = Object.assign({}, props.style || {});
                 delete props.style.left;
@@ -1022,7 +1024,8 @@ var jueying;
                 delete props.style.position;
                 props.style.width = '100%';
                 props.style.height = '100%';
-                return React.createElement(jueying.ComponentWrapper, Object.assign({}, props, { type: type, designer: this, style: style }), React.createElement(type, props, ...children));
+                let className = props.selected ? jueying.appendClassName(props.className, jueying.classNames.componentSelected) : props.className;
+                return React.createElement(jueying.ComponentWrapper, Object.assign({}, Object.assign({}, props, { className }), { type: type, designer: this, style: style }), React.createElement(type, props, ...children));
             }
             props.ref = (e) => {
                 if (!e)
@@ -1040,6 +1043,9 @@ var jueying;
                 }
                 throw new Error('not implement');
             };
+            if (props.selected) {
+                props.className = jueying.appendClassName(props.className, jueying.classNames.componentSelected);
+            }
             let element = React.createElement(type, props, ...children);
             return element;
         }
@@ -1173,13 +1179,20 @@ var jueying;
     `;
     document.head.appendChild(element);
     function appendClassName(sourceClassName, addonClassName) {
-        console.assert(sourceClassName != null);
+        sourceClassName = sourceClassName || '';
         console.assert(addonClassName);
         if (sourceClassName.indexOf(addonClassName) >= 0)
             return sourceClassName;
         return `${sourceClassName} ${addonClassName}`;
     }
     jueying.appendClassName = appendClassName;
+    function removeClassName(sourceClassName, targetClassName) {
+        sourceClassName = sourceClassName || '';
+        sourceClassName = sourceClassName.replace(new RegExp(targetClassName, 'g'), '');
+        sourceClassName = sourceClassName.trim();
+        return sourceClassName;
+    }
+    jueying.removeClassName = removeClassName;
 })(jueying || (jueying = {}));
 var jueying;
 (function (jueying) {
@@ -1346,17 +1359,17 @@ var jueying;
                     pageDocuments = pageDocuments || [];
                     pageDocuments.push(pageDocument);
                     let addon;
-                    if (template.addonPath) {
+                    if (template.pluginPath) {
                         try {
-                            let es = yield chitu.loadjs(`${template.addonPath}/index`);
-                            console.log(`load addon ${template.addonPath}/index success`);
+                            let es = yield chitu.loadjs(`${template.pluginPath}`);
+                            console.log(`load addon ${template.pluginPath} success`);
                             console.assert(es.default != null);
                             addon = es.default;
                             // components = addon.components || []
                             // this.setState({ addon })
                         }
                         catch (e) {
-                            console.log(`load addon ${template.addonPath}/addon fail`);
+                            console.log(`load addon ${template.pluginPath} fail`);
                         }
                     }
                     this.setState({

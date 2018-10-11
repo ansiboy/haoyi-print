@@ -30,10 +30,14 @@ class PrinterDropdown extends PropEditor<{ value: string, printerNames?: string[
 export function setStyleEditor(componentType: React.ComponentClass | string) {
 
     let field: keyof jueying.ComponentProps<any> = 'field'
+    Component.setPropEditor(componentType, field, TextInput, 'data')
+
+    field = 'name'
     Component.setPropEditor(componentType, field, TextInput, 'design')
+
     Component.setPropEditor(componentType, 'text', TextInput, 'appearance')
     Component.setPropEditor(componentType, 'className', TextInput, 'behavior')
-    Component.setPropEditor(componentType, 'colspan', TextInput, 'behavior')
+    Component.setPropEditor(componentType, 'colSpan', TextInput, 'behavior')
 
     let printerProp: keyof PageViewProps = 'printer'
     Component.setPropEditor(componentType, printerProp, PrinterDropdown, 'behavior')
@@ -94,7 +98,12 @@ jueying.strings = {
     data: '数据'
 }
 
-let htmlTypes = ['table', 'thead', 'th', 'tbody', 'tfoot', 'tr', 'td', 'ul', 'li', 'div']
+let htmlTypes = [
+    'div',
+    'label',
+    'table', 'thead', 'th', 'tbody', 'tfoot', 'tr', 'td',
+    'ul', 'li',
+]
 htmlTypes.forEach(o => {
     setStyleEditor(o)
 })

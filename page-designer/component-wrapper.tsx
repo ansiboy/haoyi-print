@@ -234,11 +234,8 @@ namespace jueying {
             let { top, left, position, width, height, display, visibility } = style
 
             let props = this.props
-            let className = appendClassName(props.className || '', classNames.component)
-            if (props.selected) {
-                className = appendClassName(className, classNames.componentSelected)
-            }
-
+            let className = props.className || ''
+            
             let wrapperProps: ComponentProps<any> & React.HTMLAttributes<any> = {
                 id: props.id,
                 className: className,
@@ -254,7 +251,7 @@ namespace jueying {
 
             return <div {...wrapperProps}>
                 {move_handle}
-                {attr.resize ?
+                {attr.resize && this.props.selected ?
                     <>
                         <div className="resize_handle NE"></div>
                         <div className="resize_handle NN"></div>

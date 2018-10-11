@@ -15,14 +15,19 @@ class PrintAddon implements Addon {
     components = [
         {
             componentData: {
-                type: 'div',
-                props: {
-                    text: 'label'
-                }
+                type: 'label'
             },
             displayName: "标签",
             icon: "glyphicon glyphicon-comment",
             introduce: "标签",
+        },
+        {
+            componentData: {
+                type: 'div'
+            },
+            displayName: "DIV",
+            icon: "glyphicon glyphicon-comment",
+            introduce: "DIV",
         },
         {
             componentData: { type: 'SquareCode' },
@@ -146,6 +151,19 @@ class PrintAddon implements Addon {
 
 //===================================================================================
 // 通过拦截 React.createElement 函数，自定义 HTML 元素生成
+
+function designTimeText(type: string, props: ComponentProps<any>, children: any[]) {
+    children = children || []
+    let text: string = props.text
+    if (text || children.length > 0) {
+        return text
+    }
+
+    text = props.field ? `[${props.field}]` : props.name
+
+    return text
+}
+
 let pageDesignerRender = jueying.PageDesigner.prototype.render
 jueying.PageDesigner.prototype.render = function () {
 
@@ -153,7 +171,7 @@ jueying.PageDesigner.prototype.render = function () {
     (React as any).createElement = function (type: string, props: ComponentProps<any>, ...children: any[]) {
         if (typeof type == 'string' && props) {
 
-            let text: string = props.field ? `[${props.field}]` : props.text
+            let text: string = designTimeText(type, props, children)
             delete props.field
             delete props.text
 
@@ -163,7 +181,7 @@ jueying.PageDesigner.prototype.render = function () {
                     children.push(text)
                 }
                 else {
-                    children.unshift(reactCreateElement('tr', {}, reactCreateElement('td', { colspan: 1000 } as any, text)))
+                    children.unshift(reactCreateElement('tr', {}, reactCreateElement('td', { colSpan: 1000 } as React.CSSProperties, text)))
                 }
             }
         }
