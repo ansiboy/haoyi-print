@@ -1,5 +1,5 @@
 import { component, Component, TextInput, ComponentProps } from "jueying";
-import { setStyleEditor, PageViewContext } from "./base-component";
+import { setStyleEditor } from "./base-component";
 import React = require("react");
 
 export interface PageViewProps extends ComponentProps<PageView> {
@@ -19,9 +19,7 @@ export class PageView extends React.Component<PageViewProps, State>{
     }
     render() {
         return <div className={this.props.className} style={this.props.style}>
-            <PageViewContext.Provider value={{ pageView: this }}>
                 {this.props.children}
-            </PageViewContext.Provider>
         </div>
     }
 }

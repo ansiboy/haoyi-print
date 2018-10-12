@@ -5,9 +5,9 @@ namespace jueying {
     export class JSONUndoRedo<T> {
         private undoStack: Array<jsondiffpatch.Delta>
         private redonStack: Array<jsondiffpatch.Delta>
-        private currentData: T
+        private _currentData: T
         constructor(initData: T) {
-            this.currentData = JSON.parse(JSON.stringify(initData))
+            this._currentData = JSON.parse(JSON.stringify(initData))
             this.undoStack = []
             this.redonStack = []
         }
@@ -17,35 +17,38 @@ namespace jueying {
         get canRedo() {
             return this.redonStack.length > 0
         }
+        get currentData() {
+            return this._currentData
+        }
         setChangedData(changedData: ComponentData) {
             if (this.redonStack.length > 0)
                 this.redonStack = []
 
-            let delta = jsondiffpatch.diff(this.currentData, changedData)
+            let delta = jsondiffpatch.diff(this._currentData, changedData)
             if (delta == null)
                 return
 
             this.pushDelta(delta, this.undoStack)
-            this.currentData = JSON.parse(JSON.stringify(changedData))
+            this._currentData = JSON.parse(JSON.stringify(changedData))
         }
         undo(): T {
             if (this.canUndo == false)
                 return
 
             let delta = this.undoStack.pop()
-            this.currentData = jsondiffpatch.unpatch(this.currentData, delta)
+            this._currentData = jsondiffpatch.unpatch(this._currentData, delta)
             this.pushDelta(delta, this.redonStack)
-            return JSON.parse(JSON.stringify(this.currentData))
+            return JSON.parse(JSON.stringify(this._currentData))
         }
         redo(): T {
             if (this.canRedo == false)
                 return
 
             let delta = this.redonStack.pop()
-            this.currentData = jsondiffpatch.patch(this.currentData, delta)
+            this._currentData = jsondiffpatch.patch(this._currentData, delta)
             this.pushDelta(delta, this.undoStack)
 
-            return JSON.parse(JSON.stringify(this.currentData))
+            return JSON.parse(JSON.stringify(this._currentData))
         }
 
         private pushDelta(delta: jsondiffpatch.Delta, stack: Array<jsondiffpatch.Delta>) {

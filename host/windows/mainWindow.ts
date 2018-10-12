@@ -1,8 +1,9 @@
-import { BrowserWindow } from "electron"
+import { BrowserWindow, app } from "electron"
+import * as electron from "electron"
 import * as path from 'path'
 import * as fs from 'fs'
 
-export function createMainWindow() {
+export function createMainWindow(htmlPath: string) {
     // Create the browser window.
     let mainWindow = new BrowserWindow({
         width: 1024, height: 800,
@@ -12,9 +13,8 @@ export function createMainWindow() {
     })
 
     // and load the index.html of the app.
-    let indexFilePath = path.join(__dirname, '../../www/index.html')
-    mainWindow.loadURL(indexFilePath + '#main')
 
+    mainWindow.loadURL(htmlPath + '#main')
     // Open the DevTools.
     mainWindow.webContents.openDevTools()
 

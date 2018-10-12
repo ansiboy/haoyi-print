@@ -4,139 +4,179 @@ import "./components/list"
 import "./components/page-view"
 import "./components/square-code"
 
-import { PageDocumentFile, Addon } from "jueying.forms";
+import { PageDocumentFile, DocumentPlugin, DesignerFramework1, PageDocument } from "jueying.forms";
 import React = require("react");
-import { showSettingsDialog } from "../../controls/settingsDialog";
 import { showPrintDialog } from "./dialogs/print-dialog";
-import { ComponentData, ReactFactory, ComponentProps } from "jueying";
+import { ComponentData, ReactFactory, ComponentProps, guid } from "jueying";
 import { generatePrintHTML } from "./print";
 
-class PrintAddon implements Addon {
-    components = [
-        {
-            componentData: {
-                type: 'label'
+let components = [
+    {
+        componentData: {
+            type: 'label'
+        },
+        displayName: "标签",
+        icon: "glyphicon glyphicon-comment",
+        introduce: "标签",
+    },
+    {
+        componentData: {
+            type: 'div'
+        },
+        displayName: "DIV",
+        icon: "glyphicon glyphicon-comment",
+        introduce: "DIV",
+    },
+    {
+        componentData: { type: 'SquareCode' },
+        displayName: "二维码",
+        icon: "glyphicon glyphicon-qrcode",
+        introduce: "二维码",
+    },
+    {
+        componentData: {
+            type: 'ul',
+            props: { style: { width: 300 } },
+            children: [
+                { type: 'li', props: { style: { height: 40 } } },
+                { type: 'li', props: { style: { height: 40 } } },
+                { type: 'li', props: { style: { height: 40 } } }
+            ]
+        },
+        displayName: "列表",
+        icon: "glyphicon glyphicon-list",
+        introduce: "列表",
+    },
+    {
+        componentData: {
+            type: 'table',
+            props: {
+                style: { width: '200px', height: '200px' },
+                className: 'table table-bordered'
             },
-            displayName: "标签",
-            icon: "glyphicon glyphicon-comment",
-            introduce: "标签",
-        },
-        {
-            componentData: {
-                type: 'div'
-            },
-            displayName: "DIV",
-            icon: "glyphicon glyphicon-comment",
-            introduce: "DIV",
-        },
-        {
-            componentData: { type: 'SquareCode' },
-            displayName: "二维码",
-            icon: "glyphicon glyphicon-qrcode",
-            introduce: "二维码",
-        },
-        {
-            componentData: {
-                type: 'ul',
-                props: { style: { width: 300 } },
-                children: [
-                    { type: 'li', props: { style: { height: 40 } } },
-                    { type: 'li', props: { style: { height: 40 } } },
-                    { type: 'li', props: { style: { height: 40 } } }
-                ]
-            },
-            displayName: "列表",
-            icon: "glyphicon glyphicon-list",
-            introduce: "列表",
-        },
-        {
-            componentData: {
-                type: 'table',
-                props: {
-                    style: { width: '200px', height: '200px' },
-                    className: 'table table-bordered'
+            children: [
+                {
+                    type: 'thead',
+                    children: [
+                        {
+                            type: 'tr',
+                            children: [
+                                {
+                                    type: 'th', props: { style: { width: '33%' } }
+                                },
+                                { type: 'th', props: { style: { width: '33%' } } },
+                                { type: 'th', props: { style: { width: '33%' } } }
+                            ]
+                        }
+                    ]
                 },
-                children: [
-                    {
-                        type: 'thead',
-                        children: [
-                            {
-                                type: 'tr',
-                                children: [
-                                    {
-                                        type: 'th', props: { style: { width: '33%' } }
-                                    },
-                                    { type: 'th', props: { style: { width: '33%' } } },
-                                    { type: 'th', props: { style: { width: '33%' } } }
-                                ]
-                            }
-                        ]
-                    },
-                    {
-                        type: 'tbody',
-                        children: [
-                            {
-                                type: 'tr',
-                                children: [
-                                    { type: 'td', children: [{ type: 'div', props: { style: { width: '33%' } } }] },
-                                    { type: 'td' },
-                                    { type: 'td' }
-                                ]
-                            },
-                            {
-                                type: 'tr',
-                                children: [
-                                    { type: 'td' },
-                                    { type: 'td' },
-                                    { type: 'td' }
-                                ]
-                            },
-                            {
-                                type: 'tr',
-                                children: [
-                                    { type: 'td' },
-                                    { type: 'td' },
-                                    { type: 'td' }
-                                ]
-                            }
-                        ]
-                    },
-                    { type: 'tfoot' }
-                ]
-            },
-            displayName: "表格",
-            icon: "glyphicon glyphicon-th",
-            introduce: "表格",
-        }
-    ]
-    renderToolbarButtons({ activeDocument }: { activeDocument: PageDocumentFile }) {
+                {
+                    type: 'tbody',
+                    children: [
+                        {
+                            type: 'tr',
+                            children: [
+                                { type: 'td', children: [{ type: 'div', props: { style: { width: '33%' } } }] },
+                                { type: 'td' },
+                                { type: 'td' }
+                            ]
+                        },
+                        {
+                            type: 'tr',
+                            children: [
+                                { type: 'td' },
+                                { type: 'td' },
+                                { type: 'td' }
+                            ]
+                        },
+                        {
+                            type: 'tr',
+                            children: [
+                                { type: 'td' },
+                                { type: 'td' },
+                                { type: 'td' }
+                            ]
+                        }
+                    ]
+                },
+                { type: 'tfoot' }
+            ]
+        },
+        displayName: "表格",
+        icon: "glyphicon glyphicon-th",
+        introduce: "表格",
+    }
+]
+
+class PrintPlugin implements DocumentPlugin {
+    components = components
+    init(ide: DesignerFramework1) {
+
         let buttonClassName = 'btn btn-default btn-sm'
         let buttons = new Array<JSX.Element>()
 
+        let activeDocument = ide.state.activeDocument
         buttons.push(
             <button className={buttonClassName}
-                disabled={!activeDocument}
-                onClick={() => this.print(activeDocument)}>
+                ref={e => {
+                    if (!e) return
+                    e.disabled = !activeDocument
+                    e.onclick = () => {
+                        if (!ide.state.activeDocument)
+                            return
+
+                        this.print(ide.state.activeDocument)
+                    }
+
+                }}>
                 <i className="icon-print" />
                 <span>打印</span>
             </button>,
         )
         buttons.unshift(...[
-
             <button className={`${buttonClassName}`}
                 onClick={e => this.settings()}>
                 <i className="icon-cogs" />
                 <span>设置</span>
             </button>,
         ])
-        return buttons
+
+        let toolbar = <ul key={guid()}>
+            {buttons.map((o, i) =>
+                <li key={i} className="pull-right">{o}</li>
+            )}
+        </ul>
+
+        ide.toolbarPanel.appendToolbar(toolbar)
     }
-    print(activeDocument: PageDocumentFile) {
+    // renderToolbarButtons({ activeDocument }: { activeDocument: PageDocumentFile }) {
+    //     let buttonClassName = 'btn btn-default btn-sm'
+    //     let buttons = new Array<JSX.Element>()
+
+    //     buttons.push(
+    //         <button className={buttonClassName}
+    //             disabled={!activeDocument}
+    //             onClick={() => this.print(activeDocument)}>
+    //             <i className="icon-print" />
+    //             <span>打印</span>
+    //         </button>,
+    //     )
+    //     buttons.unshift(...[
+
+    //         <button className={`${buttonClassName}`}
+    //             onClick={e => this.settings()}>
+    //             <i className="icon-cogs" />
+    //             <span>设置</span>
+    //         </button>,
+    //     ])
+    //     return buttons
+    // }
+    print(activeDocument: PageDocument) {
         // let { activeDocument } = this.state
         console.assert(activeDocument != null)
 
         let doc = activeDocument
-        let name = doc.fileName
+        let name = doc.name
 
         showPrintDialog(name)
     }
@@ -145,7 +185,7 @@ class PrintAddon implements Addon {
         remote.app.exit();
     }
     settings() {
-        showSettingsDialog()
+        // showSettingsDialog()
     }
 }
 
@@ -177,12 +217,12 @@ jueying.PageDesigner.prototype.render = function () {
 
             children = children || []
             if (text) {
-                if (type != 'tbody') {
-                    children.push(text)
-                }
-                else {
-                    children.unshift(reactCreateElement('tr', {}, reactCreateElement('td', { colSpan: 1000 } as React.CSSProperties, text)))
-                }
+                // if (type != 'tbody') {
+                children.push(text)
+                // }
+                // else {
+                //     children.unshift(reactCreateElement('tr', {}, reactCreateElement('td', { colSpan: 1000 } as React.CSSProperties, text)))
+                // }
             }
         }
 
@@ -224,5 +264,5 @@ ipcRenderer.on('generate-template-html', async function (event: Electron.Event, 
     ipcRenderer.send('generate-template-html', html)
 })
 
-let addon = new PrintAddon()
+let addon = new PrintPlugin()
 export default addon

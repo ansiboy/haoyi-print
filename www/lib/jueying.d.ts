@@ -25,10 +25,11 @@ declare namespace jueying {
     class JSONUndoRedo<T> {
         private undoStack;
         private redonStack;
-        private currentData;
+        private _currentData;
         constructor(initData: T);
         readonly canUndo: boolean;
         readonly canRedo: boolean;
+        readonly currentData: T;
         setChangedData(changedData: ComponentData): void;
         undo(): T;
         redo(): T;
@@ -72,16 +73,18 @@ declare namespace jueying {
 }
 declare namespace jueying {
     interface ComponentToolbarProps extends React.Props<ComponentPanel> {
-        componets: ComponentDefine[];
         style?: React.CSSProperties;
         className?: string;
     }
     interface ComponentToolbarState {
+        componets: ComponentDefine[];
     }
     class ComponentPanel extends React.Component<ComponentToolbarProps, ComponentToolbarState> {
         designer: PageDesigner;
         private toolbarElement;
+        constructor(props: any);
         private componentDraggable;
+        setComponets(componets: ComponentDefine[]): void;
         static getComponentData(dataTransfer: DataTransfer): ComponentData;
         /** 获取光标在图标内的位置 */
         static mouseInnerPosition(dataTransfer: DataTransfer): {
@@ -204,6 +207,7 @@ declare namespace jueying {
         static fileNotExists(fileName: string): any;
         static argumentNull(argumentName: string): Error;
         static pageDataIsNull(): Error;
+        static toolbarRequiredKey(): Error;
     }
 }
 declare namespace jueying {
@@ -416,18 +420,32 @@ declare namespace jueying {
     function removeClassName(sourceClassName: string, targetClassName: any): string;
 }
 declare namespace jueying.forms {
-    interface Addon {
+    interface DocumentPlugin extends Plugin {
         /** 文档模板组件，在加载文档后显示在组件面板中 */
         components: ComponentDefine[];
-        /** 工具栏按钮，在加载文档后显示在组件面板中 */
-        renderToolbarButtons?: (context: {
-            activeDocument: PageDocumentFile;
-        }) => JSX.Element[];
+    }
+    interface Plugin {
+        init?(form: DesignerFramework1): any;
     }
 }
 declare namespace jueying.forms {
-    function guid(): string;
-    function isEquals(obj1: object, obj2: object): boolean;
+    let defaultPluginSingleton: boolean;
+    interface Confid {
+        index: string;
+        plugins: {
+            /** 插件 ID */
+            id: string;
+            /** 插件名称 */
+            name: string;
+            /** 插件加载文件路径 */
+            path: string;
+            /** 主界面启动后，是否主动加载该插件 */
+            autoLoad?: boolean;
+            /** 是否单例，默认为 true */
+            singleton?: boolean;
+        }[];
+        startup: string[];
+    }
 }
 declare namespace jueying.forms {
     type ElementData = jueying.ComponentData;
@@ -438,7 +456,7 @@ declare namespace jueying.forms {
         pageData: ElementData;
         name: string;
         /** 组件文件夹，该文档可用组件的文件夹名称 */
-        pluginPath?: string;
+        plugin?: string;
     }
 }
 declare namespace jueying.forms {
@@ -448,37 +466,49 @@ declare namespace jueying.forms {
     }
     interface DesignerFrameworkState {
         pageDocuments?: PageDocumentFile[];
-        activeDocument?: PageDocumentFile;
-        addon?: Addon;
+        activeDocumentField?: PageDocumentFile;
+        addon?: DocumentPlugin;
     }
-    class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState> {
+    type DesignerFrameworkProps1 = DesignerFrameworkProps & {
+        config: Confid;
+    };
+    type DesignerFrameworkState1 = DesignerFrameworkState & {
+        documents: PageDocument[];
+        activeDocument?: PageDocument;
+        buttons: JSX.Element[];
+    };
+    class DesignerFramework1 extends React.Component<DesignerFrameworkProps1, DesignerFrameworkState1> {
         protected pageDesigner: PageDesigner;
-        private _storage;
         private editorPanel;
-        private toolbarElement;
-        private changedManages;
-        private editorPanelElement;
-        constructor(props: any);
-        renderButtons(activeDocument: PageDocumentFile, buttonClassName?: string): JSX.Element[];
-        readonly storage: DocumentStorage;
-        static readonly dialogsElement: HTMLElement;
-        readonly changedManage: JSONUndoRedo<ComponentData>;
-        undo(): void;
-        redo(): void;
-        save(): Promise<void>;
-        loadDocument(template: PageDocument, isNew: boolean): Promise<void>;
-        fetchTemplates(): Promise<{
-            items: PageDocument[];
-            count: number;
+        documentChanged: Callback<{
+            document: PageDocument;
         }>;
-        newFile(): Promise<void>;
-        open(): void;
+        documentClosing: Callback<{
+            preventClose: boolean;
+            document: PageDocument;
+        }>;
+        documentClosed: Callback<{
+            document: PageDocument;
+        }>;
+        documentActived: Callback<{
+            document: PageDocument;
+            index: number;
+        }>;
+        documentAdd: Callback<{
+            document: PageDocument;
+        }>;
+        readonly plugins: (Plugin & {
+            typeId: string;
+        })[];
+        componentPanel: ComponentPanel;
+        toolbarPanel: ToolbarPanel;
+        constructor(props: DesignerFrameworkProps1);
+        setActiveDocument(document: PageDocument): boolean;
+        static readonly dialogsElement: HTMLElement;
         private activeDocument;
-        setState<K extends keyof DesignerFrameworkState>(state: (Pick<DesignerFrameworkState, K> | DesignerFrameworkState)): void;
+        private loadPlugin;
         private closeDocument;
-        designerRef(e: PageDesigner): void;
-        renderToolbar(element: HTMLElement): void;
-        renderEditorPanel(element: HTMLElement): void;
+        designerRef(e: PageDesigner, document: PageDocument): void;
         render(): JSX.Element;
     }
 }
@@ -552,5 +582,15 @@ declare namespace jueying.forms {
             requiredFileName?: boolean;
             callback?: (tmp: PageDocument, fileName?: string) => void;
         }): void;
+    }
+}
+declare namespace jueying.forms {
+    interface ToolbarState {
+        toolbars: JSX.Element[];
+    }
+    class ToolbarPanel extends React.Component<{}, ToolbarState> {
+        constructor(props: {});
+        appendToolbar(toolbar: JSX.Element): void;
+        render(): JSX.Element;
     }
 }

@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "target": "es2017",
+        "module": "amd",
+        // "outDir": "../",
+        "jsx": "react",
+        "strict": false,
+        "experimentalDecorators": true,
+    },
+    "exclude": [
+        "server/**"
+    ]
+}

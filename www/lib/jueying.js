@@ -43,7 +43,7 @@ var jueying;
      */
     class JSONUndoRedo {
         constructor(initData) {
-            this.currentData = JSON.parse(JSON.stringify(initData));
+            this._currentData = JSON.parse(JSON.stringify(initData));
             this.undoStack = [];
             this.redonStack = [];
         }
@@ -53,30 +53,33 @@ var jueying;
         get canRedo() {
             return this.redonStack.length > 0;
         }
+        get currentData() {
+            return this._currentData;
+        }
         setChangedData(changedData) {
             if (this.redonStack.length > 0)
                 this.redonStack = [];
-            let delta = jsondiffpatch.diff(this.currentData, changedData);
+            let delta = jsondiffpatch.diff(this._currentData, changedData);
             if (delta == null)
                 return;
             this.pushDelta(delta, this.undoStack);
-            this.currentData = JSON.parse(JSON.stringify(changedData));
+            this._currentData = JSON.parse(JSON.stringify(changedData));
         }
         undo() {
             if (this.canUndo == false)
                 return;
             let delta = this.undoStack.pop();
-            this.currentData = jsondiffpatch.unpatch(this.currentData, delta);
+            this._currentData = jsondiffpatch.unpatch(this._currentData, delta);
             this.pushDelta(delta, this.redonStack);
-            return JSON.parse(JSON.stringify(this.currentData));
+            return JSON.parse(JSON.stringify(this._currentData));
         }
         redo() {
             if (this.canRedo == false)
                 return;
             let delta = this.redonStack.pop();
-            this.currentData = jsondiffpatch.patch(this.currentData, delta);
+            this._currentData = jsondiffpatch.patch(this._currentData, delta);
             this.pushDelta(delta, this.undoStack);
-            return JSON.parse(JSON.stringify(this.currentData));
+            return JSON.parse(JSON.stringify(this._currentData));
         }
         pushDelta(delta, stack) {
             //============================================================
@@ -224,6 +227,10 @@ var jueying;
 var jueying;
 (function (jueying) {
     class ComponentPanel extends React.Component {
+        constructor(props) {
+            super(props);
+            this.state = { componets: [] };
+        }
         componentDraggable(toolItemElement, componentData) {
             console.assert(toolItemElement != null);
             toolItemElement.draggable = true;
@@ -232,6 +239,9 @@ var jueying;
                 ev.dataTransfer.setData(jueying.constants.componentData, JSON.stringify(componentData));
                 ev.dataTransfer.setData('mousePosition', JSON.stringify({ x: ev.offsetX, y: ev.offsetY }));
             });
+        }
+        setComponets(componets) {
+            this.setState({ componets });
         }
         static getComponentData(dataTransfer) {
             var str = dataTransfer.getData(jueying.constants.componentData);
@@ -248,8 +258,7 @@ var jueying;
         }
         render() {
             let props = Object.assign({}, this.props);
-            delete props.componets;
-            let componets = this.props.componets;
+            let componets = this.state.componets || [];
             return React.createElement(jueying.DesignerContext.Consumer, null, context => {
                 this.designer = context.designer;
                 return React.createElement("div", Object.assign({}, props, { className: "component-panel panel panel-primary" }),
@@ -695,6 +704,9 @@ var jueying;
         static pageDataIsNull() {
             return new Error(`Page data is null.`);
         }
+        static toolbarRequiredKey() {
+            return new Error(`Toolbar has not a key prop.`);
+        }
     }
     jueying.Errors = Errors;
 })(jueying || (jueying = {}));
@@ -1015,8 +1027,10 @@ var jueying;
             //     tagName == 'li') {
             //     allowWrapper = false
             // }
-            let attr = jueying.Component.getAttribute(type);
-            shouldWrapper = (attr.resize || attr.movable || typeof type != 'string') && props.style.position == 'absolute';
+            if (typeof type == 'string') {
+                let attr = jueying.Component.getAttribute(type);
+                shouldWrapper = (attr.resize || attr.movable || typeof type != 'string') && props.style.position == 'absolute';
+            }
             if (shouldWrapper) {
                 let style = Object.assign({}, props.style || {});
                 delete props.style.left;
@@ -1198,59 +1212,7 @@ var jueying;
 (function (jueying) {
     var forms;
     (function (forms) {
-        function guid() {
-            function s4() {
-                return Math.floor((1 + Math.random()) * 0x10000)
-                    .toString(16)
-                    .substring(1);
-            }
-            return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-                s4() + '-' + s4() + s4() + s4();
-        }
-        forms.guid = guid;
-        function isEquals(obj1, obj2) {
-            if ((obj1 == null && obj2 != null) || (obj1 != null && obj2 == null))
-                return false;
-            if (obj1 == null && obj2 == null)
-                return true;
-            var type = typeof obj1;
-            if (type == 'number' || type == 'string' || obj1 instanceof Date) {
-                return obj1 == obj2;
-            }
-            if (Array.isArray(obj1)) {
-                if (!Array.isArray(obj2))
-                    return false;
-                if (obj1.length != obj2.length)
-                    return false;
-                for (let i = 0; i < obj1.length; i++) {
-                    if (!isEquals(obj1[i], obj2[i])) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            let keys1 = Object.getOwnPropertyNames(obj1)
-                .filter(o => !skipField(obj1, o))
-                .sort();
-            let keys2 = Object.getOwnPropertyNames(obj2)
-                .filter(o => !skipField(obj2, o))
-                .sort();
-            if (!isEquals(keys1, keys2))
-                return false;
-            for (let i = 0; i < keys1.length; i++) {
-                let key = keys1[i];
-                let value1 = obj1[key];
-                let value2 = obj2[key];
-                if (!isEquals(value1, value2)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        forms.isEquals = isEquals;
-        function skipField(obj, field) {
-            return typeof obj[field] == 'function';
-        }
+        forms.defaultPluginSingleton = true;
     })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 /// <reference path="templates.tsx"/>
@@ -1266,45 +1228,40 @@ var jueying;
 (function (jueying) {
     var forms;
     (function (forms) {
-        class DesignerFramework extends React.Component {
+        class DesignerFramework1 extends React.Component {
             constructor(props) {
                 super(props);
-                this.state = {};
-                this.changedManages = {};
+                //TODO: 校验 config 文件
+                this.state = { documents: [], buttons: [] };
+                this.documentChanged = jueying.Callback.create();
+                this.documentClosing = jueying.Callback.create();
+                this.documentClosed = jueying.Callback.create();
+                this.documentActived = jueying.Callback.create();
+                this.documentAdd = jueying.Callback.create();
+                this.plugins = [];
+                props.config.plugins
+                    .filter(o => o.autoLoad)
+                    .forEach(o => {
+                    this.loadPlugin(o.path, o.id);
+                });
             }
-            renderButtons(activeDocument, buttonClassName) {
-                buttonClassName = buttonClassName || 'btn btn-default';
-                let isChanged = activeDocument ? activeDocument.notSaved : false;
-                let addon = this.state.addon;
-                let buttons = [
-                    React.createElement("button", { className: buttonClassName, disabled: !isChanged, onClick: () => this.save() },
-                        React.createElement("i", { className: "icon-save" }),
-                        React.createElement("span", null, "\u4FDD\u5B58")),
-                    React.createElement("button", { className: buttonClassName, disabled: this.changedManage == null || !this.changedManage.canRedo, onClick: () => this.redo() },
-                        React.createElement("i", { className: "icon-repeat" }),
-                        React.createElement("span", null, "\u91CD\u505A")),
-                    React.createElement("button", { className: buttonClassName, disabled: this.changedManage == null || !this.changedManage.canUndo, onClick: () => this.undo() },
-                        React.createElement("i", { className: "icon-undo" }),
-                        React.createElement("span", null, "\u64A4\u9500")),
-                    React.createElement("button", { className: buttonClassName },
-                        React.createElement("i", { className: "icon-eye-open" }),
-                        React.createElement("span", null, "\u9884\u89C8")),
-                    React.createElement("button", { className: buttonClassName, onClick: () => this.newFile() },
-                        React.createElement("i", { className: "icon-file" }),
-                        React.createElement("span", null, "\u65B0\u5EFA")),
-                    React.createElement("button", { className: buttonClassName, onClick: () => this.open() },
-                        React.createElement("i", { className: "icon-folder-open" }),
-                        React.createElement("span", null, "\u6253\u5F00")),
-                ];
-                if (addon != null && addon.renderToolbarButtons) {
-                    buttons.push(...addon.renderToolbarButtons({ activeDocument }) || []);
+            setActiveDocument(document) {
+                let { documents } = this.state;
+                console.assert(document.name);
+                let { targetDocument, index } = documents.filter(o => o.name == document.name)
+                    .map((o, index) => ({ targetDocument: o, index }))[0] || { targetDocument: null, index: -1 };
+                if (!targetDocument) {
+                    documents.push(document);
+                    // this.setState({ documents })
+                    this.documentAdd.fire({ document });
+                    this.activeDocument(documents.length - 1);
+                    return;
                 }
-                return buttons;
-            }
-            get storage() {
-                if (this._storage == null)
-                    this._storage = new forms.LocalDocumentStorage();
-                return this._storage;
+                documents[index] = document;
+                this.setState({ documents });
+                this.documentChanged.fire({ document });
+                this.activeDocument(index);
+                return true;
             }
             static get dialogsElement() {
                 let id = 'designer-framework-dialogs';
@@ -1316,190 +1273,105 @@ var jueying;
                 }
                 return element;
             }
-            get changedManage() {
-                let activeDocument = this.state.activeDocument;
-                if (activeDocument == null)
-                    return null;
-                return this.changedManages[activeDocument.fileName];
-            }
             //======================================================
             // Virtual Method
-            undo() {
-                let pageData = this.changedManage.undo();
-                let { activeDocument } = this.state;
-                activeDocument.document.pageData = pageData;
-                this.setState({ activeDocument });
-            }
-            redo() {
-                let pageData = this.changedManage.redo();
-                let { activeDocument } = this.state;
-                activeDocument.document.pageData = pageData;
-                this.setState({ activeDocument });
-            }
-            save() {
-                return __awaiter(this, void 0, void 0, function* () {
-                    let { activeDocument, pageDocuments } = this.state;
-                    let pageDocument = activeDocument;
-                    console.assert(pageDocument != null);
-                    pageDocument.save();
-                    this.setState({ pageDocuments });
-                });
-            }
-            loadDocument(template, isNew) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    let fileName = template.name;
-                    console.assert(fileName);
-                    console.assert(template);
-                    let { pageData } = template;
-                    let { pageDocuments } = this.state;
-                    let documentStorage = this.storage;
-                    let pageDocument = isNew ? forms.PageDocumentFile.new(documentStorage, fileName, template) :
-                        yield forms.PageDocumentFile.load(documentStorage, fileName);
-                    this.changedManages[fileName] = new jueying.JSONUndoRedo(pageData);
-                    pageDocuments = pageDocuments || [];
-                    pageDocuments.push(pageDocument);
-                    let addon;
-                    if (template.pluginPath) {
-                        try {
-                            let es = yield chitu.loadjs(`${template.pluginPath}`);
-                            console.log(`load addon ${template.pluginPath} success`);
-                            console.assert(es.default != null);
-                            addon = es.default;
-                            // components = addon.components || []
-                            // this.setState({ addon })
-                        }
-                        catch (e) {
-                            console.log(`load addon ${template.pluginPath} fail`);
-                        }
-                    }
-                    this.setState({
-                        pageDocuments, addon,
-                        activeDocument: pageDocuments[pageDocuments.length - 1]
-                    });
-                });
-            }
-            fetchTemplates() {
-                return __awaiter(this, void 0, void 0, function* () {
-                    let templates = this.props.templates;
-                    return { items: templates, count: templates.length };
-                });
-            }
-            newFile() {
-                return __awaiter(this, void 0, void 0, function* () {
-                    forms.TemplateDialog.show({
-                        fetch: () => this.fetchTemplates(),
-                        requiredFileName: true,
-                        callback: (tmp) => {
-                            this.loadDocument(tmp, true);
-                        }
-                    });
-                });
-            }
-            open() {
-                forms.TemplateDialog.show({
-                    fetch: (pageIndex, pageSize) => __awaiter(this, void 0, void 0, function* () {
-                        let result = yield this.storage.list(pageIndex, pageSize);
-                        let items = result.items; //.map(a => ({ name: a[0], pageData: a[1] }));
-                        let count = result.count;
-                        return { items: items, count };
-                    }),
-                    callback: (tmp) => {
-                        let docs = this.state.pageDocuments || [];
-                        let existDoc = docs.filter(o => o.fileName == tmp.name)[0];
-                        if (existDoc) {
-                            let index = docs.indexOf(existDoc);
-                            this.activeDocument(index);
-                            return;
-                        }
-                        this.loadDocument(tmp, false);
-                    }
-                });
-            }
             activeDocument(index) {
-                let { pageDocuments } = this.state;
-                let doc = pageDocuments[index];
-                console.assert(doc != null);
-                this.setState({ activeDocument: doc });
-                setTimeout(() => {
-                    let pageViewId = doc.document.pageData.props.id;
-                    console.assert(pageViewId != null, 'pageView id is null');
-                    console.assert(doc.document.pageData.type == 'PageView');
-                    this.pageDesigner.selectComponent(pageViewId);
-                }, 50);
+                return __awaiter(this, void 0, void 0, function* () {
+                    let { documents } = this.state;
+                    console.assert(index <= documents.length - 1);
+                    let doc = documents[index];
+                    this.setState({ activeDocument: doc });
+                    this.documentActived.fire({ document: doc, index });
+                    if (doc.plugin) {
+                        let pluginInfo = this.props.config.plugins.filter(o => o.id == doc.plugin)[0];
+                        if (pluginInfo == null) {
+                            console.log(`Plugin ${doc.plugin} is not config`);
+                        }
+                        if (!pluginInfo.id) {
+                            throw new Error(`Plugin id cannt null or empty.`);
+                        }
+                        pluginInfo.singleton = pluginInfo.singleton == null ? forms.defaultPluginSingleton : pluginInfo.singleton;
+                        console.assert(this.plugins != null);
+                        let plugin = this.plugins.filter(o => o.typeId.toLowerCase() == pluginInfo.id.toLowerCase())[0];
+                        if (plugin == null || pluginInfo.singleton == false) {
+                            plugin = yield this.loadPlugin(pluginInfo.path, pluginInfo.id);
+                        }
+                        let obj = plugin;
+                        if (obj.components) {
+                            console.assert(this.componentPanel != null);
+                            this.componentPanel.setComponets(obj.components);
+                        }
+                    }
+                });
             }
-            setState(state) {
-                super.setState(state);
+            //TODO: 防止 Plugin 重复加载
+            loadPlugin(pluginPath, typeId) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    try {
+                        let mod = yield chitu.loadjs(pluginPath);
+                        console.assert(mod);
+                        let plugin = mod.default;
+                        console.assert(plugin);
+                        let obj = Object.assign(plugin, { typeId });
+                        this.plugins.push(obj);
+                        if (plugin.init)
+                            plugin.init(this);
+                        return obj;
+                    }
+                    catch (exc) {
+                        console.error(exc);
+                    }
+                });
             }
             closeDocument(index) {
-                let { pageDocuments } = this.state;
-                console.assert(pageDocuments != null);
-                let doc = pageDocuments[index];
-                console.assert(doc != null);
-                let close = () => {
-                    pageDocuments.splice(index, 1);
-                    let activeDocumentIndex = index > 0 ? index - 1 : 0;
-                    let activeDocument = pageDocuments[activeDocumentIndex];
-                    this.setState({ pageDocuments, activeDocument, addon: null });
-                };
-                if (!doc.notSaved) {
-                    close();
-                    return;
+                let { documents } = this.state;
+                console.assert(documents != null);
+                console.assert(index <= documents.length - 1);
+                let document = documents[index];
+                let args = { preventClose: false, document };
+                this.documentClosing.fire(args);
+                if (args.preventClose) {
+                    return false;
                 }
-                ui.confirm({
-                    title: '提示',
-                    message: '该页面尚未保存，是否保存?',
-                    confirmText: '保存',
-                    cancelText: '不保存',
-                    confirm: () => __awaiter(this, void 0, void 0, function* () {
-                        yield doc.save();
-                        close();
-                    }),
-                    cancle: () => {
-                        close();
-                        return Promise.resolve();
-                    },
-                });
+                documents.splice(index, 1);
+                this.setState({ documents });
+                this.documentClosed.fire({ document });
+                if (documents.length > 0) {
+                    this.activeDocument(index > documents.length - 1 ? 0 : index);
+                }
             }
-            designerRef(e) {
+            designerRef(e, document) {
                 if (!e)
                     return;
                 this.pageDesigner = e || this.pageDesigner;
                 let func = () => {
-                    let activeDocument = this.state.activeDocument;
-                    this.changedManage.setChangedData(activeDocument.document.pageData);
-                    this.renderToolbar(this.toolbarElement);
-                    this.renderEditorPanel(this.editorPanelElement);
+                    // let activeDocument = this.state.activeDocumentField
+                    // this.changedManage.setChangedData(activeDocument.document.pageData)
+                    // this.renderToolbar(this.toolbarElement)
+                    // this.renderEditorPanel(this.editorPanelElement)
+                    this.editorPanel.setState({ designer: e });
+                    this.documentChanged.fire({ document });
                 };
-                this.pageDesigner.componentRemoved.add(func);
-                this.pageDesigner.componentAppend.add(func);
-                this.pageDesigner.componentUpdated.add(func);
-                this.pageDesigner.componentSelected.add(func);
+                e.componentRemoved.add(func);
+                e.componentAppend.add(func);
+                e.componentUpdated.add(func);
+                // this.pageDesigner.componentSelected.add(func)
             }
-            renderToolbar(element) {
-                let pageDocument = this.state.activeDocument;
-                let buttons = this.renderButtons(pageDocument);
-                let { title } = this.props;
-                ReactDOM.render(React.createElement(React.Fragment, null,
-                    React.createElement("li", { className: "pull-left" },
-                        React.createElement("h3", null, title || '')),
-                    buttons.map((o, i) => React.createElement("li", { key: i, className: "pull-right" }, o))), element);
-            }
-            renderEditorPanel(element) {
-                ReactDOM.render(React.createElement(jueying.EditorPanel, { emptyText: "未选中控件，点击页面控件，可以编辑选中控件的属性", designer: this.pageDesigner, ref: e => this.editorPanel = e || this.editorPanel }), element);
-            }
+            // renderEditorPanel(element: HTMLElement) {
+            //     ReactDOM.render(
+            //         <EditorPanel emptyText={"未选中控件，点击页面控件，可以编辑选中控件的属性"}
+            //             designer={this.pageDesigner}
+            //             ref={e => this.editorPanel = e || this.editorPanel} />,
+            //         element
+            //     )
+            // }
             render() {
-                let { activeDocument, pageDocuments, addon } = this.state;
+                let { activeDocumentField, pageDocuments, documents } = this.state;
                 pageDocuments = pageDocuments || [];
-                let pageDocument = activeDocument;
                 return React.createElement("div", { className: "designer-form" },
-                    React.createElement("ul", { className: "toolbar clearfix", ref: e => {
-                            if (!e)
-                                return;
-                            this.toolbarElement = e;
-                            this.renderToolbar(this.toolbarElement);
-                        } }),
+                    React.createElement(forms.ToolbarPanel, { ref: e => this.toolbarPanel = e || this.toolbarPanel }),
                     React.createElement("div", { className: "main-panel" },
-                        React.createElement("ul", { className: "nav nav-tabs", style: { display: pageDocuments.length == 0 ? 'none' : null } }, pageDocuments.map((o, i) => React.createElement("li", { key: i, role: "presentation", className: o == activeDocument ? 'active' : null, onClick: () => this.activeDocument(i) },
+                        React.createElement("ul", { className: "nav nav-tabs", style: { display: pageDocuments.length == 0 ? 'none' : null } }, pageDocuments.map((o, i) => React.createElement("li", { key: i, role: "presentation", className: o == activeDocumentField ? 'active' : null, onClick: () => this.activeDocument(i) },
                             React.createElement("a", { href: "javascript:" },
                                 o.fileName,
                                 React.createElement("i", { className: "pull-right icon-remove", style: { cursor: 'pointer' }, onClick: (e) => {
@@ -1507,18 +1379,12 @@ var jueying;
                                         e.stopPropagation();
                                         this.closeDocument(i);
                                     } }))))),
-                        pageDocument ?
-                            React.createElement(jueying.PageDesigner, { pageData: pageDocument.document.pageData, ref: e => this.designerRef(e) }) : null),
-                    React.createElement(jueying.ComponentPanel, { className: "component-panel", componets: addon ? addon.components : [] }),
-                    React.createElement("div", { ref: e => {
-                            if (!e)
-                                return;
-                            this.editorPanelElement = e || this.editorPanelElement;
-                            this.renderEditorPanel(e);
-                        } }));
+                        documents.map(o => React.createElement(jueying.PageDesigner, { key: o.name, pageData: o.pageData, ref: (e) => this.designerRef(e, o) }))),
+                    React.createElement(jueying.ComponentPanel, { className: "component-panel", ref: e => this.componentPanel = e || this.componentPanel }),
+                    React.createElement(jueying.EditorPanel, { emptyText: "未选中控件，点击页面控件，可以编辑选中控件的属性", designer: this.pageDesigner, ref: e => this.editorPanel = e || this.editorPanel }));
             }
         }
-        forms.DesignerFramework = DesignerFramework;
+        forms.DesignerFramework1 = DesignerFramework1;
     })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 var jueying;
@@ -1594,7 +1460,7 @@ var jueying;
                 return this.storage.save(this._fileName, this._document);
             }
             get notSaved() {
-                let equals = forms.isEquals(this.originalPageData, this._document);
+                let equals = isEquals(this.originalPageData, this._document);
                 return !equals;
             }
             get fileName() {
@@ -1622,9 +1488,50 @@ var jueying;
             }
         }
         forms.PageDocumentFile = PageDocumentFile;
+        function isEquals(obj1, obj2) {
+            if ((obj1 == null && obj2 != null) || (obj1 != null && obj2 == null))
+                return false;
+            if (obj1 == null && obj2 == null)
+                return true;
+            var type = typeof obj1;
+            if (type == 'number' || type == 'string' || obj1 instanceof Date) {
+                return obj1 == obj2;
+            }
+            if (Array.isArray(obj1)) {
+                if (!Array.isArray(obj2))
+                    return false;
+                if (obj1.length != obj2.length)
+                    return false;
+                for (let i = 0; i < obj1.length; i++) {
+                    if (!isEquals(obj1[i], obj2[i])) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            let keys1 = Object.getOwnPropertyNames(obj1)
+                .filter(o => !skipField(obj1, o))
+                .sort();
+            let keys2 = Object.getOwnPropertyNames(obj2)
+                .filter(o => !skipField(obj2, o))
+                .sort();
+            if (!isEquals(keys1, keys2))
+                return false;
+            for (let i = 0; i < keys1.length; i++) {
+                let key = keys1[i];
+                let value1 = obj1[key];
+                let value2 = obj2[key];
+                if (!isEquals(value1, value2)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        function skipField(obj, field) {
+            return typeof obj[field] == 'function';
+        }
     })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
-/// <reference path="comon.tsx"/>
 var jueying;
 (function (jueying) {
     var forms;
@@ -1760,6 +1667,34 @@ var jueying;
         document.body.appendChild(dialog_element);
         let defaultInstance;
         ReactDOM.render(React.createElement(TemplateDialog, { ref: (e) => defaultInstance = e || defaultInstance }), dialog_element);
+    })(forms = jueying.forms || (jueying.forms = {}));
+})(jueying || (jueying = {}));
+var jueying;
+(function (jueying) {
+    var forms;
+    (function (forms) {
+        class ToolbarPanel extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { toolbars: [] };
+            }
+            appendToolbar(toolbar) {
+                if (toolbar == null)
+                    throw jueying.Errors.argumentNull('toolbar');
+                if (!toolbar.key)
+                    throw jueying.Errors.toolbarRequiredKey();
+                let arr = this.state.toolbars;
+                console.assert(arr);
+                arr.push(toolbar);
+                this.setState({ toolbars: arr });
+            }
+            render() {
+                let { toolbars } = this.state;
+                console.assert(toolbars);
+                return React.createElement("ul", { className: "toolbar" }, toolbars.map((o, i) => React.createElement("li", { key: i }, o)));
+            }
+        }
+        forms.ToolbarPanel = ToolbarPanel;
     })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
 //# sourceMappingURL=jueying.js.map

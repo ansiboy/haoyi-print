@@ -1,5 +1,3 @@
-/// <reference path="comon.tsx"/>
-
 namespace jueying.forms {
     class PageViewContainer extends React.Component<{}, {}>{
         private static phone_screen_width = 320;

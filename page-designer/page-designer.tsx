@@ -407,8 +407,10 @@ namespace jueying {
             //     tagName == 'li') {
             //     allowWrapper = false
             // }
-            let attr = Component.getAttribute(type)
-            shouldWrapper = (attr.resize || attr.movable || typeof type != 'string') && props.style.position == 'absolute'
+            if (typeof type == 'string') {
+                let attr = Component.getAttribute(type)
+                shouldWrapper = (attr.resize || attr.movable || typeof type != 'string') && props.style.position == 'absolute'
+            }
 
             if (shouldWrapper) {
                 let style = Object.assign({}, props.style || {})

@@ -1,11 +1,7 @@
 import { ComponentProps, Component, TextInput } from "jueying";
 import * as React from 'react';
-import { PageView } from "./page-view";
 import { setStyleEditor } from "../editors/component-editors";
 export { setStyleEditor }
-
-
-
 
 export function propertyEditors<T extends { new(...args: any[]): {} }>(constructor: T) {
     if (!jueying.PageDesigner) {
@@ -16,8 +12,6 @@ export function propertyEditors<T extends { new(...args: any[]): {} }>(construct
     setStyleEditor(constructor.name)
     return constructor
 }
-
-export const PageViewContext = React.createContext({ pageView: null as any as PageView })
 
 export const DataContext = React.createContext({ data: {} as { [key: string]: any } })
 

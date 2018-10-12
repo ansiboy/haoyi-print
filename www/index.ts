@@ -1,6 +1,7 @@
 (function () {
 
-    window['nodeRequire'] = require;
+    window['nodeRequire'] = require['nodeRequire'] = require;
+
     let lib = 'lib'
     requirejs.config({
         shim: {
@@ -39,6 +40,7 @@
         },
         paths: {
             css: `${lib}/css`,
+            text: `${lib}/text`,
             less: `${lib}/require-less-0.1.5/less`,
             lessc: `${lib}/require-less-0.1.5/lessc`,
             normalize: 'lib/require-less-0.1.5/normalize',
@@ -60,11 +62,13 @@
             react: `${lib}/react.development`,
             'react-dom': `${lib}/react-dom.development`,
             rulers: `${lib}/rulers`,
+            config: `project-config.json`,
+            addons: `../addons`
         }
     });
 
 
-
+    require['nodeRequire'] = window['nodeRequire']
     requirejs([`less!${lib}/bootstrap-3.3.7/less/bootstrap.less`])
     requirejs(['less!content/page-designer'])
     requirejs(['less!content/index'])

@@ -1,6 +1,6 @@
 import { Component, TextInput, dropdown, PropEditorConstructor, PropEditor } from "jueying";
 import React = require("react");
-import { Service } from "../../../service";
+import { Service } from "./../service";
 import { PageViewProps } from "../components/page-view";
 
 class PrinterDropdown extends PropEditor<{ value: string, printerNames?: string[] }, string> {

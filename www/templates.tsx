@@ -91,32 +91,32 @@ import { PageDocument } from "jueying.forms";
 //     name: '商品订购'
 // }
 
-let template1: PageDocument = {
-    pageData: {
-        type: 'PageView',
-        props: {
-            "id": guid(),
-            "className": "page-view",
-            style: {
-                width: '100%', height: '100%', minWidth: 'unset'
-            },
-            "componentName": "PageView"
-        },
-        "children": [
-            {
-                type: "ControlPlaceholder",
-                props: {
-                    "emptyText": "页面中部，可以从工具栏拖拉控件到这里",
-                    "key": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
-                    "id": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
-                    htmlTag: 'section',
-                    style: { height: '100%', margin: 0 }
-                } as any
-            }
-        ]
-    },
-    name: '空白模板(流式定位)'
-}
+// let template1: PageDocument = {
+//     pageData: {
+//         type: 'PageView',
+//         props: {
+//             "id": guid(),
+//             "className": "page-view",
+//             style: {
+//                 width: '100%', height: '100%', minWidth: 'unset'
+//             },
+//             "componentName": "PageView"
+//         },
+//         "children": [
+//             {
+//                 type: "ControlPlaceholder",
+//                 props: {
+//                     "emptyText": "页面中部，可以从工具栏拖拉控件到这里",
+//                     "key": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
+//                     "id": "181c33a2-e2fd-9d79-ae08-c8a97cfb1f04",
+//                     htmlTag: 'section',
+//                     style: { height: '100%', margin: 0 }
+//                 } as any
+//             }
+//         ]
+//     },
+//     name: '空白模板(流式定位)'
+// }
 
 let template2: PageDocument = {
     pageData: {
@@ -143,7 +143,7 @@ let template2: PageDocument = {
         // ]
     },
     name: '空白模板(绝对定位)',
-    pluginPath: 'addons/haoyi-print'
+    plugin: 'haoyi-print'
 }
 
 export default [template2];

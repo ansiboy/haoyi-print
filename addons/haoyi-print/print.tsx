@@ -1,6 +1,6 @@
 import { ComponentData, Component, Errors } from "jueying";
 import { DocumentStorage, PageDocument } from "jueying.forms";
-import { Service } from "../../service";
+import { Service } from "./service";
 import ReactDOM = require("react-dom");
 
 export async function print(deviceName: string, name: string, data?: object) {

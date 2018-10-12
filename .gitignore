@@ -1,7 +1,5 @@
 node_modules
-host/**/*.js
-page-designer/**/*.js
-www/**/*.js
+**/*.js
 !www/lib/**/*.js
 
 **/*.map

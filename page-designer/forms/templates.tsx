@@ -9,6 +9,6 @@ namespace jueying.forms {
         pageData: ElementData,
         name: string,
         /** 组件文件夹，该文档可用组件的文件夹名称 */
-        pluginPath?: string,
+        plugin?: string,
     }
 }

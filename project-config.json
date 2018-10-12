@@ -1,0 +1,26 @@
+{
+    "index": "index.html",
+    "plugins": [
+        {
+            "id": "88BB17D9-BD62-4426-BA78-9E87EAA5690F",
+            "name": "win-min-max",
+            "path": "addons/win-min-max/index",
+            "autoLoad": true
+        },
+        {
+            "id": "217A8C64-DF30-49D8-9169-608D83147DA7",
+            "name": "haoyi-print",
+            "path": "addons/haoyi-print/index",
+            "autoLoad": true
+        },
+        {
+            "id": "075DC561-8D16-4E25-97E2-704ACDC3F59C",
+            "name": "document-manager",
+            "path": "addons/document-manager/index",
+            "autoLoad": true
+        }
+    ],
+    "startup": [
+        "addons/haoyi-print/server/main"
+    ]
+}

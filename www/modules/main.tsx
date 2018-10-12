@@ -1,13 +1,16 @@
-import { DesignerFramework, DocumentStorage, PageDocumentFile } from 'jueying.extentions'
 import templates from "templates";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
-import { ComponentData } from 'jueying';
-import '../addons/haoyi-print/index'
+import { DocumentStorage, PageDocumentFile, DesignerFramework1 } from "jueying.forms";
 
-class MainPage extends DesignerFramework {
+// import config from '../../config'
+// requirejs(config.plugins.filter(o => o.load).map(o => o.path), function () {
+//     debugger
+// })
+
+class MainPage extends DesignerFramework1 {
     private _storage1: DocumentStorage;
     constructor(props) {
         super(props)
@@ -39,27 +42,27 @@ class MainPage extends DesignerFramework {
     windowMin() {
         this.window.minimize()
     }
-    renderButtons(pageDocument: PageDocumentFile) {
-        let buttonClassName = 'btn btn-default btn-sm'
-        let buttons = super.renderButtons(pageDocument, buttonClassName)
-        let { pageDocuments } = this.state
+    // renderButtons(pageDocument: PageDocumentFile) {
+    //     let buttonClassName = 'btn btn-default btn-sm'
+    //     let buttons = super.renderButtons(pageDocument, buttonClassName)
+    //     let { pageDocuments } = this.state
 
-        pageDocuments = pageDocuments || [];
-        buttons.unshift(...[
-            <button className={`${buttonClassName}`}
-                onClick={e => this.exit()}>
-                <i className="icon-remove" />
-            </button>,
-            <button className={`${buttonClassName}`}
-                onClick={e => this.windowMax()}>
-                <i className="icon-check-empty" />
-            </button>,
-            <button className={`${buttonClassName}`} onClick={e => this.windowMin()}>
-                <i className="icon-minus" />
-            </button>,
-        ])
-        return buttons
-    }
+    //     pageDocuments = pageDocuments || [];
+    //     buttons.unshift(...[
+    //         <button className={`${buttonClassName}`}
+    //             onClick={e => this.exit()}>
+    //             <i className="icon-remove" />
+    //         </button>,
+    //         <button className={`${buttonClassName}`}
+    //             onClick={e => this.windowMax()}>
+    //             <i className="icon-check-empty" />
+    //         </button>,
+    //         <button className={`${buttonClassName}`} onClick={e => this.windowMin()}>
+    //             <i className="icon-minus" />
+    //         </button>,
+    //     ])
+    //     return buttons
+    // }
 
     enableMove(titleElement: HTMLElement, win: Electron.BrowserWindow) {
         //============================================================
@@ -108,26 +111,27 @@ class MainPage extends DesignerFramework {
         }
     }
 
-    /** 用于显示绑定的字段 */
-    translatePageData(pageData: ComponentData) {
-        let stack = new Array<ComponentData>()
-        stack.push(pageData)
-        while (stack.length > 0) {
-            let item = stack.pop()
-            if (item.props.field) {
-                item.props.text = `[${item.props.field}]`
-            }
-            let children = item.children || []
-            children.forEach(child => {
-                stack.push(child)
-            })
-        }
-    }
+    // /** 用于显示绑定的字段 */
+    // translatePageData(pageData: ComponentData) {
+    //     let stack = new Array<ComponentData>()
+    //     stack.push(pageData)
+    //     while (stack.length > 0) {
+    //         let item = stack.pop()
+    //         if (item.props.field) {
+    //             item.props.text = `[${item.props.field}]`
+    //         }
+    //         let children = item.children || []
+    //         children.forEach(child => {
+    //             stack.push(child)
+    //         })
+    //     }
+    // }
 
     componentDidMount() {
         if (super.componentDidMount)
             super.componentDidMount()
 
+        debugger
         let toolbarElement = document.querySelector('.toolbar') as HTMLElement
         if (toolbarElement) {
             this.enableMove(toolbarElement, this.window)
@@ -141,10 +145,22 @@ class MainPage extends DesignerFramework {
 
 
 
+
 export default function (page: chitu.Page) {
-    ReactDOM.render(<MainPage {...{
-        componentDefines: [], templates, title: '好易标签打印'
-    }} />, page.element)
+
+    requirejs(['text!config'], function (configText: string) {
+        let config: jueying.forms.Confid = JSON.parse(configText)
+        // requirejs(config.plugins.filter(o => o.autoLoad).map(o => `../${o.path}`), function () {
+        //     debugger
+        // })
+
+        ReactDOM.render(<MainPage {...{
+            componentDefines: [], templates, title: '好易标签打印',
+            config
+        }} />, page.element)
+    })
+
+
 }
 
 

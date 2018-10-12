@@ -9,5 +9,8 @@ namespace jueying {
         static pageDataIsNull() {
             return new Error(`Page data is null.`);
         }
+        static toolbarRequiredKey() {
+            return new Error(`Toolbar has not a key prop.`);
+        }
     }
 }
