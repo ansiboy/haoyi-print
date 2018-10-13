@@ -16,6 +16,7 @@ namespace jueying {
 
     export interface PageDesignerProps extends React.Props<PageDesigner> {
         pageData: ComponentData | null,
+        style?: React.CSSProperties
     }
 
     export interface PageDesignerState {
@@ -461,8 +462,9 @@ namespace jueying {
         render() {
             let designer = this;
             let { pageData } = this.state
+            let style = this.props.style
 
-            let result = <div className="designer" tabIndex={1}
+            let result = <div className="designer" tabIndex={1} style={style}
                 ref={e => {
                     if (!e) return
                     this.element = e || this.element

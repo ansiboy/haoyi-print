@@ -1,8 +1,8 @@
-import { PageDocument, Plugin, DesignerFramework1, TemplateDialog, LocalDocumentStorage, PageDocumentFile } from "jueying.forms";
+import { PageDocument, Plugin, DesignerFramework } from "jueying.forms";
 import React = require("react");
 import { FileDocument } from "./page-document-handler";
-import { Errors } from "./errors";
 import { guid } from "jueying";
+import { TemplateDialog } from "./template-dialog";
 import { DocumentFileStorage } from "./document-storage";
 
 let buttonClassName = 'btn btn-default btn-sm'
@@ -12,7 +12,7 @@ interface ToolbarState {
     activeDocument?: PageDocument
 }
 interface ToolbarProps {
-    ide: DesignerFramework1,
+    ide: DesignerFramework,
 }
 class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
 
@@ -191,7 +191,7 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
 }
 
 class DocumentPlugin implements Plugin {
-    init(ide?: DesignerFramework1) {
+    init(ide?: DesignerFramework) {
 
         let buttons = <Toolbar key={guid()} ide={ide} />
         ide.toolbarPanel.appendToolbar(buttons)

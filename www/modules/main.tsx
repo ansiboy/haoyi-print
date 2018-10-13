@@ -3,14 +3,14 @@ import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { showSettingsDialog } from '../controls/settingsDialog';
 import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
-import { DocumentStorage, PageDocumentFile, DesignerFramework1 } from "jueying.forms";
+import { DocumentStorage, DesignerFramework } from "jueying.forms";
 
 // import config from '../../config'
 // requirejs(config.plugins.filter(o => o.load).map(o => o.path), function () {
 //     debugger
 // })
 
-class MainPage extends DesignerFramework1 {
+class MainPage extends DesignerFramework {
     private _storage1: DocumentStorage;
     constructor(props) {
         super(props)

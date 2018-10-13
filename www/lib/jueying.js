@@ -36,60 +36,6 @@ var jueying;
     }
     jueying.Callback = Callback;
 })(jueying || (jueying = {}));
-var jueying;
-(function (jueying) {
-    /**
-     * 实现 JSON 对象的 UNDO，REDO 操作
-     */
-    class JSONUndoRedo {
-        constructor(initData) {
-            this._currentData = JSON.parse(JSON.stringify(initData));
-            this.undoStack = [];
-            this.redonStack = [];
-        }
-        get canUndo() {
-            return this.undoStack.length > 0;
-        }
-        get canRedo() {
-            return this.redonStack.length > 0;
-        }
-        get currentData() {
-            return this._currentData;
-        }
-        setChangedData(changedData) {
-            if (this.redonStack.length > 0)
-                this.redonStack = [];
-            let delta = jsondiffpatch.diff(this._currentData, changedData);
-            if (delta == null)
-                return;
-            this.pushDelta(delta, this.undoStack);
-            this._currentData = JSON.parse(JSON.stringify(changedData));
-        }
-        undo() {
-            if (this.canUndo == false)
-                return;
-            let delta = this.undoStack.pop();
-            this._currentData = jsondiffpatch.unpatch(this._currentData, delta);
-            this.pushDelta(delta, this.redonStack);
-            return JSON.parse(JSON.stringify(this._currentData));
-        }
-        redo() {
-            if (this.canRedo == false)
-                return;
-            let delta = this.redonStack.pop();
-            this._currentData = jsondiffpatch.patch(this._currentData, delta);
-            this.pushDelta(delta, this.undoStack);
-            return JSON.parse(JSON.stringify(this._currentData));
-        }
-        pushDelta(delta, stack) {
-            //============================================================
-            // 对于 delta ，必须 clone 一份数据再 push
-            stack.push(JSON.parse(JSON.stringify(delta)));
-            //============================================================
-        }
-    }
-    jueying.JSONUndoRedo = JSONUndoRedo;
-})(jueying || (jueying = {}));
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
  *
@@ -707,6 +653,9 @@ var jueying;
         static toolbarRequiredKey() {
             return new Error(`Toolbar has not a key prop.`);
         }
+        static loadPluginFail(pluginId) {
+            return new Error(`Load plugin '${pluginId}' fail.`);
+        }
     }
     jueying.Errors = Errors;
 })(jueying || (jueying = {}));
@@ -1070,7 +1019,8 @@ var jueying;
         render() {
             let designer = this;
             let { pageData } = this.state;
-            let result = React.createElement("div", { className: "designer", tabIndex: 1, ref: e => {
+            let style = this.props.style;
+            let result = React.createElement("div", { className: "designer", tabIndex: 1, style: style, ref: e => {
                     if (!e)
                         return;
                     this.element = e || this.element;
@@ -1228,7 +1178,7 @@ var jueying;
 (function (jueying) {
     var forms;
     (function (forms) {
-        class DesignerFramework1 extends React.Component {
+        class DesignerFramework extends React.Component {
             constructor(props) {
                 super(props);
                 //TODO: 校验 config 文件
@@ -1252,7 +1202,6 @@ var jueying;
                     .map((o, index) => ({ targetDocument: o, index }))[0] || { targetDocument: null, index: -1 };
                 if (!targetDocument) {
                     documents.push(document);
-                    // this.setState({ documents })
                     this.documentAdd.fire({ document });
                     this.activeDocument(documents.length - 1);
                     return;
@@ -1296,10 +1245,13 @@ var jueying;
                         if (plugin == null || pluginInfo.singleton == false) {
                             plugin = yield this.loadPlugin(pluginInfo.path, pluginInfo.id);
                         }
-                        let obj = plugin;
-                        if (obj.components) {
-                            console.assert(this.componentPanel != null);
-                            this.componentPanel.setComponets(obj.components);
+                        if (plugin == null)
+                            throw jueying.Errors.loadPluginFail(doc.plugin);
+                        if (plugin.onDocumentActived) {
+                            let result = plugin.onDocumentActived({ document: doc });
+                            if (result.components) {
+                                this.componentPanel.setComponets(result.components);
+                            }
                         }
                     }
                 });
@@ -1355,320 +1307,165 @@ var jueying;
                 e.componentRemoved.add(func);
                 e.componentAppend.add(func);
                 e.componentUpdated.add(func);
-                // this.pageDesigner.componentSelected.add(func)
+                this.pageDesigner.componentSelected.add(() => {
+                    this.editorPanel.setState({ designer: e });
+                });
             }
-            // renderEditorPanel(element: HTMLElement) {
-            //     ReactDOM.render(
-            //         <EditorPanel emptyText={"未选中控件，点击页面控件，可以编辑选中控件的属性"}
-            //             designer={this.pageDesigner}
-            //             ref={e => this.editorPanel = e || this.editorPanel} />,
-            //         element
-            //     )
-            // }
             render() {
-                let { activeDocumentField, pageDocuments, documents } = this.state;
-                pageDocuments = pageDocuments || [];
+                let { activeDocument, documents } = this.state;
+                console.assert(document != null);
                 return React.createElement("div", { className: "designer-form" },
                     React.createElement(forms.ToolbarPanel, { ref: e => this.toolbarPanel = e || this.toolbarPanel }),
                     React.createElement("div", { className: "main-panel" },
-                        React.createElement("ul", { className: "nav nav-tabs", style: { display: pageDocuments.length == 0 ? 'none' : null } }, pageDocuments.map((o, i) => React.createElement("li", { key: i, role: "presentation", className: o == activeDocumentField ? 'active' : null, onClick: () => this.activeDocument(i) },
+                        React.createElement("ul", { className: "nav nav-tabs", style: { display: documents.length == 0 ? 'none' : null } }, documents.map((o, i) => React.createElement("li", { key: i, role: "presentation", className: o == activeDocument ? 'active' : null, onClick: () => this.activeDocument(i) },
                             React.createElement("a", { href: "javascript:" },
-                                o.fileName,
+                                o.name,
                                 React.createElement("i", { className: "pull-right icon-remove", style: { cursor: 'pointer' }, onClick: (e) => {
                                         e.cancelable = true;
                                         e.stopPropagation();
                                         this.closeDocument(i);
                                     } }))))),
-                        documents.map(o => React.createElement(jueying.PageDesigner, { key: o.name, pageData: o.pageData, ref: (e) => this.designerRef(e, o) }))),
+                        documents.map(o => React.createElement(jueying.PageDesigner, { key: o.name, pageData: o.pageData, style: { display: o == activeDocument ? null : 'none' }, ref: (e) => this.designerRef(e, o) }))),
                     React.createElement(jueying.ComponentPanel, { className: "component-panel", ref: e => this.componentPanel = e || this.componentPanel }),
                     React.createElement(jueying.EditorPanel, { emptyText: "未选中控件，点击页面控件，可以编辑选中控件的属性", designer: this.pageDesigner, ref: e => this.editorPanel = e || this.editorPanel }));
             }
         }
-        forms.DesignerFramework1 = DesignerFramework1;
+        forms.DesignerFramework = DesignerFramework;
     })(forms = jueying.forms || (jueying.forms = {}));
 })(jueying || (jueying = {}));
-var jueying;
-(function (jueying) {
-    var forms;
-    (function (forms) {
-        class LocalDocumentStorage {
-            constructor() {
-                debugger;
-            }
-            list(pageIndex, pageSize) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    if (pageIndex == null)
-                        throw jueying.Errors.argumentNull('pageIndex');
-                    if (pageSize == null)
-                        throw jueying.Errors.argumentNull('pageSize');
-                    let allItems = new Array();
-                    for (let i = 0; i < localStorage.length; i++) {
-                        let key = localStorage.key(i);
-                        if (!key.startsWith(LocalDocumentStorage.prefix)) {
-                            continue;
-                        }
-                        let name = key.substr(LocalDocumentStorage.prefix.length);
-                        let value = localStorage[key];
-                        let doc = JSON.parse(value);
-                        allItems.push(doc);
-                    }
-                    let count = allItems.length;
-                    let items = allItems.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize);
-                    return { items, count };
-                });
-            }
-            load(name) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    let key = `${LocalDocumentStorage.prefix}${name}`;
-                    let text = localStorage.getItem(key);
-                    if (text == null)
-                        return null;
-                    return JSON.parse(text);
-                });
-            }
-            save(name, pageData) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    let key = `${LocalDocumentStorage.prefix}${name}`;
-                    let value = JSON.stringify(pageData);
-                    localStorage.setItem(key, value);
-                });
-            }
-            remove(name) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    let key = `${LocalDocumentStorage.prefix}${name}`;
-                    localStorage.removeItem(key);
-                });
-            }
-        }
-        LocalDocumentStorage.prefix = 'pdc_';
-        forms.LocalDocumentStorage = LocalDocumentStorage;
-    })(forms = jueying.forms || (jueying.forms = {}));
-})(jueying || (jueying = {}));
-var jueying;
-(function (jueying) {
-    var forms;
-    (function (forms) {
-        class PageDocumentFile {
-            constructor(fileName, storage, document) {
-                this.storage = storage;
-                this._document = document;
-                this.originalPageData = JSON.parse(JSON.stringify(document));
-                this._fileName = fileName;
-            }
-            save() {
-                this.originalPageData = JSON.parse(JSON.stringify(this._document));
-                return this.storage.save(this._fileName, this._document);
-            }
-            get notSaved() {
-                let equals = isEquals(this.originalPageData, this._document);
-                return !equals;
-            }
-            get fileName() {
-                return this._fileName;
-            }
-            get document() {
-                return this._document;
-            }
-            set document(value) {
-                this._document = value;
-            }
-            static load(storage, fileName) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    // let storage = new LocalDocumentStorage()
-                    let data = yield storage.load(fileName);
-                    if (data == null) {
-                        throw jueying.Errors.fileNotExists(fileName);
-                    }
-                    return new PageDocumentFile(fileName, storage, data);
-                });
-            }
-            static new(storage, fileName, init) {
-                // let storage = new LocalDocumentStorage()
-                return new PageDocumentFile(fileName, storage, init);
-            }
-        }
-        forms.PageDocumentFile = PageDocumentFile;
-        function isEquals(obj1, obj2) {
-            if ((obj1 == null && obj2 != null) || (obj1 != null && obj2 == null))
-                return false;
-            if (obj1 == null && obj2 == null)
-                return true;
-            var type = typeof obj1;
-            if (type == 'number' || type == 'string' || obj1 instanceof Date) {
-                return obj1 == obj2;
-            }
-            if (Array.isArray(obj1)) {
-                if (!Array.isArray(obj2))
-                    return false;
-                if (obj1.length != obj2.length)
-                    return false;
-                for (let i = 0; i < obj1.length; i++) {
-                    if (!isEquals(obj1[i], obj2[i])) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            let keys1 = Object.getOwnPropertyNames(obj1)
-                .filter(o => !skipField(obj1, o))
-                .sort();
-            let keys2 = Object.getOwnPropertyNames(obj2)
-                .filter(o => !skipField(obj2, o))
-                .sort();
-            if (!isEquals(keys1, keys2))
-                return false;
-            for (let i = 0; i < keys1.length; i++) {
-                let key = keys1[i];
-                let value1 = obj1[key];
-                let value2 = obj2[key];
-                if (!isEquals(value1, value2)) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        function skipField(obj, field) {
-            return typeof obj[field] == 'function';
-        }
-    })(forms = jueying.forms || (jueying.forms = {}));
-})(jueying || (jueying = {}));
-var jueying;
-(function (jueying) {
-    var forms;
-    (function (forms) {
-        class PageViewContainer extends React.Component {
-            render() {
-                let { phone_screen_width, phone_screen_height, scale } = PageViewContainer;
-                let transform = `translateX(-${phone_screen_width * (1 - scale) / 2}px) translateY(-${phone_screen_height * (1 - scale) / 2}px) scale(${scale})`;
-                let style = { width: phone_screen_width, height: phone_screen_height, minWidth: 'unset', transform };
-                return React.createElement("div", { style: style }, this.props.children);
-            }
-        }
-        PageViewContainer.phone_screen_width = 320;
-        PageViewContainer.phone_screen_height = 568;
-        PageViewContainer.scale = 0.6;
-        PageViewContainer.phone_height = PageViewContainer.phone_screen_height * PageViewContainer.scale;
-        PageViewContainer.phone_width = PageViewContainer.phone_screen_width * PageViewContainer.scale;
-        const PAGE_SIZE = 3;
-        class TemplateDialog extends React.Component {
-            constructor(props) {
-                super(props);
-                this.state = { templates: null, pageIndex: 0, selectedTemplateIndex: 0, showFileNameInput: true };
-            }
-            selectTemplate(templateIndex) {
-                this.setState({ selectedTemplateIndex: templateIndex });
-            }
-            confirm() {
-                return __awaiter(this, void 0, void 0, function* () {
-                    if (this.state.showFileNameInput) {
-                        let isValid = yield this.validator.check();
-                        if (!isValid)
-                            return Promise.reject();
-                    }
-                    if (this.callback) {
-                        let { templates, selectedTemplateIndex, fileName } = this.state;
-                        let template = JSON.parse(JSON.stringify(templates[selectedTemplateIndex]));
-                        if (fileName)
-                            template.name = fileName;
-                        this.callback(template);
-                        this.close();
-                    }
-                });
-            }
-            loadTemplates(pageIndex) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    console.assert(this.fetchTemplates != null);
-                    let tmps = yield this.fetchTemplates(pageIndex, PAGE_SIZE);
-                    console.assert(tmps != null);
-                    console.assert(tmps.count > 0);
-                    this.setState({ templates: tmps.items, templatesCount: tmps.count });
-                });
-            }
-            componentDidMount() {
-                this.validator = new dilu.FormValidator(dialog_element, { name: 'fileName', rules: [dilu.rules.required('请输入文件名')] });
-            }
-            showPage(pageIndex) {
-                return __awaiter(this, void 0, void 0, function* () {
-                    let result = yield this.fetchTemplates(pageIndex, PAGE_SIZE);
-                    this.setState({ templates: result.items, templatesCount: result.count, pageIndex });
-                });
-            }
-            render() {
-                let { pageIndex, templates, templatesCount, selectedTemplateIndex, fileName, showFileNameInput, } = this.state;
-                let height = PageViewContainer.phone_height;
-                let width = PageViewContainer.phone_width;
-                let margin = 15; // 间距
-                let count = PAGE_SIZE;
-                let dialog_content_width = width * count + margin * (count + 1);
-                let pagingBar;
-                if (templatesCount != null) {
-                    let pagesCount = Math.ceil(templatesCount / PAGE_SIZE);
-                    let children = [];
-                    for (let i = 0; i < pagesCount; i++) {
-                        children.push(React.createElement("li", { key: i, className: i == pageIndex ? 'active' : null },
-                            React.createElement("a", { href: "javascript:", onClick: () => this.showPage(i) }, i + 1)));
-                    }
-                    pagingBar = h("ul", { className: 'pagination', style: { margin: 0 } }, children);
-                }
-                return React.createElement("div", { className: "modal-dialog" },
-                    React.createElement("div", { className: "modal-content", style: { width: dialog_content_width } },
-                        React.createElement("div", { className: "modal-header" },
-                            React.createElement("button", { type: "button", className: "close", onClick: () => ui.hideDialog(dialog_element) },
-                                React.createElement("span", { "aria-hidden": "true" }, "\u00D7")),
-                            React.createElement("h4", { className: "modal-title" }, "\u9009\u62E9\u6A21\u677F")),
-                        React.createElement("div", { className: "modal-body clearfix" },
-                            React.createElement("div", { className: "form-group" }, templates == null ?
-                                React.createElement("div", { className: jueying.classNames.loadingTemplates }, "\u6570\u636E\u6B63\u5728\u52A0\u8F7D\u4E2D") :
-                                templates.length == 0 ?
-                                    React.createElement("div", { className: jueying.classNames.emptyTemplates }, "\u6682\u65E0\u6A21\u7248\u6570\u636E") :
-                                    React.createElement(React.Fragment, null,
-                                        templates.map((o, i) => React.createElement("div", { key: i, style: { width, height, float: i == 2 ? 'right' : 'left', margin: i == 1 ? '0 0 0 15px' : null }, onClick: () => this.selectTemplate(i), className: i == selectedTemplateIndex ? jueying.classNames.templateSelected : null },
-                                            React.createElement(PageViewContainer, null,
-                                                jueying.Component.createElement(o.pageData),
-                                                React.createElement("div", { className: "name" },
-                                                    React.createElement("span", null, o.name))))),
-                                        React.createElement("div", { className: "clearfix" }))),
-                            showFileNameInput ? React.createElement("div", { className: "form-group", style: { marginBottom: 0 } },
-                                React.createElement("label", { className: "pull-left" }, "\u6587\u4EF6\u540D"),
-                                React.createElement("div", { style: { marginLeft: 100 } },
-                                    React.createElement("input", { name: "fileName", className: "form-control", value: fileName || '', onChange: (e) => {
-                                            fileName = e.target.value;
-                                            this.setState({ fileName });
-                                        } }))) : null),
-                        React.createElement("div", { className: "modal-footer" },
-                            React.createElement("div", { className: "pull-left" }, pagingBar),
-                            React.createElement("div", { className: "pull-right" },
-                                React.createElement("button", { className: "btn btn-primary", onClick: () => this.confirm() },
-                                    React.createElement("i", { className: "icon-ok" }),
-                                    React.createElement("span", null, "\u786E\u5B9A"))))));
-            }
-            open(requiredFileName) {
-                requiredFileName == null ? true : requiredFileName;
-                this.setState({
-                    pageIndex: 0, selectedTemplateIndex: 0, fileName: '',
-                    showFileNameInput: requiredFileName, templates: [],
-                });
-                ui.showDialog(dialog_element);
-                this.loadTemplates(0);
-            }
-            close() {
-                ui.hideDialog(dialog_element);
-            }
-            static show(args) {
-                let { fetch, callback, requiredFileName } = args;
-                defaultInstance.callback = callback;
-                defaultInstance.fetchTemplates = fetch;
-                defaultInstance.open(requiredFileName);
-            }
-        }
-        forms.TemplateDialog = TemplateDialog;
-        let dialog_element = document.createElement('div');
-        dialog_element.className = `modal fade ${jueying.classNames.templateDialog}`;
-        document.body.appendChild(dialog_element);
-        let defaultInstance;
-        ReactDOM.render(React.createElement(TemplateDialog, { ref: (e) => defaultInstance = e || defaultInstance }), dialog_element);
-    })(forms = jueying.forms || (jueying.forms = {}));
-})(jueying || (jueying = {}));
+// namespace jueying.forms {
+//     export interface DocumentStorage {
+//         list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[], count: number }>;
+//         load(name: string): Promise<PageDocument>;
+//         save(name: string, pageData: PageDocument): Promise<any>;
+//         remove(name: string): Promise<any>;
+//     }
+//     export class LocalDocumentStorage implements DocumentStorage {
+//         private static prefix = 'pdc_';
+//         constructor() {
+//             debugger
+//         }
+//         async list(pageIndex, pageSize) {
+//             if (pageIndex == null) throw Errors.argumentNull('pageIndex');
+//             if (pageSize == null) throw Errors.argumentNull('pageSize');
+//             let allItems = new Array<PageDocument>();
+//             for (let i = 0; i < localStorage.length; i++) {
+//                 let key = localStorage.key(i);
+//                 if (!key.startsWith(LocalDocumentStorage.prefix)) {
+//                     continue;
+//                 }
+//                 let name = key.substr(LocalDocumentStorage.prefix.length);
+//                 let value = localStorage[key];
+//                 let doc = JSON.parse(value);
+//                 allItems.push(doc);
+//             }
+//             let count = allItems.length;
+//             let items = allItems.slice(pageIndex * pageSize, (pageIndex + 1) * pageSize)
+//             return { items, count };
+//         }
+//         async load(name: string) {
+//             let key = `${LocalDocumentStorage.prefix}${name}`;
+//             let text = localStorage.getItem(key);
+//             if (text == null)
+//                 return null;
+//             return JSON.parse(text);
+//         }
+//         async save(name: string, pageData: PageDocument) {
+//             let key = `${LocalDocumentStorage.prefix}${name}`;
+//             let value = JSON.stringify(pageData);
+//             localStorage.setItem(key, value);
+//         }
+//         async remove(name: string): Promise<any> {
+//             let key = `${LocalDocumentStorage.prefix}${name}`;
+//             localStorage.removeItem(key);
+//         }
+//     }
+// }
+// namespace jueying.forms {
+//     export class PageDocumentFile {
+//         private storage: DocumentStorage;
+//         private _document: PageDocument;
+//         private originalPageData: PageDocument;
+//         private _fileName: string;
+//         constructor(fileName: string, storage: DocumentStorage, document: PageDocument) {
+//             this.storage = storage;
+//             this._document = document;
+//             this.originalPageData = JSON.parse(JSON.stringify(document));
+//             this._fileName = fileName;
+//         }
+//         save() {
+//             this.originalPageData = JSON.parse(JSON.stringify(this._document));
+//             return this.storage.save(this._fileName, this._document);
+//         }
+//         get notSaved() {
+//             let equals = isEquals(this.originalPageData, this._document);
+//             return !equals;
+//         }
+//         get fileName() {
+//             return this._fileName;
+//         }
+//         get document() {
+//             return this._document;
+//         }
+//         set document(value) {
+//             this._document = value
+//         }
+//         static async load(storage: DocumentStorage, fileName: string) {
+//             // let storage = new LocalDocumentStorage()
+//             let data = await storage.load(fileName);
+//             if (data == null) {
+//                 throw Errors.fileNotExists(fileName);
+//             }
+//             return new PageDocumentFile(fileName, storage, data);
+//         }
+//         static new(storage: DocumentStorage, fileName: string, init: PageDocument) {
+//             // let storage = new LocalDocumentStorage()
+//             return new PageDocumentFile(fileName, storage, init);
+//         }
+//     }
+//     function isEquals(obj1: object, obj2: object) {
+//         if ((obj1 == null && obj2 != null) || (obj1 != null && obj2 == null))
+//             return false;
+//         if (obj1 == null && obj2 == null)
+//             return true;
+//         var type = typeof obj1;
+//         if (type == 'number' || type == 'string' || obj1 instanceof Date) {
+//             return obj1 == obj2;
+//         }
+//         if (Array.isArray(obj1)) {
+//             if (!Array.isArray(obj2))
+//                 return false;
+//             if (obj1.length != obj2.length)
+//                 return false;
+//             for (let i = 0; i < obj1.length; i++) {
+//                 if (!isEquals(obj1[i], obj2[i])) {
+//                     return false;
+//                 }
+//             }
+//             return true;
+//         }
+//         let keys1 = Object.getOwnPropertyNames(obj1)
+//             .filter(o => !skipField(obj1, o))
+//             .sort();
+//         let keys2 = Object.getOwnPropertyNames(obj2)
+//             .filter(o => !skipField(obj2, o))
+//             .sort();
+//         if (!isEquals(keys1, keys2))
+//             return false;
+//         for (let i = 0; i < keys1.length; i++) {
+//             let key = keys1[i];
+//             let value1 = obj1[key];
+//             let value2 = obj2[key];
+//             if (!isEquals(value1, value2)) {
+//                 return false;
+//             }
+//         }
+//         return true;
+//     }
+//     function skipField(obj: any, field: string): boolean {
+//         return typeof obj[field] == 'function';
+//     }
+// }
 var jueying;
 (function (jueying) {
     var forms;

@@ -4,7 +4,7 @@ import "./components/list"
 import "./components/page-view"
 import "./components/square-code"
 
-import { PageDocumentFile, DocumentPlugin, DesignerFramework1, PageDocument } from "jueying.forms";
+import { DesignerFramework, PageDocument, Plugin } from "jueying.forms";
 import React = require("react");
 import { showPrintDialog } from "./dialogs/print-dialog";
 import { ComponentData, ReactFactory, ComponentProps, guid } from "jueying";
@@ -16,7 +16,7 @@ let components = [
             type: 'label'
         },
         displayName: "标签",
-        icon: "glyphicon glyphicon-comment",
+        icon: "glyphicon glyphicon-tag",
         introduce: "标签",
     },
     {
@@ -24,7 +24,7 @@ let components = [
             type: 'div'
         },
         displayName: "DIV",
-        icon: "glyphicon glyphicon-comment",
+        icon: "glyphicon glyphicon-book",
         introduce: "DIV",
     },
     {
@@ -108,9 +108,9 @@ let components = [
     }
 ]
 
-class PrintPlugin implements DocumentPlugin {
-    components = components
-    init(ide: DesignerFramework1) {
+class PrintPlugin implements Plugin {
+    // components = components
+    init(ide: DesignerFramework) {
 
         let buttonClassName = 'btn btn-default btn-sm'
         let buttons = new Array<JSX.Element>()
@@ -148,6 +148,9 @@ class PrintPlugin implements DocumentPlugin {
         </ul>
 
         ide.toolbarPanel.appendToolbar(toolbar)
+    }
+    onDocumentActived() {
+        return { components }
     }
     // renderToolbarButtons({ activeDocument }: { activeDocument: PageDocumentFile }) {
     //     let buttonClassName = 'btn btn-default btn-sm'

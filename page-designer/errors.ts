@@ -12,5 +12,8 @@ namespace jueying {
         static toolbarRequiredKey() {
             return new Error(`Toolbar has not a key prop.`);
         }
+        static loadPluginFail(pluginId: string) {
+            return new Error(`Load plugin '${pluginId}' fail.`);
+        }
     }
 }

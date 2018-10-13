@@ -1,5 +1,14 @@
-import { DocumentStorage, PageDocument } from "jueying.forms";
-import { Errors, JSONUndoRedo, ComponentData } from "jueying";
+import { PageDocument } from "jueying.forms";
+import { Errors, ComponentData } from "jueying";
+import { JSONUndoRedo } from "./json-undo-redo";
+
+
+export interface DocumentStorage {
+    list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[], count: number }>;
+    load(name: string): Promise<PageDocument>;
+    save(name: string, pageData: PageDocument): Promise<any>;
+    remove(name: string): Promise<any>;
+}
 
 export class FileDocument {
 
@@ -57,7 +66,7 @@ export class FileDocument {
         return this.changedManage.canRedo
     }
 
-    undo(): ComponentData  {
+    undo(): ComponentData {
         let pageData = this.changedManage.undo()
         console.assert(pageData)
         return pageData

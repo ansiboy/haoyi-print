@@ -1,5 +1,6 @@
-import { DocumentStorage, PageDocument } from "jueying.forms";
+import { PageDocument } from "jueying.forms";
 import { Service } from "./service";
+import { DocumentStorage } from "./page-document-handler";
 
 
 let service = new Service()

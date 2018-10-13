@@ -1,5 +1,5 @@
 import { ComponentData, Component, Errors } from "jueying";
-import { DocumentStorage, PageDocument } from "jueying.forms";
+import { PageDocument } from "jueying.forms";
 import { Service } from "./service";
 import ReactDOM = require("react-dom");
 
@@ -94,7 +94,7 @@ export async function createTemplateElement(templateName: string, data?: object)
 }
 
 let service = new Service()
-class ServiceDocumentStorage implements DocumentStorage {
+class ServiceDocumentStorage {
     list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[]; count: number; }> {
         return service.templateList().then(r => {
             return {

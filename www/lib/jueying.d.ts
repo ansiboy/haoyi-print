@@ -18,24 +18,6 @@ declare namespace jueying {
         static create<T>(): Callback<T>;
     }
 }
-declare namespace jueying {
-    /**
-     * 实现 JSON 对象的 UNDO，REDO 操作
-     */
-    class JSONUndoRedo<T> {
-        private undoStack;
-        private redonStack;
-        private _currentData;
-        constructor(initData: T);
-        readonly canUndo: boolean;
-        readonly canRedo: boolean;
-        readonly currentData: T;
-        setChangedData(changedData: ComponentData): void;
-        undo(): T;
-        redo(): T;
-        private pushDelta;
-    }
-}
 /*******************************************************************************
  * Copyright (C) maishu All rights reserved.
  *
@@ -208,23 +190,10 @@ declare namespace jueying {
         static argumentNull(argumentName: string): Error;
         static pageDataIsNull(): Error;
         static toolbarRequiredKey(): Error;
+        static loadPluginFail(pluginId: string): Error;
     }
 }
 declare namespace jueying {
-    interface Document {
-        name?: string;
-        createDateTime?: Date;
-        version?: number;
-        /**
-         * 页面的类型，默认为 page
-         * snapshoot 为页面快照
-         * productTemplate 为商品模板
-         * page 为普通页面
-         * system 为系统页面
-         */
-        type?: 'snapshoot' | 'productTemplate' | 'page' | 'system';
-        data: ComponentData;
-    }
     interface ComponentData {
         type: string;
         props?: ComponentProps<any>;
@@ -235,12 +204,6 @@ declare namespace jueying {
         displayName: string;
         icon: string;
         introduce: string;
-    }
-    interface ToolbarButton {
-        disabled?: boolean;
-        onClick: () => void;
-        text: string;
-        icon: string;
     }
 }
 /*******************************************************************************
@@ -259,6 +222,7 @@ declare namespace jueying {
 declare namespace jueying {
     interface PageDesignerProps extends React.Props<PageDesigner> {
         pageData: ComponentData | null;
+        style?: React.CSSProperties;
     }
     interface PageDesignerState {
         pageData: ComponentData | null;
@@ -420,12 +384,13 @@ declare namespace jueying {
     function removeClassName(sourceClassName: string, targetClassName: any): string;
 }
 declare namespace jueying.forms {
-    interface DocumentPlugin extends Plugin {
-        /** 文档模板组件，在加载文档后显示在组件面板中 */
-        components: ComponentDefine[];
-    }
     interface Plugin {
-        init?(form: DesignerFramework1): any;
+        init?(form: DesignerFramework): any;
+        onDocumentActived?(args: {
+            document: PageDocument;
+        }): {
+            components?: ComponentDefine[];
+        };
     }
 }
 declare namespace jueying.forms {
@@ -460,24 +425,15 @@ declare namespace jueying.forms {
     }
 }
 declare namespace jueying.forms {
-    interface DesignerFrameworkProps {
-        title?: string;
-        templates: PageDocument[];
-    }
-    interface DesignerFrameworkState {
-        pageDocuments?: PageDocumentFile[];
-        activeDocumentField?: PageDocumentFile;
-        addon?: DocumentPlugin;
-    }
-    type DesignerFrameworkProps1 = DesignerFrameworkProps & {
+    type DesignerFrameworkProps = {
         config: Confid;
     };
-    type DesignerFrameworkState1 = DesignerFrameworkState & {
+    type DesignerFrameworkState = {
         documents: PageDocument[];
         activeDocument?: PageDocument;
         buttons: JSX.Element[];
     };
-    class DesignerFramework1 extends React.Component<DesignerFrameworkProps1, DesignerFrameworkState1> {
+    class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState> {
         protected pageDesigner: PageDesigner;
         private editorPanel;
         documentChanged: Callback<{
@@ -502,7 +458,7 @@ declare namespace jueying.forms {
         })[];
         componentPanel: ComponentPanel;
         toolbarPanel: ToolbarPanel;
-        constructor(props: DesignerFrameworkProps1);
+        constructor(props: DesignerFrameworkProps);
         setActiveDocument(document: PageDocument): boolean;
         static readonly dialogsElement: HTMLElement;
         private activeDocument;
@@ -510,78 +466,6 @@ declare namespace jueying.forms {
         private closeDocument;
         designerRef(e: PageDesigner, document: PageDocument): void;
         render(): JSX.Element;
-    }
-}
-declare namespace jueying.forms {
-    interface DocumentStorage {
-        list(pageIndex: number, pageSize: number): Promise<{
-            items: PageDocument[];
-            count: number;
-        }>;
-        load(name: string): Promise<PageDocument>;
-        save(name: string, pageData: PageDocument): Promise<any>;
-        remove(name: string): Promise<any>;
-    }
-    class LocalDocumentStorage implements DocumentStorage {
-        private static prefix;
-        constructor();
-        list(pageIndex: any, pageSize: any): Promise<{
-            items: PageDocument[];
-            count: number;
-        }>;
-        load(name: string): Promise<any>;
-        save(name: string, pageData: PageDocument): Promise<void>;
-        remove(name: string): Promise<any>;
-    }
-}
-declare namespace jueying.forms {
-    class PageDocumentFile {
-        private storage;
-        private _document;
-        private originalPageData;
-        private _fileName;
-        constructor(fileName: string, storage: DocumentStorage, document: PageDocument);
-        save(): Promise<any>;
-        readonly notSaved: boolean;
-        readonly fileName: string;
-        document: PageDocument;
-        static load(storage: DocumentStorage, fileName: string): Promise<PageDocumentFile>;
-        static new(storage: DocumentStorage, fileName: string, init: PageDocument): PageDocumentFile;
-    }
-}
-declare namespace jueying.forms {
-    type LoadDocuments = (pageIndex: number, pageSize: number) => Promise<{
-        items: PageDocument[];
-        count: number;
-    }>;
-    interface TemplateDialogProps {
-    }
-    interface TemplateDialogState {
-        templates: PageDocument[];
-        templatesCount?: number;
-        pageIndex: number;
-        selectedTemplateIndex: number;
-        fileName?: string;
-        showFileNameInput: boolean;
-    }
-    class TemplateDialog extends React.Component<TemplateDialogProps, TemplateDialogState> {
-        private fetchTemplates;
-        private callback;
-        private validator;
-        constructor(props: any);
-        private selectTemplate;
-        private confirm;
-        loadTemplates(pageIndex: number): Promise<void>;
-        componentDidMount(): void;
-        showPage(pageIndex: number): Promise<void>;
-        render(): JSX.Element;
-        open(requiredFileName?: boolean): void;
-        close(): void;
-        static show(args: {
-            fetch: LoadDocuments;
-            requiredFileName?: boolean;
-            callback?: (tmp: PageDocument, fileName?: string) => void;
-        }): void;
     }
 }
 declare namespace jueying.forms {
