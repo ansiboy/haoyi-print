@@ -12,6 +12,8 @@
     "@types/react-dom": "^16.0.6",
     "diff": "^3.5.0",
     "jsondiffpatch": "^0.3.11",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
     "unit-to-px": "^1.0.2"
   },
   "devDependencies": {

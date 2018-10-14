@@ -6,6 +6,10 @@ const { remote } = nodeRequire('electron')
 class Toolbar extends React.Component<any, any>{
     constructor(props: any) {
         super(props)
+
+
+
+
     }
     exit(): void {
         remote.app.exit();
@@ -79,6 +83,11 @@ class Toolbar extends React.Component<any, any>{
         toolbarElement.ondblclick = () => {
             this.toggleMax()
         }
+
+        let window = remote.getCurrentWindow()
+        window.on('minimize', function () {
+            window.hide()
+        })
     }
     render() {
         let buttonClassName = 'btn btn-default btn-sm'

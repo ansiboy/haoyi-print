@@ -35,10 +35,6 @@ export function createMainWindow(htmlPath: string) {
         mainWindow = null as any
     })
 
-    mainWindow.on('minimize', function () {
-        mainWindow.hide()
-    })
-
     mainWindow.webContents.on('new-window', (event, url, frameName, disposition, options: Electron.BrowserWindowConstructorOptions, additionalFeatures) => {
         if (frameName.startsWith('print-window')) {
             event.preventDefault()

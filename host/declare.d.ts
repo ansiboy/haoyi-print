@@ -1,4 +1,4 @@
-/// <reference path="../www/lib/jueying.d.ts"/>
+/// <reference path="../lib/jueying.d.ts"/>
 
 declare namespace jueying.forms {
     interface Config {

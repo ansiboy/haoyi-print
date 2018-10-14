@@ -1,12 +1,11 @@
 
-/// <reference path="lib/typings/require.d.ts"/>
-/// <reference path="lib/jueying.d.ts"/>
+/// <reference path="../../../../lib/typings/require.d.ts"/>
+/// <reference path="../../../../lib/jueying.d.ts"/>
 
 (function () {
 
     window['nodeRequire'] = require;
-    let lib = 'lib'
-    let dir = 'www'
+    let lib = '../../../../lib'
     requirejs.config({
         shim: {
             'jquery-ui': {
@@ -67,41 +66,19 @@
             'react-dom': `${lib}/react-dom.development`,
             rulers: `${lib}/rulers`,
 
-            modules: `${dir}/modules`,
-            templates: `${dir}/templates`,
-            controls: `${dir}/controls`,
-            designer: `${dir}/designer`,
-            service: `${dir}/service`,
             components: `addons/haoyi-print/components`,
-            config: `project-config.json`
         }
     });
 
-
-
+    require['nodeRequire'] = window['nodeRequire']
     requirejs([`less!${lib}/bootstrap-3.3.7/less/bootstrap.less`])
-    requirejs([`less!${dir}/content/page-designer`])
-    requirejs([`less!${dir}/content/index`])
     requirejs(['react', 'react-dom', 'jquery', 'jsondiffpatch', 'ui', 'chitu'], function (react, reactDOM, jquery, jsondiffpatch) {
-        (window as any)['React'] = react;
-        (window as any)['ReactDOM'] = reactDOM;
-        (window as any)['$'] = jquery;
-        (window as any)['h'] = react.createElement;
-        (window as any)['jsondiffpatch'] = jsondiffpatch;
-        requirejs([`${dir}/application`], function (a: any) {
-            a.app.run()
-        })
+        // (window as any)['React'] = react;
+        // (window as any)['ReactDOM'] = reactDOM;
 
-        define('jueying.extentions', ['jueying'], function () {
-            return jueying.forms
-        })
-        define('jueying.forms', ['jueying'], function () {
-            return jueying.forms
-        })
+        requirejs(['./main'])
+
     });
 
-    window['require'] = window['nodeRequire']
-    require['nodeRequire'] = window['nodeRequire']
-    // window['exports'] = {}
 })()
 

@@ -4,7 +4,7 @@
         "module": "none",
         "sourceMap": true,
         "declaration": true,
-        "outFile": "../www/lib/jueying.js",
+        "outFile": "../lib/jueying.js",
         "rootDir": ".",
         "jsx": "react",
         "strict": false,

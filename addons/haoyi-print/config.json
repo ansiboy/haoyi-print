@@ -1,0 +1,11 @@
+{
+    "userConfig": {
+        "hostname": "127.0.0.1",
+        "port": 52894,
+        "enableInnerPrintService": true
+    },
+    "applicationConfig": {
+        "templatePath": "./print-templates",
+        "productName": "好易标签打印"
+    }
+}

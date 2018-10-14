@@ -1,4 +1,3 @@
-/// <reference path="../www/lib/jueying.d.ts"/>
 import { app, BrowserWindow } from 'electron'
 import { createMainWindow } from './windows/mainWindow';
 import * as path from 'path';
@@ -33,73 +32,12 @@ async function start() {
     let indexFilePath = path.join(app.getAppPath(), config.index || '')
 
     mainWindow = createMainWindow(indexFilePath)
-    // settingsWindow = createSettingsWindow()
-
-    // createTray(mainWindow, {
-    //   '显示': function () {
-    //     mainWindow.show()
-    //   },
-    //   '设置': function () {
-    //     settingsWindow.show()
-    //   },
-    //   '退出': function () {
-    //     app.quit()
-    //   }
-    // })
-
     processConfig(config)
   })
 
-  /*
-  // Quit when all windows are closed.
-  app.on('window-all-closed', function () {
-    // On OS X it is common for applications and their menu bar
-    // to stay active until the user quits explicitly with Cmd + Q
-    if (process.platform !== 'darwin') {
-      app.quit()
-    }
-  })
-  */
 
-  app.on('activate', async function () {
-    // On OS X it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    let config = await readConfig()
-    let indexFilePath = path.join(app.getAppPath(), config.index || '')
-    if (mainWindow === null) {
-      mainWindow = createMainWindow(indexFilePath)
-    }
-  });
-
-  // readConfig().then(config => {
-  //   webServer.listen(config.userConfig.port, config.userConfig.hostname)
-
-  // })
 }
 
-// let config: jueying.forms.Config
-// function loadConfig(): Promise<jueying.forms.Config> {
-//   return new Promise((resolve, reject) => {
-
-//     if (config) {
-//       return resolve(config)
-//     }
-
-//     fs.readFile('project-config.json', (err, data) => {
-//       if (err) {
-//         console.log(err)
-//         reject(err)
-//         return
-//       }
-
-//       config = JSON.parse(data.toString());
-//       resolve(config);
-
-
-//     })
-
-//   })
-// }
 
 function processConfig(config: jueying.forms.Config) {
   let obj = config;

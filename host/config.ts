@@ -3,47 +3,7 @@ import fs = require('fs')
 import { app } from 'electron';
 import * as errors from './errors'
 
-// export type UserConfig = {
-//     defaultPrinter?: string,
-//     port: number,
-//     hostname: string,
-//     enableInnerPrintService: boolean,
-// }
-
-// export type ApplicationConfig = {
-//     productName: string,
-//     templatePath: string,
-// }
-
-// export type Config = {
-//     userConfig: UserConfig,
-//     applicationConfig: ApplicationConfig
-// }
-
-// const defaultUserConfig: UserConfig = {
-//     hostname: '127.0.0.1',
-//     port: 52894,
-//     enableInnerPrintService: true,
-// }
-
-// const defaultApplicationConfig: ApplicationConfig = {
-//     templatePath: './print-templates',
-//     productName: '好易标签打印',
-// }
-
-// const defaultConfig: Config = {
-//     userConfig: defaultUserConfig,
-//     applicationConfig: defaultApplicationConfig,
-// }
-
 type Config = jueying.forms.Config
-
-// const defaultConfig: Config = {
-//     index: 'index.html',
-//     host: {
-//         service_port: 6215
-//     }
-// }
 
 export function configPath() {
     let filepath = path.join(app.getAppPath(), "project-config.json")
