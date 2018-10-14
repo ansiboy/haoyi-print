@@ -65,8 +65,6 @@ export async function readConfig(): Promise<Config> {
             resolve(config)
         })
     })
-    // config = Object.assign(defaultConfig, config)
-    // }
 
     return config
 }

@@ -2,8 +2,7 @@
 
 import * as chitu from 'chitu';
 import { PrintTask } from "server/modules/printTask";
-import { UserConfig } from "server/config";
-import { PageDocument } from "jueying.forms";
+import { PageDocument, Config } from "jueying.forms";
 
 
 export class Service extends chitu.Service {
@@ -75,30 +74,10 @@ export class Service extends chitu.Service {
     }
     getConfig() {
         let url = this.url('config/get')
-        return this.get<UserConfig>(url)
+        return this.get<Config>(url)
     }
     saveConfig(config) {
         let url = this.url('config/save')
-        return this.postByJson<UserConfig>(url, { config })
-    }
-
-    ui = {
-        maxMainWindow: () => {
-            let url = this.url('ui/maxMainWindow')
-            return this.postByJson(url, {})
-        },
-        minMainWindow: () => {
-            let url = this.url('ui/minMainWindow')
-            return this.postByJson(url, {})
-        },
-        getMainWindowPosition: () => {
-            return this.get<number[]>('ui/getMainWindowPosition')
-        },
-        setMainWindowPosition: (x: number, y: number) => {
-            return this.postByJson('ui/setMainWindowPosition', { x, y })
-        },
-        exists: () => {
-            return this.postByJson('ui/exists')
-        }
+        return this.postByJson<Config>(url, { config })
     }
 }

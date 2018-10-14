@@ -8,7 +8,7 @@ declare module 'jueying' {
 	export = jueying;
 }
 declare module 'jueying.extentions' {
-    
+
 	export = jueying.forms
 }
 declare module 'jueying.forms' {
@@ -17,9 +17,21 @@ declare module 'jueying.forms' {
 
 declare namespace jueying {
 	interface ComponentProps<T> {
-        text?: string,
-        field?: string,
-    }
+		text?: string,
+		field?: string,
+	}
+}
+
+interface PrintConfig {
+	enableInnerPrintService: boolean
+	defaultPrinter: string
+	hostname: string,
+	port: number
+}
+declare namespace jueying.forms {
+	interface Config {
+		print: PrintConfig,
+	}
 }
 
 

@@ -1,8 +1,6 @@
 /// <reference path="../www/lib/jueying.d.ts"/>
-import { app, BrowserWindow, Config } from 'electron'
-import { createTray } from './tray';
+import { app, BrowserWindow } from 'electron'
 import { createMainWindow } from './windows/mainWindow';
-import { createSettingsWindow } from './windows/settingsWindow';
 import * as path from 'path';
 import { readConfig } from './config';
 import { webServer } from './webServer';
@@ -35,19 +33,19 @@ async function start() {
     let indexFilePath = path.join(app.getAppPath(), config.index || '')
 
     mainWindow = createMainWindow(indexFilePath)
-    settingsWindow = createSettingsWindow()
+    // settingsWindow = createSettingsWindow()
 
-    createTray(mainWindow, {
-      '显示': function () {
-        mainWindow.show()
-      },
-      '设置': function () {
-        settingsWindow.show()
-      },
-      '退出': function () {
-        app.quit()
-      }
-    })
+    // createTray(mainWindow, {
+    //   '显示': function () {
+    //     mainWindow.show()
+    //   },
+    //   '设置': function () {
+    //     settingsWindow.show()
+    //   },
+    //   '退出': function () {
+    //     app.quit()
+    //   }
+    // })
 
     processConfig(config)
   })

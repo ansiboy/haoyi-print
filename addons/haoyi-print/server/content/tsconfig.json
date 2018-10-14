@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "module": "amd",
+        "target": "es6",
+        "sourceMap": true,
+        "jsx": "react"
+    },
+    "exclude": [
+        "content/**"
+    ]
+}

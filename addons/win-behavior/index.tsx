@@ -10,7 +10,7 @@ class Toolbar extends React.Component<any, any>{
     exit(): void {
         remote.app.exit();
     }
-    windowMax(): void {
+    toggleMax(): void {
         let window = remote.getCurrentWindow()
         if (window.isMaximized())
             window.unmaximize()
@@ -76,6 +76,9 @@ class Toolbar extends React.Component<any, any>{
             let window = remote.getCurrentWindow()
             this.enableMove(toolbarElement, window)
         }
+        toolbarElement.ondblclick = () => {
+            this.toggleMax()
+        }
     }
     render() {
         let buttonClassName = 'btn btn-default btn-sm'
@@ -89,7 +92,7 @@ class Toolbar extends React.Component<any, any>{
             </li>
             <li className="pull-right">
                 <button className={`${buttonClassName}`}
-                    onClick={e => this.windowMax()}>
+                    onClick={e => this.toggleMax()}>
                     <i className="icon-check-empty" />
                 </button>
             </li>
@@ -100,8 +103,6 @@ class Toolbar extends React.Component<any, any>{
             </li>
         </ul>
     }
-
-
 }
 
 let plugin: Plugin = {
