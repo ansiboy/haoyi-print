@@ -1,9 +1,11 @@
-import { app, BrowserWindow } from 'electron'
+/// <reference path="../www/lib/jueying.d.ts"/>
+import { app, BrowserWindow, Config } from 'electron'
 import { createTray } from './tray';
 import { createMainWindow } from './windows/mainWindow';
 import { createSettingsWindow } from './windows/settingsWindow';
-import * as fs from 'fs';
 import * as path from 'path';
+import { readConfig } from './config';
+import { webServer } from './webServer';
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 
@@ -29,7 +31,7 @@ async function start() {
   // initialization and is ready to create browser windows.
   // Some APIs can only be used after this event occurs.
   app.on('ready', async function () {
-    let config = await loadConfig()
+    let config = await readConfig()
     let indexFilePath = path.join(app.getAppPath(), config.index || '')
 
     mainWindow = createMainWindow(indexFilePath)
@@ -64,7 +66,7 @@ async function start() {
   app.on('activate', async function () {
     // On OS X it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    let config = await loadConfig()
+    let config = await readConfig()
     let indexFilePath = path.join(app.getAppPath(), config.index || '')
     if (mainWindow === null) {
       mainWindow = createMainWindow(indexFilePath)
@@ -77,33 +79,45 @@ async function start() {
   // })
 }
 
-let config: vr.Confid
-function loadConfig(): Promise<vr.Confid> {
-  return new Promise((resolve, reject) => {
+// let config: jueying.forms.Config
+// function loadConfig(): Promise<jueying.forms.Config> {
+//   return new Promise((resolve, reject) => {
 
-    if (config) {
-      return resolve(config)
-    }
+//     if (config) {
+//       return resolve(config)
+//     }
 
-    fs.readFile('project-config.json', (err, data) => {
-      if (err) {
-        console.log(err)
-        reject(err)
-        return
-      }
+//     fs.readFile('project-config.json', (err, data) => {
+//       if (err) {
+//         console.log(err)
+//         reject(err)
+//         return
+//       }
 
-      // try {
-      config = JSON.parse(data.toString());
-      resolve(config);
+//       config = JSON.parse(data.toString());
+//       resolve(config);
 
 
-    })
+//     })
 
-  })
-}
+//   })
+// }
 
-function processConfig(config: vr.Confid) {
+function processConfig(config: jueying.forms.Config) {
   let obj = config;
+
+  let host_config = Object.assign({
+    host: {
+      service_port: 52819,
+      service_address: '127.0.0.1'
+    }
+  } as jueying.forms.Config, config.host);
+
+
+  webServer.listen(host_config.service_port, host_config.service_address);
+
+  //=================================================
+  // 加载插件
   (obj.startup || []).forEach(startup_path => {
     setTimeout(() => {
       try {
@@ -119,5 +133,5 @@ function processConfig(config: vr.Confid) {
       }
     })
   });
-
+  //=================================================
 }

@@ -16,20 +16,12 @@ declare module 'jueying.forms' {
 }
 
 declare namespace jueying {
-	// export interface PageViewProps {
-	// 	width?: number,
-	// 	// height?: number,
-	// 	data?: { [key: string]: any },
-	// 	unit: string,
-	// 	fontFamily?: string,
-	// }
-	export interface ControlPlaceholderProps {
-		showField?: boolean,
-		field?: string,
-	}
+	interface ComponentProps<T> {
+        text?: string,
+        field?: string,
+    }
 }
 
-declare function h(type, props, ...children);
 
 declare let nodeRequire: NodeRequire
 
@@ -38,11 +30,5 @@ declare interface HTMLWebViewElement {
 	loadURL(url: string)
 }
 
-declare namespace jueying {
-    interface ComponentProps<T> {
-        text?: string,
-        field?: string,
-        // expression?: string,
-    }
-}
+
 

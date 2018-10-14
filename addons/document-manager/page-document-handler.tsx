@@ -18,7 +18,7 @@ export class FileDocument {
 
     private storage: DocumentStorage;
     private originalPageData: ComponentData;
-    private changedManage: JSONUndoRedo<ComponentData>;
+    private changedManage: JSONUndoRedo;
 
     constructor(storage: DocumentStorage, filename: string, pageData: ComponentData) {
         if (!storage) throw Errors.argumentNull('storage')

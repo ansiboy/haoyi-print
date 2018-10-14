@@ -229,7 +229,7 @@ jueying.PageDesigner.prototype.render = function () {
             }
         }
 
-        return h(type, props, ...children)
+        return React.createElement(type, props, ...children)
     }
     let result = pageDesignerRender.bind(this)();
     (React as any).createElement = reactCreateElement

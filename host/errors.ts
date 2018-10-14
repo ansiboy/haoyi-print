@@ -296,3 +296,10 @@ export function userTokenNotExists(token: string) {
     err.name = names.userTokenNotExists;
     return err;
 }
+
+export function configNotExists(path: string) {
+    let msg = `Config file '${path}' is not exists`;
+    let err = new Error(msg)
+    err.name = configNotExists.name
+    return err
+}

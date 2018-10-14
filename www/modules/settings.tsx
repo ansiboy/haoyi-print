@@ -54,7 +54,6 @@ export class SettingsView extends React.Component<Props, State>{
         let service = new Service()
         let c = this.config = await service.getConfig()
         this.setState({ config: c })
-        debugger
     }
     render() {
         let { printers, config } = this.state

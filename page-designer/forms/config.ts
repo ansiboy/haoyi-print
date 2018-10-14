@@ -1,7 +1,7 @@
 namespace jueying.forms {
 
     export let defaultPluginSingleton = true
-    export interface Confid {
+    export interface Config {
         index: string,
         plugins: {
             /** 插件 ID */

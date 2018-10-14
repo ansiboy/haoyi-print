@@ -1,7 +1,6 @@
 import React = require("react");
-import { Service } from "./../service";
 import ReactDOM = require("react-dom");
-import { print, createTemplateElement } from '../print'
+import { createTemplateElement } from '../print'
 
 interface PrintDialogProps {
     templateName: string,

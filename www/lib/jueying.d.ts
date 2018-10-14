@@ -395,7 +395,7 @@ declare namespace jueying.forms {
 }
 declare namespace jueying.forms {
     let defaultPluginSingleton: boolean;
-    interface Confid {
+    interface Config {
         index: string;
         plugins: {
             /** 插件 ID */
@@ -426,7 +426,7 @@ declare namespace jueying.forms {
 }
 declare namespace jueying.forms {
     type DesignerFrameworkProps = {
-        config: Confid;
+        config: Config;
     };
     type DesignerFrameworkState = {
         documents: PageDocument[];

@@ -1,5 +1,8 @@
 {
     "index": "index.html",
+    "host": {
+        "service_port": 52819
+    },
     "plugins": [
         {
             "id": "88BB17D9-BD62-4426-BA78-9E87EAA5690F",

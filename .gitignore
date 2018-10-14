@@ -1,3 +1,5 @@
+.vscode/*.sql
+
 node_modules
 **/*.js
 !www/lib/**/*.js

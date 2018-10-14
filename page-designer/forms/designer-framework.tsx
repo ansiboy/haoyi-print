@@ -3,7 +3,7 @@
 
 namespace jueying.forms {
     type DesignerFrameworkProps = {
-        config: Confid
+        config: Config
     }
 
     type DesignerFrameworkState = {

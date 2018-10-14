@@ -2,8 +2,7 @@ import templates from "templates";
 import * as ReactDOM from 'react-dom';
 import * as React from 'react';
 import { showSettingsDialog } from '../controls/settingsDialog';
-import { ServiceDocumentStorage } from '../designer/serviceDocumentStorage';
-import { DocumentStorage, DesignerFramework } from "jueying.forms";
+import { DesignerFramework } from "jueying.forms";
 
 // import config from '../../config'
 // requirejs(config.plugins.filter(o => o.load).map(o => o.path), function () {
@@ -11,37 +10,30 @@ import { DocumentStorage, DesignerFramework } from "jueying.forms";
 // })
 
 class MainPage extends DesignerFramework {
-    private _storage1: DocumentStorage;
     constructor(props) {
         super(props)
-    }
-    get storage() {
-        if (this._storage1 == null)
-            this._storage1 = new ServiceDocumentStorage()
-
-        return this._storage1
     }
     get window() {
         const { remote } = nodeRequire('electron');
         let win = remote.getCurrentWindow();
         return win
     }
-    exit() {
-        const { remote } = nodeRequire('electron')
-        remote.app.exit();
-    }
+    // exit() {
+    //     const { remote } = nodeRequire('electron')
+    //     remote.app.exit();
+    // }
     settings() {
         showSettingsDialog()
     }
-    windowMax() {
-        if (this.window.isMaximized())
-            this.window.unmaximize()
-        else
-            this.window.maximize()
-    }
-    windowMin() {
-        this.window.minimize()
-    }
+    // windowMax() {
+    //     if (this.window.isMaximized())
+    //         this.window.unmaximize()
+    //     else
+    //         this.window.maximize()
+    // }
+    // windowMin() {
+    //     this.window.minimize()
+    // }
     // renderButtons(pageDocument: PageDocumentFile) {
     //     let buttonClassName = 'btn btn-default btn-sm'
     //     let buttons = super.renderButtons(pageDocument, buttonClassName)
@@ -131,7 +123,6 @@ class MainPage extends DesignerFramework {
         if (super.componentDidMount)
             super.componentDidMount()
 
-        debugger
         let toolbarElement = document.querySelector('.toolbar') as HTMLElement
         if (toolbarElement) {
             this.enableMove(toolbarElement, this.window)
@@ -149,10 +140,8 @@ class MainPage extends DesignerFramework {
 export default function (page: chitu.Page) {
 
     requirejs(['text!config'], function (configText: string) {
-        let config: jueying.forms.Confid = JSON.parse(configText)
-        // requirejs(config.plugins.filter(o => o.autoLoad).map(o => `../${o.path}`), function () {
-        //     debugger
-        // })
+        let config: jueying.forms.Config = JSON.parse(configText)
+   
 
         ReactDOM.render(<MainPage {...{
             componentDefines: [], templates, title: '好易标签打印',
