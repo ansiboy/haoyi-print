@@ -109,25 +109,25 @@ let components = [
 ]
 
 class PrintPlugin implements Plugin {
-    // components = components
+    private btn_print: HTMLButtonElement
+
     init(ide: DesignerFramework) {
 
         let buttonClassName = 'btn btn-default btn-sm'
         let buttons = new Array<JSX.Element>()
 
-        let activeDocument = ide.state.activeDocument
         buttons.push(
             <button className={buttonClassName}
                 ref={e => {
                     if (!e) return
-                    e.disabled = !activeDocument
+                    e.disabled = true
                     e.onclick = () => {
-                        if (!ide.state.activeDocument)
+                        if (!ide.activedDocument)
                             return
 
-                        this.print(ide.state.activeDocument)
+                        this.print(ide.activedDocument)
                     }
-
+                    this.btn_print = e
                 }}>
                 <i className="icon-print" />
                 <span>打印</span>
@@ -145,35 +145,15 @@ class PrintPlugin implements Plugin {
             {buttons.map((o, i) =>
                 <li key={i} className="pull-right">{o}</li>
             )}
-        </ul>
+        </ul>;
 
         ide.toolbarPanel.appendToolbar(toolbar)
     }
     onDocumentActived() {
+        console.assert(this.btn_print != null)
+        this.btn_print.disabled = false
         return { components }
     }
-    // renderToolbarButtons({ activeDocument }: { activeDocument: PageDocumentFile }) {
-    //     let buttonClassName = 'btn btn-default btn-sm'
-    //     let buttons = new Array<JSX.Element>()
-
-    //     buttons.push(
-    //         <button className={buttonClassName}
-    //             disabled={!activeDocument}
-    //             onClick={() => this.print(activeDocument)}>
-    //             <i className="icon-print" />
-    //             <span>打印</span>
-    //         </button>,
-    //     )
-    //     buttons.unshift(...[
-
-    //         <button className={`${buttonClassName}`}
-    //             onClick={e => this.settings()}>
-    //             <i className="icon-cogs" />
-    //             <span>设置</span>
-    //         </button>,
-    //     ])
-    //     return buttons
-    // }
     print(activeDocument: PageDocument) {
         // let { activeDocument } = this.state
         console.assert(activeDocument != null)
@@ -229,7 +209,7 @@ jueying.PageDesigner.prototype.render = function () {
             }
         }
 
-        return React.createElement(type, props, ...children)
+        return reactCreateElement(type, props, ...children)
     }
     let result = pageDesignerRender.bind(this)();
     (React as any).createElement = reactCreateElement

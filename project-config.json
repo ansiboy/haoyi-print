@@ -13,7 +13,7 @@
         {
             "id": "217A8C64-DF30-49D8-9169-608D83147DA7",
             "name": "haoyi-print",
-            "path": "addons/haoyi-print/index",
+            "path": "addons/haoyi-print/client/index",
             "autoLoad": true
         },
         {

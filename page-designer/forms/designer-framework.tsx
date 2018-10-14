@@ -47,6 +47,10 @@ namespace jueying.forms {
                 })
         }
 
+        get activedDocument() {
+            return this.state.activeDocument;
+        }
+
         setActiveDocument(document: PageDocument) {
             let { documents } = this.state
             console.assert(document.name)

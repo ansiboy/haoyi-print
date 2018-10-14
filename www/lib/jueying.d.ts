@@ -459,6 +459,7 @@ declare namespace jueying.forms {
         componentPanel: ComponentPanel;
         toolbarPanel: ToolbarPanel;
         constructor(props: DesignerFrameworkProps);
+        readonly activedDocument: PageDocument;
         setActiveDocument(document: PageDocument): boolean;
         static readonly dialogsElement: HTMLElement;
         private activeDocument;

@@ -1195,6 +1195,9 @@ var jueying;
                     this.loadPlugin(o.path, o.id);
                 });
             }
+            get activedDocument() {
+                return this.state.activeDocument;
+            }
             setActiveDocument(document) {
                 let { documents } = this.state;
                 console.assert(document.name);
