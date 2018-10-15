@@ -68,13 +68,24 @@
             rulers: `${lib}/rulers`,
 
             components: `addons/haoyi-print/components`,
-            config: `../../config.json`
+            config: `../../../../config.json`
         }
     });
 
     require['nodeRequire'] = window['nodeRequire']
     requirejs([`less!${lib}/bootstrap-3.3.7/less/bootstrap.less`])
     requirejs(['react', 'react-dom', 'jquery', 'jsondiffpatch', 'ui', 'chitu'], function (react, reactDOM, jquery, jsondiffpatch) {
+
+        (window as any)['React'] = react;
+        (window as any)['ReactDOM'] = reactDOM;
+        (window as any)['$'] = jquery;
+        (window as any)['h'] = react.createElement;
+        (window as any)['jsondiffpatch'] = jsondiffpatch;
+
+        define('jueying.forms', ['jueying'], function () {
+            return jueying.forms
+        })
+
         requirejs(['./main'])
 
     });

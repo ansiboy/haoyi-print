@@ -1,7 +1,7 @@
 
 
 import * as chitu from 'chitu';
-import { PageDocument, Config } from "jueying.forms";
+import { PageDocument } from "jueying.forms";
 import { loadConfig } from '../../../www/application'
 
 export class Service extends chitu.Service {
@@ -25,6 +25,10 @@ export class Service extends chitu.Service {
     }
     private async url(path: string): Promise<string> {
         let c = await loadConfig()
+        console.assert(c.host)
+        console.assert(c.host.bind_ip)
+        console.assert(c.host.service_port)
+
         return `http://${c.host.bind_ip}:${c.host.service_port}/${path}`
     }
     async templateList() {
@@ -69,11 +73,11 @@ export class Service extends chitu.Service {
         return this.postByJson<string | null>(url, { value })
     }
     async getConfig() {
-        let url = await this.url('printConfig/get')
+        let url = await this.url('printConfig/readConfig')
         return this.get<PrintConfig>(url)
     }
-    async saveConfig(config) {
-        let url = await this.url('printConfig/save')
+    async saveConfig(config: PrintConfig) {
+        let url = await this.url('printConfig/writeConfig')
         return this.postByJson<PrintConfig>(url, { config })
     }
 }

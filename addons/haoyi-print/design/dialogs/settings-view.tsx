@@ -28,8 +28,10 @@ export class SettingsView extends React.Component<Props, State>{
         this.props.close()
     }
     save() {
-        let { writeConfig } = nodeRequire('./../../tray/config')
-        return writeConfig(this.state.config)
+        // let { writeConfig } = nodeRequire('./../../tray/config')
+        // return writeConfig(this.state.config)
+        let service = new Service()
+        return service.saveConfig(this.state.config)
     }
     async componentDidMount() {
         try {

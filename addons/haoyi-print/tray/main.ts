@@ -27,8 +27,8 @@ function createSettingsWindow() {
         height: 500,
         title: '设置',
         show: true,
-        frame: true,
-        transparent: false,
+        frame: false,
+        transparent: true,
         webPreferences: { webSecurity: false },
     })
 
