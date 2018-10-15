@@ -5,4 +5,7 @@ export class Errors {
     static argumentNull(name: string) {
         return new Error(`Argument '${name}' is null or empty`)
     }
+    static fieldNull(field: string, objectName: string) {
+        return new Error(`Field  of '${objectName}', '${field}' is null or empty`)
+    }
 }

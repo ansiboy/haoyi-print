@@ -1,15 +1,18 @@
 import { PageDocument, Plugin, DesignerFramework, Workbench } from "jueying.forms";
 import React = require("react");
-import { FileDocument } from "./page-document-handler";
+import { DocumentFile } from "./page-document-handler";
 import { guid } from "jueying";
 import { TemplateDialog } from "./template-dialog";
 import { DocumentFileStorage } from "./document-storage";
+import templates from './templates'
+
 
 let buttonClassName = 'btn btn-default btn-sm'
 
 interface ToolbarState {
     pageDocuments?: PageDocument[]
-    activeDocument?: PageDocument
+    // activeDocument?: PageDocument,
+    currentField?: DocumentFile
 }
 interface ToolbarProps {
     ide: Workbench,
@@ -17,7 +20,7 @@ interface ToolbarProps {
 class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
 
     _storage: any;
-    documentFiles: { [key: string]: FileDocument }
+    documentFiles: { [key: string]: DocumentFile }
     constructor(props: ToolbarProps) {
         super(props)
         this.state = {}
@@ -38,12 +41,9 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         let { pageDocuments } = this.state;
         let documentStorage = this.storage
         let pageDocument = isNew ? template :
-            await FileDocument.load(documentStorage, fileName);
+            await DocumentFile.load(documentStorage, fileName);
 
-
-        let file = this.documentFiles[fileName]
-        console.assert(file == null)
-        file = FileDocument.new(this.storage, fileName, pageDocument)
+        let file = DocumentFile.new(this.storage, pageDocument)
         this.documentFiles[fileName] = file
 
 
@@ -51,7 +51,7 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         pageDocuments.push(pageDocument);
         this.setState({
             pageDocuments,
-            activeDocument: pageDocuments[pageDocuments.length - 1]
+            currentField: file
         })
 
 
@@ -60,15 +60,10 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
     }
     getDocumentFile(document: PageDocument) {
         let file = this.documentFiles[document.name]
-        // if (!file) {
-        //     file = FileDocument.new(this.storage, document)
-        //     this.documentFiles[document.name] = file
-        // }
         console.assert(file)
         return this.documentFiles[document.name]
     }
     async fetchTemplates() {
-        let templates = []
         return { items: templates, count: templates.length };
     }
     async newFile() {
@@ -101,46 +96,39 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         })
     }
     undo() {
-        let { activeDocument } = this.state
-        let file = this.documentFiles[activeDocument.name]
-        console.assert(file != null)
-        activeDocument.pageData = file.undo()
-        this.props.ide.activeDocument = activeDocument
-        this.setState({ activeDocument })
+        let { currentField } = this.state
+        console.assert(currentField != null)
+        currentField.undo()
+        this.props.ide.activeDocument = currentField.document
+        this.setState({ currentField })
     }
     redo() {
-        let { activeDocument } = this.state
-        let file = this.getDocumentFile(activeDocument)
-        activeDocument.pageData = file.redo()
-        this.setState({ activeDocument })
-        this.props.ide.activeDocument = activeDocument
+        let { currentField } = this.state
+        currentField.redo()
+        this.setState({ currentField })
+        this.props.ide.activeDocument = currentField.document
     }
     async save() {
-        let { activeDocument } = this.state;
-        let file = this.getDocumentFile(activeDocument)
-        file.save(activeDocument);
-        this.setState({ activeDocument });
+        let { currentField } = this.state;
+        await currentField.save()
+        this.setState({ currentField });
     }
     componentDidMount() {
-        // this.props.ide.documentChanged.add(args => {
-
-        // })
     }
     onDocumentChanged(document: PageDocument) {
         let file = this.documentFiles[document.name]
         console.assert(file != null)
         file.setSnapShoot(document.pageData)
-        this.setState({ activeDocument: document })
+        this.setState({ currentField: file })
     }
     render() {
         let canRedo = false, canSave = false, canUndo = false
-        let activeDocument = this.state.activeDocument
-        if (activeDocument) {
-            let file = this.documentFiles[activeDocument.name]
-            console.assert(file)
-            canRedo = file.canRedo
-            canUndo = file.canUndo
-            canSave = file.canSave
+        let currentField = this.state.currentField
+        if (currentField) {
+            // let file = this.documentFiles[activeDocument.name]
+            canRedo = currentField.canRedo
+            canUndo = currentField.canUndo
+            canSave = currentField.canSave
         }
 
         let buttons = [

@@ -33,6 +33,7 @@ export class PrintDialog extends React.Component<PrintDialogProps, PrintDialogSt
         let service = new Service()
         let deviceName = await service.getDefaultPrinter()
         // print(deviceName, templateName, templateData)
+        service.printByTemplate(templateName, templateData, deviceName)
     }
     parseTemplateText(templateDataText: string) {
         try {

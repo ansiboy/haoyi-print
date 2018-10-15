@@ -28,6 +28,8 @@ export async function print(deviceName: string, name: string, data?: object) {
         }, 1000 * 60)
         //==============================
     }, 800)
+
+    printWindow.webContents
 }
 
 

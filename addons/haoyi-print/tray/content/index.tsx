@@ -86,8 +86,10 @@
             return jueying.forms
         })
 
-        requirejs(['./main'])
-
+        if (!location.hash)
+            requirejs(['./main'])
+        else
+            requirejs([`./${location.hash.substr(1)}`])
     });
 
 })()

@@ -1,7 +1,7 @@
 import { argumentNull } from "../errors";
-import { BrowserWindow, ipcMain } from "electron";
-// import { mainWindow } from "..";
-import { readConfig, writeConfig } from "../config";
+import { BrowserWindow } from "electron";
+import { readConfig, writeConfig } from "./config";
+import { createPrintWindow } from "../main";
 
 export async function print({ deviceName, html }: { deviceName: string, html: string }) {
 
@@ -37,20 +37,29 @@ export async function setDefaultPrinter({ value }: { value: string }) {
 
     let config = await readConfig()
     config.userConfig.defaultPrinter = value
-    writeConfig(config)
+    writeConfig({ config })
 }
 
-export async function printByTemplate({ templateName, templateData }: { templateName: string, templateData: object }) {
+type A = { templateName: string, templateData: object, deviceName?: string }
+export async function printByTemplate({ templateName, templateData, deviceName }: A) {
     if (!templateName) throw argumentNull('templateName')
     if (!templateData) throw argumentNull('templateData')
 
-    // mainWindow.webContents.send('generate-template-html', { templateName, templateData })
-}
+    if (!deviceName) {
+        deviceName = await getDefaultPrinter() || ''
+    }
 
-ipcMain.on('generate-template-html', async (event: Event, html: string) => {
-    let deviceName = await getDefaultPrinter() || ''
-    print({ deviceName, html })
-})
+    let printWindow = createPrintWindow(templateName, templateData)
+    setTimeout(() => {
+        printWindow.webContents.print({ silent: true, deviceName });
+        //==============================
+        // 发送指令后指令后关闭窗口
+        setTimeout(() => {
+            // printWindow.close()
+        }, 2000)
+        //==============================
+    }, 800)
+}
 
 export async function printers() {
     let names = BrowserWindow.getAllWindows()[0].webContents.getPrinters().map(o => o.name)

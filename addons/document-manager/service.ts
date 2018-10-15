@@ -41,38 +41,38 @@ export class Service extends chitu.Service {
         let url = await this.url('template/get')
         return this.get<PageDocument>(url, { name })
     }
-    async templateSave(name: string, data: PageDocument) {
+    async templateSave(data: PageDocument) {
         let url = await this.url('template/save')
-        return this.postByJson(url, { name, item: data })
+        return this.postByJson(url, { item: data })
     }
-    async printTaskRemove(id: string) {
-        let url = await this.url('printTask/remove')
-        return this.postByJson(url, { id })
-    }
-    async printTaskCreate(templateName: string, templateData: object) {
-        let url = await this.url('printTask/create')
-        return this.postByJson(url, { templateName, templateData })
-    }
-    async print(deviceName: string, html: string) {
-        let url = await this.url('print/print')
-        return this.postByJson(url, { deviceName, html })
-    }
-    async printByTemplate(templateName: string, templateData: object) {
-        let url = await this.url('print/printByTemplate')
-        return this.postByJson(url, { templateName, templateData })
-    }
-    async printers() {
-        let url = await this.url('print/printers')
-        return this.get<string[]>(url)
-    }
-    async getDefaultPrinter() {
-        let url = await this.url('print/getDefaultPrinter')
-        let value = await this.get<string | null>(url)
-        return value || ''
-    }
-    async setDefaultPrinter(value: string | null) {
-        let url = await this.url('print/setDefaultPrinter')
-        return this.postByJson<string | null>(url, { value })
-    }
+    // async printTaskRemove(id: string) {
+    //     let url = await this.url('printTask/remove')
+    //     return this.postByJson(url, { id })
+    // }
+    // async printTaskCreate(templateName: string, templateData: object) {
+    //     let url = await this.url('printTask/create')
+    //     return this.postByJson(url, { templateName, templateData })
+    // }
+    // async print(deviceName: string, html: string) {
+    //     let url = await this.url('print/print')
+    //     return this.postByJson(url, { deviceName, html })
+    // }
+    // async printByTemplate(templateName: string, templateData: object) {
+    //     let url = await this.url('print/printByTemplate')
+    //     return this.postByJson(url, { templateName, templateData })
+    // }
+    // async printers() {
+    //     let url = await this.url('print/printers')
+    //     return this.get<string[]>(url)
+    // }
+    // async getDefaultPrinter() {
+    //     let url = await this.url('print/getDefaultPrinter')
+    //     let value = await this.get<string | null>(url)
+    //     return value || ''
+    // }
+    // async setDefaultPrinter(value: string | null) {
+    //     let url = await this.url('print/setDefaultPrinter')
+    //     return this.postByJson<string | null>(url, { value })
+    // }
 
 }

@@ -66,7 +66,13 @@ namespace jueying.forms {
                 })
 
             this.documentChanged.add(args => {
-                this.plugins.forEach(o => o.onDocumentActived({ document: args.document }))
+
+                this.plugins.forEach(o => {
+                    if (!o.onDocumentChanged)
+                        return
+
+                    o.onDocumentChanged({ document: args.document })
+                })
             })
 
         }

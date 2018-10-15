@@ -5,7 +5,7 @@ import { DocumentStorage } from "./document-storage";
 
 
 
-export class FileDocument {
+export class DocumentFile {
 
     pageData: ComponentData;
     private name: string;
@@ -14,39 +14,47 @@ export class FileDocument {
     private storage: DocumentStorage;
     private originalPageData: ComponentData;
     private changedManage: JSONUndoRedo;
+    private _document: PageDocument;
+    private _canSave: boolean;
 
-    constructor(storage: DocumentStorage, filename: string, pageData: ComponentData) {
+    constructor(storage: DocumentStorage, document: PageDocument, isNew: boolean) {
         if (!storage) throw Errors.argumentNull('storage')
-        if (!pageData) throw Errors.argumentNull('pageData')
+        if (!document) throw Errors.argumentNull('document')
 
-
+        this.pageData = document.pageData
+        this._document = document
         this.storage = storage;
         this.name = this.fileName
-        // console.assert(document.pageData)
-        this.originalPageData = JSON.parse(JSON.stringify(pageData));
+        this.originalPageData = JSON.parse(JSON.stringify(this.pageData));
 
-        this.pageData = pageData;
-        // this.name = document.name;
-        // this.plugin = document.plugin;
         this.changedManage = new JSONUndoRedo(this.pageData)
+        this._canSave = isNew
+    }
+
+    get document() {
+        return this._document
     }
 
     setSnapShoot(pageData: ComponentData) {
         if (isEquals(pageData, this.changedManage.currentData)) {
             return
         }
+
+        this._canSave = true;
         this.originalPageData = JSON.parse(JSON.stringify(pageData));
         this.changedManage.setChangedData(pageData)
     }
 
-    save(document: PageDocument) {
-        this.originalPageData = JSON.parse(JSON.stringify(document.pageData));
-        return this.storage.save(this.name, document);
+    save() {
+        this.originalPageData = JSON.parse(JSON.stringify(this._document.pageData));
+        return this.storage.save(this._document).then(o => {
+            this._canSave = false
+            return o
+        });
     }
 
     get canSave() {
-        let equals = isEquals(this.originalPageData, this.pageData);
-        return !equals;
+        return this._canSave;
     }
 
     get fileName() {
@@ -61,31 +69,31 @@ export class FileDocument {
         return this.changedManage.canRedo
     }
 
-    undo(): ComponentData {
+    undo() {
         let pageData = this.changedManage.undo()
         console.assert(pageData)
-        return pageData
+        this._document.pageData = pageData
     }
 
-    redo(): ComponentData {
+    redo() {
         let pageData = this.changedManage.redo()
         console.assert(pageData)
-        return pageData
+        this._document.pageData = pageData
     }
 
-    static async load(storage: DocumentStorage, fileName: string) {
+    static async load(storage: DocumentStorage, fileName: string): Promise<PageDocument> {
         let data = await storage.load(fileName);
         if (data == null) {
             throw Errors.fileNotExists(fileName);
         }
 
-        // return new FileDocument(storage, fileName, data.pageData);
         data.name = fileName
         return data
     }
 
-    static new(storage: DocumentStorage, fileName: string, init: PageDocument) {
-        return new FileDocument(storage, fileName, init.pageData);
+    static new(storage: DocumentStorage, init: PageDocument) {
+        console.assert(init.name)
+        return new DocumentFile(storage, init, true);
     }
 
 }

@@ -19,6 +19,9 @@ export default function main() {
     registerController('print', path.join(__dirname, 'modules/print'))
     registerController('template', path.join(__dirname, 'modules/template'))
     registerController('printConfig', path.join(__dirname, 'modules/config'))
+
+    // let indexFilePath = path.join(__dirname, 'content/index.html#print?templateName=仓库库位.json')
+
 }
 
 function createSettingsWindow() {
@@ -26,13 +29,11 @@ function createSettingsWindow() {
         width: 800,
         height: 500,
         title: '设置',
-        show: true,
+        show: false,
         frame: false,
         transparent: true,
         webPreferences: { webSecurity: false },
     })
-
-    win.webContents.openDevTools();
 
     let indexFilePath = path.join(__dirname, 'content/index.html')
     win.loadURL(indexFilePath)// + '#settings'
@@ -61,5 +62,21 @@ function createTray(win: BrowserWindow, menus: { [key: string]: Function }) {
 
 
     tray.setContextMenu(contextMenu)
+}
+
+export function createPrintWindow(templateName: string, printData?: object) {
+    if (!templateName) throw new Error(`Argument 'templateName' cannt be null or empty`)
+
+    printData = printData || {}
+    let printWin = new BrowserWindow({
+        width: 800, height: 500, show: false,
+        title: '打印',
+        webPreferences: { webSecurity: false }
+    })
+    printWin.webContents.openDevTools()
+    let printDataString = encodeURIComponent(JSON.stringify(printData))
+    templateName = encodeURIComponent(templateName)
+    printWin.loadURL(path.join(__dirname, `content/print.html?templateName=${templateName}&printData=${printDataString}#print`))
+    return printWin
 }
 

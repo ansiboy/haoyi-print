@@ -4,7 +4,7 @@ import { Service } from "./service";
 export interface DocumentStorage {
     list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[], count: number }>;
     load(name: string): Promise<PageDocument>;
-    save(name: string, pageData: PageDocument): Promise<any>;
+    save(pageData: PageDocument): Promise<any>;
     remove(name: string): Promise<any>;
 }
 
@@ -23,8 +23,8 @@ export class DocumentFileStorage implements DocumentStorage {
     load(name: string): Promise<PageDocument | null> {
         return service.templateGet(name)
     }
-    save(name: string, pageData: PageDocument): Promise<any> {
-        return service.templateSave(name, pageData)
+    save(pageData: PageDocument): Promise<any> {
+        return service.templateSave(pageData)
     }
     remove(name: string): Promise<any> {
         throw new Error("Method not implemented.");

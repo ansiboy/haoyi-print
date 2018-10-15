@@ -55,9 +55,9 @@ export class Service extends chitu.Service {
         let url = await this.url('print/print')
         return this.postByJson(url, { deviceName, html })
     }
-    async printByTemplate(templateName: string, templateData: object) {
+    async printByTemplate(templateName: string, templateData: object, deviceName: string) {
         let url = await this.url('print/printByTemplate')
-        return this.postByJson(url, { templateName, templateData })
+        return this.postByJson(url, { templateName, templateData, deviceName })
     }
     async printers() {
         let url = await this.url('print/printers')
