@@ -4,7 +4,7 @@ import "./components/list"
 import "./components/page-view"
 import "./components/square-code"
 
-import { DesignerFramework, PageDocument, Plugin } from "jueying.forms";
+import { PageDocument, Plugin, Workbench } from "jueying.forms";
 import React = require("react");
 import { showPrintDialog } from "./dialogs/print-dialog";
 import { ComponentData, ReactFactory, ComponentProps, guid } from "jueying";
@@ -19,7 +19,7 @@ import { showSettingsDialog } from "./dialogs/settings-dialog";
 class PrintPlugin implements Plugin {
     private btn_print: HTMLButtonElement
 
-    init(ide: DesignerFramework) {
+    init(ide: Workbench) {
 
         let buttonClassName = 'btn btn-default btn-sm'
         let buttons = new Array<JSX.Element>()
@@ -30,10 +30,10 @@ class PrintPlugin implements Plugin {
                     if (!e) return
                     e.disabled = true
                     e.onclick = () => {
-                        if (!ide.activedDocument)
+                        if (!ide.activeDocument)
                             return
 
-                        this.print(ide.activedDocument)
+                        this.print(ide.activeDocument)
                     }
                     this.btn_print = e
                 }}>
@@ -55,7 +55,7 @@ class PrintPlugin implements Plugin {
             )}
         </ul>;
 
-        ide.toolbarPanel.appendToolbar(toolbar)
+        return { toolbar }
     }
     onDocumentActived() {
         console.assert(this.btn_print != null)

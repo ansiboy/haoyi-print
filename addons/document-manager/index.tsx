@@ -1,4 +1,4 @@
-import { PageDocument, Plugin, DesignerFramework } from "jueying.forms";
+import { PageDocument, Plugin, DesignerFramework, Workbench } from "jueying.forms";
 import React = require("react");
 import { FileDocument } from "./page-document-handler";
 import { guid } from "jueying";
@@ -12,7 +12,7 @@ interface ToolbarState {
     activeDocument?: PageDocument
 }
 interface ToolbarProps {
-    ide: DesignerFramework,
+    ide: Workbench,
 }
 class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
 
@@ -55,7 +55,7 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         })
 
 
-        this.props.ide.setActiveDocument(template)
+        this.props.ide.activeDocument = template
 
     }
     getDocumentFile(document: PageDocument) {
@@ -92,7 +92,7 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
                 let docs = this.state.pageDocuments || [];
                 let existDoc = docs.filter(o => o.name == tmp.name)[0];
                 if (existDoc) {
-                    this.props.ide.setActiveDocument(existDoc)
+                    this.props.ide.activeDocument = existDoc
                     return;
                 }
 
@@ -105,7 +105,7 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         let file = this.documentFiles[activeDocument.name]
         console.assert(file != null)
         activeDocument.pageData = file.undo()
-        this.props.ide.setActiveDocument(activeDocument)
+        this.props.ide.activeDocument = activeDocument
         this.setState({ activeDocument })
     }
     redo() {
@@ -113,7 +113,7 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         let file = this.getDocumentFile(activeDocument)
         activeDocument.pageData = file.redo()
         this.setState({ activeDocument })
-        this.props.ide.setActiveDocument(activeDocument)
+        this.props.ide.activeDocument = activeDocument
     }
     async save() {
         let { activeDocument } = this.state;
@@ -122,26 +122,17 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         this.setState({ activeDocument });
     }
     componentDidMount() {
-        this.props.ide.documentChanged.add(args => {
-            let file = this.documentFiles[args.document.name]
-            console.assert(file != null)
-            file.setSnapShoot(args.document.pageData)
-            this.setState({ activeDocument: args.document })
-        })
-        // this.props.ide.documentAdd.add(args => {
-        //     let file = this.documentFiles[args.document.name]
-        //     console.assert(file == null)
-        //     file = FileDocument.new(this.storage, args.document)
-        //     this.documentFiles[args.document.name] = file
+        // this.props.ide.documentChanged.add(args => {
 
         // })
     }
+    onDocumentChanged(document: PageDocument) {
+        let file = this.documentFiles[document.name]
+        console.assert(file != null)
+        file.setSnapShoot(document.pageData)
+        this.setState({ activeDocument: document })
+    }
     render() {
-        // let activeDocument = this.state.activeDocument
-        // let { canRedo, canSave, canUndo } = (activeDocument == null ?
-        //     { canRedo: false, canSave: false, canUndo: false } :
-        //     this.documentFiles[activeDocument.name]
-        // )
         let canRedo = false, canSave = false, canUndo = false
         let activeDocument = this.state.activeDocument
         if (activeDocument) {
@@ -190,12 +181,20 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
     }
 }
 
-class DocumentPlugin implements Plugin {
-    init(ide?: DesignerFramework) {
+let toolbar: Toolbar
+let documentPlugin: Plugin = {
+    init(ide?: Workbench) {
 
-        let buttons = <Toolbar key={guid()} ide={ide} />
-        ide.toolbarPanel.appendToolbar(buttons)
+        let buttons = <Toolbar key={guid()} ide={ide}
+            ref={e => toolbar = e || toolbar} />
+
+        return { toolbar: buttons }
+    },
+    onDocumentChanged(args) {
+        console.assert(toolbar != null)
+        console.assert(args != null && args.document != null)
+        toolbar.onDocumentChanged(args.document)
     }
 }
 
-export default new DocumentPlugin()
+export default documentPlugin

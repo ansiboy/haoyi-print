@@ -355,7 +355,7 @@ namespace jueying {
             return true;
         }
 
-        findComponentData(controlId: string): ComponentData | null {
+        private findComponentData(controlId: string): ComponentData | null {
             let pageData = this.state.pageData;
             if (!pageData)
                 throw Errors.pageDataIsNull();

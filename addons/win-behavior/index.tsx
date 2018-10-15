@@ -116,7 +116,7 @@ class Toolbar extends React.Component<any, any>{
 
 let plugin: Plugin = {
     init(ide) {
-        ide.toolbarPanel.appendToolbar(<Toolbar key='win-min-max-toolbar' />)
+        return { toolbar: <Toolbar key='win-min-max-toolbar' /> }
     }
 }
 

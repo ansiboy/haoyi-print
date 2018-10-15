@@ -12,9 +12,26 @@ namespace jueying.forms {
         buttons: JSX.Element[],
     }
 
+    /**
+     * 通过 Workbench，对插件开放的接口
+     */
+    export class Workbench {
+        private form: DesignerFramework;
+        constructor(form: DesignerFramework) {
+            this.form = form
+        }
+        get activeDocument() {
+            return this.form.state.activeDocument
+        }
+        set activeDocument(value: PageDocument) {
+            this.form.setActiveDocument(value)
+        }
+    }
+
     export class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState>{
         protected pageDesigner: PageDesigner;
         private editorPanel: EditorPanel;
+        private workbench: Workbench
 
         documentChanged: Callback<{ document: PageDocument }>;
         documentClosing: Callback<{ preventClose: boolean, document: PageDocument }>;
@@ -39,12 +56,19 @@ namespace jueying.forms {
             this.documentActived = Callback.create()
             this.documentAdd = Callback.create()
 
+            this.workbench = new Workbench(this)
+
             this.plugins = []
             props.config.plugins
                 .filter(o => o.autoLoad)
                 .forEach(o => {
                     this.loadPlugin(o.path, o.id)
                 })
+
+            this.documentChanged.add(args => {
+                this.plugins.forEach(o => o.onDocumentActived({ document: args.document }))
+            })
+
         }
 
         get activedDocument() {
@@ -132,8 +156,12 @@ namespace jueying.forms {
 
                 let obj = Object.assign(plugin, { typeId })
                 this.plugins.push(obj);
-                if (plugin.init)
-                    plugin.init(this)
+                if (plugin.init) {
+                    let result = plugin.init(this.workbench) || {}
+                    if (result.toolbar) {
+                        this.toolbarPanel.appendToolbar(result.toolbar)
+                    }
+                }
 
                 return obj
             }

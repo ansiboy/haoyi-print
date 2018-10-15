@@ -292,7 +292,7 @@ declare namespace jueying {
         moveControl(componentId: string, parentId: string, childIds: string[]): void;
         private setComponentSelected;
         private removeControlFrom;
-        findComponentData(controlId: string): ComponentData | null;
+        private findComponentData;
         private onKeyDown;
         private createDesignTimeElement;
         componentWillReceiveProps(props: PageDesignerProps): void;
@@ -385,12 +385,17 @@ declare namespace jueying {
 }
 declare namespace jueying.forms {
     interface Plugin {
-        init?(form: DesignerFramework): any;
+        init?(workbench: Workbench): {
+            toolbar?: JSX.Element;
+        };
         onDocumentActived?(args: {
             document: PageDocument;
         }): {
             components?: ComponentDefine[];
         };
+        onDocumentChanged?(args: {
+            document: PageDocument;
+        }): void;
     }
 }
 declare namespace jueying.forms {
@@ -433,9 +438,18 @@ declare namespace jueying.forms {
         activeDocument?: PageDocument;
         buttons: JSX.Element[];
     };
+    /**
+     * 通过 Workbench，对插件开放的接口
+     */
+    class Workbench {
+        private form;
+        constructor(form: DesignerFramework);
+        activeDocument: PageDocument;
+    }
     class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState> {
         protected pageDesigner: PageDesigner;
         private editorPanel;
+        private workbench;
         documentChanged: Callback<{
             document: PageDocument;
         }>;
