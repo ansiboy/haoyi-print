@@ -1,7 +1,12 @@
 import { PageDocument } from "jueying.forms";
 import { Service } from "./service";
-import { DocumentStorage } from "./page-document-handler";
 
+export interface DocumentStorage {
+    list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[], count: number }>;
+    load(name: string): Promise<PageDocument>;
+    save(name: string, pageData: PageDocument): Promise<any>;
+    remove(name: string): Promise<any>;
+}
 
 let service = new Service()
 export class DocumentFileStorage implements DocumentStorage {

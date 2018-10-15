@@ -2,7 +2,7 @@
 
 import * as chitu from 'chitu';
 import { PageDocument, Config } from "jueying.forms";
-
+import { loadConfig } from '../../../www/application'
 
 export class Service extends chitu.Service {
 
@@ -23,56 +23,57 @@ export class Service extends chitu.Service {
         let headers = { "content-type": 'application/json' };
         return this.ajax<T>(url, { headers, data, method: 'post' });
     }
-    private url(path: string) {
-        return `http://localhost:52894/${path}`
+    private async url(path: string): Promise<string> {
+        let c = await loadConfig()
+        return `http://${c.host.bind_ip}:${c.host.service_port}/${path}`
     }
-    templateList() {
-        let url = this.url('template/list')
+    async templateList() {
+        let url = await this.url('template/list')
         return this.get<PageDocument[]>(url)
     }
-    templateGet(name: string) {
-        let url = this.url('template/get')
+    async templateGet(name: string) {
+        let url = await this.url('template/get')
         return this.get<PageDocument>(url, { name })
     }
-    templateSave(name: string, data: PageDocument) {
-        let url = this.url('template/save')
+    async templateSave(name: string, data: PageDocument) {
+        let url = await this.url('template/save')
         return this.postByJson(url, { name, item: data })
     }
-    printTaskRemove(id: string) {
-        let url = this.url('printTask/remove')
+    async printTaskRemove(id: string) {
+        let url = await this.url('printTask/remove')
         return this.postByJson(url, { id })
     }
-    printTaskCreate(templateName: string, templateData: object) {
-        let url = this.url('printTask/create')
+    async printTaskCreate(templateName: string, templateData: object) {
+        let url = await this.url('printTask/create')
         return this.postByJson(url, { templateName, templateData })
     }
-    print(deviceName: string, html: string) {
-        let url = this.url('print/print')
+    async print(deviceName: string, html: string) {
+        let url = await this.url('print/print')
         return this.postByJson(url, { deviceName, html })
     }
-    printByTemplate(templateName: string, templateData: object) {
-        let url = this.url('print/printByTemplate')
+    async printByTemplate(templateName: string, templateData: object) {
+        let url = await this.url('print/printByTemplate')
         return this.postByJson(url, { templateName, templateData })
     }
-    printers() {
-        let url = this.url('print/printers')
+    async printers() {
+        let url = await this.url('print/printers')
         return this.get<string[]>(url)
     }
     async getDefaultPrinter() {
-        let url = this.url('print/getDefaultPrinter')
+        let url = await this.url('print/getDefaultPrinter')
         let value = await this.get<string | null>(url)
         return value || ''
     }
-    setDefaultPrinter(value: string | null) {
-        let url = this.url('print/setDefaultPrinter')
+    async setDefaultPrinter(value: string | null) {
+        let url = await this.url('print/setDefaultPrinter')
         return this.postByJson<string | null>(url, { value })
     }
-    getConfig() {
-        let url = this.url('config/get')
-        return this.get<Config>(url)
+    async getConfig() {
+        let url = await this.url('printConfig/get')
+        return this.get<PrintConfig>(url)
     }
-    saveConfig(config) {
-        let url = this.url('config/save')
-        return this.postByJson<Config>(url, { config })
+    async saveConfig(config) {
+        let url = await this.url('printConfig/save')
+        return this.postByJson<PrintConfig>(url, { config })
     }
 }

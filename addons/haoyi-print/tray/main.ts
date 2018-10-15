@@ -1,7 +1,6 @@
 
 
-import { webServer } from './webServer';
-import { readConfig } from './config';
+import { registerController } from '../../../host/web-server';
 import * as path from 'path';
 import { app, BrowserWindow, Menu, nativeImage, MenuItemConstructorOptions, Tray } from 'electron'
 export default function main() {
@@ -16,9 +15,10 @@ export default function main() {
         }
     })
 
-    readConfig().then(config => {
-        webServer.listen(config.userConfig.port, config.userConfig.hostname)
-    })
+
+    registerController('print', path.join(__dirname, 'modules/print'))
+    registerController('template', path.join(__dirname, 'modules/template'))
+    registerController('printConfig', path.join(__dirname, 'modules/config'))
 }
 
 function createSettingsWindow() {

@@ -7,8 +7,8 @@ export function createSettingsWindow() {
         height: 500,
         title: '设置',
         show: false,
-        frame: true,
-        transparent: false,
+        frame: false,
+        transparent: true,
     })
 
     let indexFilePath = path.join(__dirname, '../content/index.html')

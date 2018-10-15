@@ -62,11 +62,10 @@
             react: `${lib}/react.development`,
             'react-dom': `${lib}/react-dom.development`,
             rulers: `${lib}/rulers`,
-            config: `project-config.json`,
+            config: `config.json`,
             addons: `../addons`
         }
     });
-
 
     require['nodeRequire'] = window['nodeRequire']
     requirejs([`less!${lib}/bootstrap-3.3.7/less/bootstrap.less`])

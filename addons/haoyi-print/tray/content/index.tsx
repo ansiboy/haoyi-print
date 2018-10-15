@@ -7,6 +7,7 @@
     window['nodeRequire'] = require;
     let lib = '../../../../lib'
     requirejs.config({
+        baseUrl: __dirname,
         shim: {
             'jquery-ui': {
                 exports: 'window["$"]',
@@ -67,15 +68,13 @@
             rulers: `${lib}/rulers`,
 
             components: `addons/haoyi-print/components`,
+            config: `../../config.json`
         }
     });
 
     require['nodeRequire'] = window['nodeRequire']
     requirejs([`less!${lib}/bootstrap-3.3.7/less/bootstrap.less`])
     requirejs(['react', 'react-dom', 'jquery', 'jsondiffpatch', 'ui', 'chitu'], function (react, reactDOM, jquery, jsondiffpatch) {
-        // (window as any)['React'] = react;
-        // (window as any)['ReactDOM'] = reactDOM;
-
         requirejs(['./main'])
 
     });

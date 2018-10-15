@@ -24,17 +24,17 @@ declare namespace jueying {
 	}
 }
 
-interface PrintConfig {
-	enableInnerPrintService: boolean
-	defaultPrinter: string
-	hostname: string,
-	port: number
-}
-declare namespace jueying.forms {
-	interface Config {
-		print: PrintConfig,
-	}
-}
+// interface PrintConfig {
+// 	enableInnerPrintService: boolean
+// 	defaultPrinter: string
+// 	hostname: string,
+// 	port: number
+// }
+// declare namespace jueying.forms {
+// 	interface Config {
+// 		print: PrintConfig,
+// 	}
+// }
 
 
 declare let nodeRequire: NodeRequire

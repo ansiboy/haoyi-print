@@ -10,7 +10,7 @@ declare type ApplicationConfig = {
     templatePath: string,
 }
 
-declare type Config = {
+declare type PrintConfig = {
     userConfig: UserConfig,
     applicationConfig: ApplicationConfig
 }

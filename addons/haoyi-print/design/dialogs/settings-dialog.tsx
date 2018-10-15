@@ -2,6 +2,7 @@ import React = require("react");
 import ReactDOM = require("react-dom");
 
 import { SettingsView } from "./settings-view";
+import { Service } from "../service";
 
 let settingsDialogElement: HTMLElement
 
@@ -11,6 +12,16 @@ export async function showSettingsDialog() {
         element.className = 'modal fade'
         document.body.appendChild(element)
 
+        let service = new Service()
+        service.getConfig().then(config => {
+            ReactDOM.render(<SettingsView
+                config={config} close={() => { ui.hideDialog(element) }} />,
+                element,
+                () => {
+                    ui.showDialog(element)
+                }
+            )
+        })
         requirejs(['text!addons/haoyi-print/config.json'], (configText) => {
             let config = JSON.parse(configText)
             ReactDOM.render(<SettingsView

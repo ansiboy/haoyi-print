@@ -1,14 +1,9 @@
 import { PageDocument } from "jueying.forms";
 import { Errors, ComponentData } from "jueying";
 import { JSONUndoRedo } from "./json-undo-redo";
+import { DocumentStorage } from "./document-storage";
 
 
-export interface DocumentStorage {
-    list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[], count: number }>;
-    load(name: string): Promise<PageDocument>;
-    save(name: string, pageData: PageDocument): Promise<any>;
-    remove(name: string): Promise<any>;
-}
 
 export class FileDocument {
 

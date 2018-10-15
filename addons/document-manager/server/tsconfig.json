@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "target": "es2017",
+        "module": "commonjs",
+        // "outDir": "../",
+        "jsx": "react",
+        "strict": false,
+        "experimentalDecorators": true,
+        "sourceMap": true
+    },
+    "exclude": [
+        "modules/**"
+    ]
+}

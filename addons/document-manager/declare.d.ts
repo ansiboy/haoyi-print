@@ -1,11 +1,11 @@
 /// <reference path="../../node_modules/electron/electron.d.ts"/>
 /// <reference path="../../node_modules/@types/node/index.d.ts"/>
-/// <reference path="../../www/lib/jueying.d.ts"/>
-/// <reference path="../../www/lib/ui.d.ts"/>
-/// <reference path="../../www/lib/typings/chitu.d.ts"/>
-/// <reference path="../../www/lib/typings/qrcode.d.ts"/>
-/// <reference path="../../www/lib/dilu.d.ts"/>
-
+/// <reference path="../../lib/jueying.d.ts"/>
+/// <reference path="../../lib/ui.d.ts"/>
+/// <reference path="../../lib/typings/chitu.d.ts"/>
+/// <reference path="../../lib/typings/qrcode.d.ts"/>
+/// <reference path="../../lib/dilu.d.ts"/>
+/// <reference path="../../lib/typings/require.d.ts"/>
 
 // D:\projects\haoyi-print\node_modules\@types\node\index.d.ts
 

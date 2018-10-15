@@ -4,7 +4,9 @@ declare namespace jueying.forms {
     interface Config {
         host: {
             service_port: number,
-            service_address: string,
+            socket_port: number,
+            bind_ip: string,
+            showMainForm: boolean,
         }
     }
 }

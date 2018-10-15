@@ -3,13 +3,13 @@ import * as electron from "electron"
 import * as path from 'path'
 import * as fs from 'fs'
 
-export function createMainWindow(htmlPath: string) {
+export function createMainWindow(htmlPath: string, show: boolean) {
     // Create the browser window.
     let mainWindow = new BrowserWindow({
         width: 1024, height: 800,
         webPreferences: { nativeWindowOpen: true },
         frame: false,
-        show: true,
+        show,
     })
 
     // and load the index.html of the app.

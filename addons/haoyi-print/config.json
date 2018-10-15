@@ -7,5 +7,12 @@
     "applicationConfig": {
         "templatePath": "./print-templates",
         "productName": "好易标签打印"
-    }
+    },
+    "plugins": [
+        {
+            "name": "haoyi-print",
+            "path": "../addons/haoyi-print/index"
+        }
+    ],
+    "startup": []
 }

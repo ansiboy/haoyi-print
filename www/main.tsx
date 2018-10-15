@@ -13,11 +13,11 @@ class MainPage extends DesignerFramework {
     constructor(props) {
         super(props)
     }
-    get window() {
-        const { remote } = nodeRequire('electron');
-        let win = remote.getCurrentWindow();
-        return win
-    }
+    // get window() {
+    //     const { remote } = nodeRequire('electron');
+    //     let win = remote.getCurrentWindow();
+    //     return win
+    // }
     // exit() {
     //     const { remote } = nodeRequire('electron')
     //     remote.app.exit();

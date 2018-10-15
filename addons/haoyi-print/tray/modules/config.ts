@@ -1,4 +1,3 @@
-/// <reference path="config.d.ts"/>
 
 import * as path from 'path'
 import fs = require('fs')
@@ -16,7 +15,7 @@ const defaultApplicationConfig: ApplicationConfig = {
     productName: '好易标签打印',
 }
 
-const defaultConfig: Config = {
+const defaultConfig: PrintConfig = {
     userConfig: defaultUserConfig,
     applicationConfig: defaultApplicationConfig,
 }
@@ -28,19 +27,19 @@ export function configPath() {
     return filepath;
 }
 
-export async function readConfig(): Promise<Config> {
+export async function readConfig(): Promise<PrintConfig> {
     let filepath = configPath()
-    let config: Config
+    let config: PrintConfig
     if (!fs.existsSync(filepath)) {
         config = defaultConfig
         writeConfig(config)
     }
     else {
-        config = await new Promise<Config>((resolve, reject) => {
+        config = await new Promise<PrintConfig>((resolve, reject) => {
             fs.readFile(filepath, 'utf8', (err, data) => {
                 if (err) reject(err)
 
-                let config: Config = JSON.parse(data)
+                let config: PrintConfig = JSON.parse(data)
                 resolve(config)
             })
         })
@@ -50,7 +49,7 @@ export async function readConfig(): Promise<Config> {
     return config
 }
 
-export async function writeConfig(config: Config) {
+export async function writeConfig(config: PrintConfig) {
     config = Object.assign({}, defaultUserConfig, config)
     let filepath = configPath()
     fs.writeFileSync(filepath, JSON.stringify(config))

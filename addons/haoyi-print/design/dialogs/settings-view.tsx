@@ -1,18 +1,19 @@
 
-/// <reference path="../../tray/config.d.ts"/>
+/// <reference path="../../tray/declare.d.ts"/>
 
 import React = require("react");
+import { Service } from "../service";
 
 
 interface State {
-    printers: Electron.PrinterInfo[],
-    config?: Config
+    printers: string[],
+    config?: PrintConfig
 }
 
 interface Props {
     title?: string,
     close: () => void
-    config: Config
+    config: PrintConfig
 }
 
 
@@ -21,22 +22,24 @@ export class SettingsView extends React.Component<Props, State>{
 
     constructor(props) {
         super(props)
-
-        const { remote } = nodeRequire('electron')
-        let printers = remote.getCurrentWindow().webContents.getPrinters()
-        this.state = { printers, config: this.props.config }
+        this.state = { printers: [], config: this.props.config }
     }
     hide() {
         this.props.close()
     }
     save() {
-        // return writeConfig(this.state.config)
-        return Promise.reject(new Error("not implment"))
+        let { writeConfig } = nodeRequire('./../../tray/config')
+        return writeConfig(this.state.config)
     }
     async componentDidMount() {
-        // debugger;
-        // let c = await readConfig()
-        // this.setState({ config: c })
+        try {
+            let service = new Service()
+            let printers = await service.printers()
+            this.setState({ printers })
+        }
+        catch (exc) {
+            console.error(exc)
+        }
     }
     render() {
         let { printers, config } = this.state
@@ -63,7 +66,7 @@ export class SettingsView extends React.Component<Props, State>{
                                     }}>
                                     <option value="">请选择打印机</option>
                                     {printers.map(o =>
-                                        <option key={o.name} value={o.name}>{o.name}</option>
+                                        <option key={o} value={o}>{o}</option>
                                     )}
                                 </select>
                             </div>

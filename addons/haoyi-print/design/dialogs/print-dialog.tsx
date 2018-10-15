@@ -1,6 +1,7 @@
 import React = require("react");
 import ReactDOM = require("react-dom");
 import { createTemplateElement } from '../print'
+import { Service } from "../service";
 
 interface PrintDialogProps {
     templateName: string,
@@ -29,8 +30,8 @@ export class PrintDialog extends React.Component<PrintDialogProps, PrintDialogSt
             }
         }
 
-        // let service = new Service()
-        // let deviceName = await service.getDefaultPrinter()
+        let service = new Service()
+        let deviceName = await service.getDefaultPrinter()
         // print(deviceName, templateName, templateData)
     }
     parseTemplateText(templateDataText: string) {

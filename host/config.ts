@@ -6,7 +6,7 @@ import * as errors from './errors'
 type Config = jueying.forms.Config
 
 export function configPath() {
-    let filepath = path.join(app.getAppPath(), "project-config.json")
+    let filepath = path.join(app.getAppPath(), "config.json")
     return filepath;
 }
 

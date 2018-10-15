@@ -73,7 +73,7 @@
             designer: `${dir}/designer`,
             service: `${dir}/service`,
             components: `addons/haoyi-print/components`,
-            config: `project-config.json`
+            config: `config.json`
         }
     });
 

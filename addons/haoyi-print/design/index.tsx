@@ -83,17 +83,7 @@ class PrintPlugin implements Plugin {
             element.className = 'modal fade'
             document.body.appendChild(element)
 
-            debugger;
 
-            // const { remote } = nodeRequire("electron");
-            // const { readConfig } = remote.require('./../addons/haoyi-print/tray/config')
-            // const { SettingsView } = remote.require('./../addons/haoyi-print/common/settings-view')
-            // let config = await readConfig()
-            // ReactDOM.render(<SettingsView config={config} close={() => { ui.hideDialog(element) }} />, element,
-            //     () => {
-            //         ui.showDialog(element)
-            //     }
-            // )
             showSettingsDialog()
         }
     }

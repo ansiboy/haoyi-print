@@ -3,6 +3,7 @@ import errors = require('./errors');
 import url = require('url');
 import querystring = require('querystring');
 
+let controllers: { [name: string]: string } = {}
 export let webServer = http.createServer(async (req, res) => {
 
     setHeaders(res)
@@ -44,7 +45,7 @@ webServer.on('error', (err) => {
 
 async function executeAction(controllerName: string, actionName: string, req: http.IncomingMessage, res: http.ServerResponse) {
 
-    let controllerPath = `./modules/${controllerName}`
+    let controllerPath = controllers[controllerName] || `./modules/${controllerName}`
 
     let controller = require(controllerPath);
     if (controller == null) {
@@ -188,4 +189,8 @@ export class ContentResult {
         this.contentType = contentType
         this.statusCode = statusCode == null ? 200 : statusCode
     }
+}
+
+export function registerController(name: string, path: string) {
+    controllers[name] = path
 }
