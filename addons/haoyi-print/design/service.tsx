@@ -31,29 +31,9 @@ export class Service extends chitu.Service {
 
         return `http://${c.host.bind_ip}:${c.host.service_port}/${path}`
     }
-    async templateList() {
-        let url = await this.url('template/list')
-        return this.get<PageDocument[]>(url)
-    }
-    async templateGet(name: string) {
-        let url = await this.url('template/get')
+    async documentGet(name: string) {
+        let url = await this.url('document/get')
         return this.get<PageDocument>(url, { name })
-    }
-    async templateSave(name: string, data: PageDocument) {
-        let url = await this.url('template/save')
-        return this.postByJson(url, { name, item: data })
-    }
-    async printTaskRemove(id: string) {
-        let url = await this.url('printTask/remove')
-        return this.postByJson(url, { id })
-    }
-    async printTaskCreate(templateName: string, templateData: object) {
-        let url = await this.url('printTask/create')
-        return this.postByJson(url, { templateName, templateData })
-    }
-    async print(deviceName: string, html: string) {
-        let url = await this.url('print/print')
-        return this.postByJson(url, { deviceName, html })
     }
     async printByTemplate(templateName: string, templateData: object, deviceName: string) {
         let url = await this.url('print/printByTemplate')

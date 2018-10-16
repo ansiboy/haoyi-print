@@ -15,17 +15,8 @@ namespace jueying.forms {
     /**
      * 通过 Workbench，对插件开放的接口
      */
-    export class Workbench {
-        private form: DesignerFramework;
-        constructor(form: DesignerFramework) {
-            this.form = form
-        }
-        get activeDocument() {
-            return this.form.state.activeDocument
-        }
-        set activeDocument(value: PageDocument) {
-            this.form.setActiveDocument(value)
-        }
+    export interface Workbench {
+        activeDocument
     }
 
     export class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState>{
@@ -56,17 +47,12 @@ namespace jueying.forms {
             this.documentActived = Callback.create()
             this.documentAdd = Callback.create()
 
-            this.workbench = new Workbench(this)
+            this.workbench = this.createWorkbench()
 
             this.plugins = []
-            props.config.plugins
-                .filter(o => o.autoLoad)
-                .forEach(o => {
-                    this.loadPlugin(o.path, o.id)
-                })
+            this.loadPlugins()
 
             this.documentChanged.add(args => {
-
                 this.plugins.forEach(o => {
                     if (!o.onDocumentChanged)
                         return
@@ -74,14 +60,61 @@ namespace jueying.forms {
                     o.onDocumentChanged({ document: args.document })
                 })
             })
-
         }
 
-        get activedDocument() {
-            return this.state.activeDocument;
+        private loadPlugins() {
+            let process: NodeJS.Process = window['process']
+            let isDestop: boolean = process != null && process.versions != null && process.versions['electron'] != null
+            let arr = this.props.config.plugins
+                .filter((o, i) => {
+                    if (o.autoLoad == 'all')
+                        return true
+
+                    if (isDestop) {
+                        return o.autoLoad == 'desktop'
+                    }
+
+                    return o.autoLoad == 'browser'
+                })
+                .map(o => this.loadPlugin(o.path, o.id))
+
+            Promise.all(arr)
+                .then(() => this.initPlugins())
+                .catch(() => this.initPlugins())
         }
 
-        setActiveDocument(document: PageDocument) {
+        private createWorkbench(): Workbench {
+            let self = this
+            let obj: Workbench = {
+                get activeDocument() {
+                    return self.state.activeDocument
+                },
+                set activeDocument(value) {
+                    self.setActiveDocument(value)
+                }
+            }
+
+            return obj
+        }
+
+        private initPlugins() {
+            // 对 plugins 进行按顺序排列
+            let plugins = this.props.config.plugins
+                .map(o => this.plugins.filter(c => c.typeId == o.id)[0])
+                .filter(o => o != null)
+                
+            for (let i = 0; i < plugins.length; i++) {
+                let plugin = plugins[i]
+                if (plugin.init) {
+                    let result = plugin.init(this.workbench) || {}
+                    if (result.toolbar) {
+                        this.toolbarPanel.appendToolbar(result.toolbar)
+                    }
+                }
+            }
+        }
+
+        private setActiveDocument(document: PageDocument) {
             let { documents } = this.state
             console.assert(document.name)
 
@@ -152,7 +185,7 @@ namespace jueying.forms {
         }
 
         //TODO: 防止 Plugin 重复加载
-        private async loadPlugin(pluginPath: string, typeId: string) {
+        private async loadPlugin(pluginPath: string, typeId: string): Promise<Plugin & { typeId: string }> {
             try {
                 let mod = await chitu.loadjs(pluginPath);
                 console.assert(mod)
@@ -162,17 +195,12 @@ namespace jueying.forms {
 
                 let obj = Object.assign(plugin, { typeId })
                 this.plugins.push(obj);
-                if (plugin.init) {
-                    let result = plugin.init(this.workbench) || {}
-                    if (result.toolbar) {
-                        this.toolbarPanel.appendToolbar(result.toolbar)
-                    }
-                }
 
                 return obj
             }
             catch (exc) {
                 console.error(exc)
+                return null
             }
         }
 

@@ -16,7 +16,7 @@ let printData = getQueryVariable('printData')
 printData = printData || '{}'
 
 let service = new Service()
-service.templateGet(templateName).then(async doc => {
+service.documentGet(templateName).then(async doc => {
     console.assert(doc)
 
     let data = JSON.parse(printData)

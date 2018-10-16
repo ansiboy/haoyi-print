@@ -11,7 +11,7 @@ namespace jueying.forms {
             /** 插件加载文件路径 */
             path: string,
             /** 主界面启动后，是否主动加载该插件 */
-            autoLoad?: boolean,
+            autoLoad?: 'browser' | 'desktop' | 'all',
             /** 是否单例，默认为 true */
             singleton?: boolean,
         }[],

@@ -2,19 +2,6 @@
 import * as path from 'path'
 import fs = require('fs')
 
-
-
-// const defaultUserConfig: UserConfig = {
-//     hostname: '127.0.0.1',
-//     port: 52894,
-//     enableInnerPrintService: true,
-// }
-
-// const defaultApplicationConfig: ApplicationConfig = {
-//     templatePath: './print-templates',
-//     productName: '好易标签打印',
-// }
-
 const defaultConfig: PrintConfig = {
     userConfig: {
         hostname: '127.0.0.1',
@@ -22,11 +9,9 @@ const defaultConfig: PrintConfig = {
         enableInnerPrintService: true,
     },
     applicationConfig: {
-        templatePath: './print-templates',
         productName: '好易标签打印',
     },
 }
-
 
 export function configPath() {
 

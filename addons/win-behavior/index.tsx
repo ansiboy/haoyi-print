@@ -1,28 +1,28 @@
 
 import { Plugin } from 'jueying.forms'
 import React = require('react');
-const { remote } = nodeRequire('electron')
 
 class Toolbar extends React.Component<any, any>{
     constructor(props: any) {
         super(props)
-
-
-
-
     }
     exit(): void {
+        const { remote } = nodeRequire('electron')
         remote.app.exit();
     }
+    private get window() {
+        const { remote } = nodeRequire('electron')
+        return remote.getCurrentWindow()
+    }
     toggleMax(): void {
-        let window = remote.getCurrentWindow()
+        let window = this.window
         if (window.isMaximized())
             window.unmaximize()
         else
             window.maximize()
     }
     windowMin() {
-        let window = remote.getCurrentWindow()
+        let window = this.window
         window.minimize()
     }
     enableMove(titleElement: HTMLElement, win: Electron.BrowserWindow) {
@@ -77,17 +77,20 @@ class Toolbar extends React.Component<any, any>{
 
         let toolbarElement = document.querySelector('.toolbar') as HTMLElement
         if (toolbarElement) {
-            let window = remote.getCurrentWindow()
+            let window = this.window
             this.enableMove(toolbarElement, window)
         }
-        toolbarElement.ondblclick = () => {
+        toolbarElement.ondblclick = (ev) => {
+            if (ev.target != toolbarElement)
+                return
+
             this.toggleMax()
         }
 
-        let window = remote.getCurrentWindow()
-        window.on('minimize', function () {
-            window.hide()
-        })
+        // let window = this.window
+        // window.on('minimize', function () {
+        //     window.hide()
+        // })
     }
     render() {
         let buttonClassName = 'btn btn-default btn-sm'

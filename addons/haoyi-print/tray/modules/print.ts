@@ -50,15 +50,18 @@ export async function printByTemplate({ templateName, templateData, deviceName }
     }
 
     let printWindow = createPrintWindow(templateName, templateData)
-    setTimeout(() => {
-        printWindow.webContents.print({ silent: true, deviceName });
-        //==============================
-        // 发送指令后指令后关闭窗口
+    printWindow.webContents.on('did-finish-load', () => {
         setTimeout(() => {
-            // printWindow.close()
-        }, 2000)
-        //==============================
-    }, 800)
+            printWindow.webContents.print({ silent: true, deviceName });
+            //==============================
+            // 发送指令后指令后关闭窗口
+            setTimeout(() => {
+                // printWindow.close()
+            }, 2000)
+            //==============================
+        }, 800)
+    })
+
 }
 
 export async function printers() {

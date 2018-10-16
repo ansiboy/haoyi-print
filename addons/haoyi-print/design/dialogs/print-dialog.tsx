@@ -9,13 +9,17 @@ interface PrintDialogProps {
 
 interface PrintDialogState {
     templateDataText?: string,
+    printers: string[],
+    selectedPrinter: string,
 }
 
 export class PrintDialog extends React.Component<PrintDialogProps, PrintDialogState>{
     constructor(props: PrintDialogProps) {
         super(props)
         this.state = {
-            templateDataText: ''
+            templateDataText: '',
+            printers: [],
+            selectedPrinter: '',
         }
     }
     async print() {
@@ -31,9 +35,11 @@ export class PrintDialog extends React.Component<PrintDialogProps, PrintDialogSt
         }
 
         let service = new Service()
-        let deviceName = await service.getDefaultPrinter()
+
         // print(deviceName, templateName, templateData)
-        service.printByTemplate(templateName, templateData, deviceName)
+        let deviceName = this.state.selectedPrinter
+        await service.printByTemplate(templateName, templateData, deviceName)
+        ui.hideDialog(printDialogElement)
     }
     parseTemplateText(templateDataText: string) {
         try {
@@ -44,9 +50,19 @@ export class PrintDialog extends React.Component<PrintDialogProps, PrintDialogSt
             return null
         }
     }
+    componentDidMount() {
+        let service = new Service()
+
+        service.getDefaultPrinter().then(o => {
+            this.setState({ selectedPrinter: o })
+        })
+        service.printers().then(items => {
+            this.setState({ printers: items })
+        })
+    }
     render() {
         let { templateName } = this.props;
-        let { templateDataText } = this.state
+        let { templateDataText, printers, selectedPrinter } = this.state
         let templateData = this.parseTemplateText(templateDataText)
         return <div className="modal-dialog modal-lg">
             <div className="modal-content">
@@ -79,6 +95,21 @@ export class PrintDialog extends React.Component<PrintDialogProps, PrintDialogSt
                     </div>
                 </div>
                 <div className="modal-footer">
+                    <label className="pull-left" style={{ padding: '4px 8px 0 0' }}>
+                        打印机
+                    </label>
+                    <div className="pull-left" style={{ width: 200 }}>
+                        <select className="form-control" value={selectedPrinter}
+                            onChange={e => {
+                                selectedPrinter = e.target.value
+                                this.setState({ selectedPrinter })
+                            }}>
+                            <option value="">默认打印机</option>
+                            {printers.map(o =>
+                                <option key={o} value={o}>{o}</option>
+                            )}
+                        </select>
+                    </div>
                     <button className="btn btn-primary" onClick={() => this.print()}>
                         <i className="icon icon-ok" />
                         <span>确定</span>

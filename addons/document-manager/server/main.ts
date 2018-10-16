@@ -7,6 +7,6 @@ export default function main(config: jueying.forms.Config) {
     console.assert(config != null)
     console.assert(config.host)
 
-    let templatePath = path.join(__dirname, 'template')
-    registerController('template', templatePath)
+    let templatePath = path.join(__dirname, 'modules/document')
+    registerController('document', templatePath)
 }

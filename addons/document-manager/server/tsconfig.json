@@ -7,8 +7,5 @@
         "strict": false,
         "experimentalDecorators": true,
         "sourceMap": true
-    },
-    "exclude": [
-        "modules/**"
-    ]
+    }
 }

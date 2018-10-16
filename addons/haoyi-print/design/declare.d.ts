@@ -1,4 +1,3 @@
-/// <reference path="../../../node_modules/electron/electron.d.ts"/>
 /// <reference path="../../../lib/jueying.d.ts"/>
 /// <reference path="../../../lib/ui.d.ts"/>
 /// <reference path="../../../lib/typings/chitu.d.ts"/>

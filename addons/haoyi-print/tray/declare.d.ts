@@ -7,7 +7,6 @@ declare type UserConfig = {
 
 declare type ApplicationConfig = {
     productName: string,
-    templatePath: string,
 }
 
 declare type PrintConfig = {

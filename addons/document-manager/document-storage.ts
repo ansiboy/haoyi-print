@@ -12,7 +12,7 @@ let service = new Service()
 export class DocumentFileStorage implements DocumentStorage {
     list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[]; count: number; }> {
 
-        return service.templateList().then(r => {
+        return service.documentList().then(r => {
             return {
                 items: r,
                 count: r.length
@@ -21,10 +21,10 @@ export class DocumentFileStorage implements DocumentStorage {
     }
 
     load(name: string): Promise<PageDocument | null> {
-        return service.templateGet(name)
+        return service.documentGet(name)
     }
     save(pageData: PageDocument): Promise<any> {
-        return service.templateSave(pageData)
+        return service.documentSave(pageData)
     }
     remove(name: string): Promise<any> {
         throw new Error("Method not implemented.");

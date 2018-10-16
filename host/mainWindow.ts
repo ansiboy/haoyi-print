@@ -1,6 +1,4 @@
 import { BrowserWindow, app } from "electron"
-import * as electron from "electron"
-import * as path from 'path'
 import * as fs from 'fs'
 
 export function createMainWindow(htmlPath: string, show: boolean) {
@@ -29,22 +27,9 @@ export function createMainWindow(htmlPath: string, show: boolean) {
     })
     // Emitted when the window is closed.
     mainWindow.on('closed', function () {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
         mainWindow = null as any
     })
 
-    mainWindow.webContents.on('new-window', (event, url, frameName, disposition, options: Electron.BrowserWindowConstructorOptions, additionalFeatures) => {
-        if (frameName.startsWith('print-window')) {
-            event.preventDefault()
-            options.show = false;
-            options.title = frameName
-            let win = new BrowserWindow(options);
-            console.log(win.getTitle());
-            (event as any).newGuest = win;
-        }
-    })
 
     return mainWindow
 }

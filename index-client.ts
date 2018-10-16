@@ -36,7 +36,7 @@
             },
             jueying: {
                 exports: 'jueying',
-                deps: ['dilu', 'jquery-ui', 'react', 'react-dom', 'jquery.event.drag.live']
+                deps: ['dilu', 'react', 'react-dom', 'jquery.event.drag.live']
             },
             chitu: {
                 exports: 'chitu'
@@ -73,7 +73,7 @@
             designer: `${dir}/designer`,
             service: `${dir}/service`,
             components: `addons/haoyi-print/components`,
-            config: `config.json`
+            config: `config`
         }
     });
 

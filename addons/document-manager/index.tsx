@@ -1,17 +1,18 @@
 import { PageDocument, Plugin, DesignerFramework, Workbench } from "jueying.forms";
 import React = require("react");
 import { DocumentFile } from "./page-document-handler";
-import { guid } from "jueying";
 import { TemplateDialog } from "./template-dialog";
 import { DocumentFileStorage } from "./document-storage";
+import { showDocumentListDialog } from "./dialogs/document-list-dialog";
 import templates from './templates'
+import { Errors } from "./errors";
+import { Service } from "./service";
 
+import { guid } from "jueying";
 
 let buttonClassName = 'btn btn-default btn-sm'
-
 interface ToolbarState {
     pageDocuments?: PageDocument[]
-    // activeDocument?: PageDocument,
     currentField?: DocumentFile
 }
 interface ToolbarProps {
@@ -33,19 +34,28 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
 
         return this._storage;
     }
-    async loadDocument(template: PageDocument, isNew: boolean) {
+    async loadDocument(template: PageDocument, isNew: boolean): Promise<PageDocument> {
         let fileName = template.name
         console.assert(fileName);
         console.assert(template)
 
         let { pageDocuments } = this.state;
-        let documentStorage = this.storage
-        let pageDocument = isNew ? template :
-            await DocumentFile.load(documentStorage, fileName);
+        let pageDocument: PageDocument
 
-        let file = DocumentFile.new(this.storage, pageDocument)
+        if (isNew) {
+            pageDocument = template
+        }
+        else {
+            pageDocument = await this.storage.load(fileName);
+            if (pageDocument == null) {
+                throw Errors.fileNotExists(fileName);
+            }
+
+            pageDocument.name = fileName
+        }
+
+        let file = DocumentFile.create(this.storage, pageDocument, isNew)
         this.documentFiles[fileName] = file
-
 
         pageDocuments = pageDocuments || [];
         pageDocuments.push(pageDocument);
@@ -54,15 +64,10 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
             currentField: file
         })
 
-
         this.props.ide.activeDocument = template
+        return pageDocument
+    }
 
-    }
-    getDocumentFile(document: PageDocument) {
-        let file = this.documentFiles[document.name]
-        console.assert(file)
-        return this.documentFiles[document.name]
-    }
     async fetchTemplates() {
         return { items: templates, count: templates.length };
     }
@@ -76,22 +81,29 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         });
     }
     open() {
-        TemplateDialog.show({
-            fetch: async (pageIndex, pageSize) => {
-                let result = await this.storage.list(pageIndex, pageSize);
-                let items = result.items
-                let count = result.count;
-                return { items: items as PageDocument[], count };
-            },
-            callback: (tmp) => {
-                let docs = this.state.pageDocuments || [];
-                let existDoc = docs.filter(o => o.name == tmp.name)[0];
-                if (existDoc) {
-                    this.props.ide.activeDocument = existDoc
-                    return;
-                }
+        // TemplateDialog.show({
+        //     fetch: async (pageIndex, pageSize) => {
+        //         let result = await this.storage.list(pageIndex, pageSize);
+        //         let items = result.items
+        //         let count = result.count;
+        //         return { items: items as PageDocument[], count };
+        //     },
+        //     callback: (tmp) => {
+        //         let docs = this.state.pageDocuments || [];
+        //         let existDoc = docs.filter(o => o.name == tmp.name)[0];
+        //         if (existDoc) {
+        //             this.props.ide.activeDocument = existDoc
+        //             return;
+        //         }
 
-                this.loadDocument(tmp, false);
+        //         this.loadDocument(tmp, false);
+        //     }
+        // })
+        showDocumentListDialog("选择打印模板", async (names) => {
+            let service = new Service()
+            for (let i = 0; i < names.length; i++) {
+                let doc = await service.documentGet(names[i])
+                this.loadDocument(doc, false)
             }
         })
     }
@@ -110,7 +122,7 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
     }
     async save() {
         let { currentField } = this.state;
-        await currentField.save()
+        await currentField.save(this.props.ide.activeDocument)
         this.setState({ currentField });
     }
     componentDidMount() {
@@ -125,7 +137,6 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
         let canRedo = false, canSave = false, canUndo = false
         let currentField = this.state.currentField
         if (currentField) {
-            // let file = this.documentFiles[activeDocument.name]
             canRedo = currentField.canRedo
             canUndo = currentField.canUndo
             canSave = currentField.canSave
@@ -146,10 +157,6 @@ class Toolbar extends React.Component<ToolbarProps, ToolbarState>{
                 onClick={() => this.undo()}>
                 <i className="icon-undo" />
                 <span>撤销</span>
-            </button>,
-            <button className={buttonClassName}>
-                <i className="icon-eye-open" />
-                <span>预览</span>
             </button>,
             <button className={buttonClassName} onClick={() => this.newFile()}>
                 <i className="icon-file" />

@@ -35,15 +35,7 @@ export async function showSettingsDialog() {
     }
 }
 
-interface State {
-    printers: Electron.PrinterInfo[],
-    config?: PrintConfig
-}
 
-interface Props {
-    title?: string,
-    close: () => void
-}
 
 
 // export class SettingsView extends React.Component<Props, State>{

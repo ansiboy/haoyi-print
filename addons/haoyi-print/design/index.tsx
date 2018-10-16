@@ -10,7 +10,6 @@ import { showPrintDialog } from "./dialogs/print-dialog";
 import { ComponentData, ReactFactory, ComponentProps, guid } from "jueying";
 import { generatePrintHTML } from "./print";
 import components from "./components";
-import ReactDOM = require("react-dom");
 import { showSettingsDialog } from "./dialogs/settings-dialog";
 
 
@@ -158,11 +157,11 @@ jueying.Component.createElement = function (args: ComponentData, h?: ReactFactor
 //===================================================================================
 
 
-const { ipcRenderer } = nodeRequire('electron')
-ipcRenderer.on('generate-template-html', async function (event: Electron.Event, args: { templateName: string, templateData: object }) {
-    let html = await generatePrintHTML(args.templateName, args.templateData)
-    ipcRenderer.send('generate-template-html', html)
-})
+// const { ipcRenderer } = nodeRequire('electron')
+// ipcRenderer.on('generate-template-html', async function (event: Electron.Event, args: { templateName: string, templateData: object }) {
+//     let html = await generatePrintHTML(args.templateName, args.templateData)
+//     ipcRenderer.send('generate-template-html', html)
+// })
 
 let addon = new PrintPlugin()
 export default addon

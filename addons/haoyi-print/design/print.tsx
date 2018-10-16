@@ -1,5 +1,4 @@
-import { ComponentData, Component, Errors } from "jueying";
-import { PageDocument } from "jueying.forms";
+import { ComponentData, Component } from "jueying";
 import { Service } from "./service";
 import ReactDOM = require("react-dom");
 
@@ -76,8 +75,8 @@ export async function generatePrintHTML(templateName: string, data?: object) {
 }
 
 export async function createTemplateElement(templateName: string, data?: object): Promise<React.ReactElement<any>> {
-    let storage = new ServiceDocumentStorage()
-    let r = await storage.load(templateName);
+    let service = new Service()
+    let r = await service.documentGet(templateName) //await storage.load(templateName);
     if (r == null)
         throw new Error(`Can not get template '${templateName}'`);
 
@@ -93,27 +92,6 @@ export async function createTemplateElement(templateName: string, data?: object)
         throw new Error('create element fail')
 
     return reactElement
-}
-
-let service = new Service()
-class ServiceDocumentStorage {
-    list(pageIndex: number, pageSize: number): Promise<{ items: PageDocument[]; count: number; }> {
-        return service.templateList().then(r => {
-            return {
-                items: r,
-                count: r.length
-            }
-        })
-    }
-    load(name: string): Promise<PageDocument | null> {
-        return service.templateGet(name)
-    }
-    save(name: string, pageData: PageDocument): Promise<any> {
-        return service.templateSave(name, pageData)
-    }
-    remove(name: string): Promise<any> {
-        throw new Error("Method not implemented.");
-    }
 }
 
 

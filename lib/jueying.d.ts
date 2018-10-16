@@ -410,7 +410,7 @@ declare namespace jueying.forms {
             /** 插件加载文件路径 */
             path: string;
             /** 主界面启动后，是否主动加载该插件 */
-            autoLoad?: boolean;
+            autoLoad?: 'browser' | 'desktop' | 'all';
             /** 是否单例，默认为 true */
             singleton?: boolean;
         }[];
@@ -441,10 +441,8 @@ declare namespace jueying.forms {
     /**
      * 通过 Workbench，对插件开放的接口
      */
-    class Workbench {
-        private form;
-        constructor(form: DesignerFramework);
-        activeDocument: PageDocument;
+    interface Workbench {
+        activeDocument: any;
     }
     class DesignerFramework extends React.Component<DesignerFrameworkProps, DesignerFrameworkState> {
         protected pageDesigner: PageDesigner;
@@ -473,8 +471,10 @@ declare namespace jueying.forms {
         componentPanel: ComponentPanel;
         toolbarPanel: ToolbarPanel;
         constructor(props: DesignerFrameworkProps);
-        readonly activedDocument: PageDocument;
-        setActiveDocument(document: PageDocument): boolean;
+        private loadPlugins;
+        private createWorkbench;
+        private initPlugins;
+        private setActiveDocument;
         static readonly dialogsElement: HTMLElement;
         private activeDocument;
         private loadPlugin;

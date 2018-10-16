@@ -33,16 +33,16 @@ export class Service extends chitu.Service {
 
         return `http://${config.host.bind_ip}:${config.host.service_port}/${path}`
     }
-    async templateList() {
-        let url = await this.url('template/list')
+    async documentList() {
+        let url = await this.url('document/list')
         return this.get<PageDocument[]>(url)
     }
-    async templateGet(name: string) {
-        let url = await this.url('template/get')
+    async documentGet(name: string) {
+        let url = await this.url('document/get')
         return this.get<PageDocument>(url, { name })
     }
-    async templateSave(data: PageDocument) {
-        let url = await this.url('template/save')
+    async documentSave(data: PageDocument) {
+        let url = await this.url('document/save')
         return this.postByJson(url, { item: data })
     }
     // async printTaskRemove(id: string) {

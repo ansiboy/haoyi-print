@@ -1,13 +1,10 @@
 import { Application } from "./chitu-react";
 import ReactDOM = require("react-dom");
 import React = require("react");
-import { DesignerFramework, Config } from "jueying.forms";
-// import templates from "./templates";
+import { DesignerFramework } from "jueying.forms";
 
-class MyApplication extends Application {
-}
 
-export let app = new MyApplication()
+export let app = new Application()
 
 define('modules/main', function () {
     async function func(page: chitu.Page) {
@@ -32,7 +29,7 @@ declare type ProjectConfig = jueying.forms.Config & {
 
 export function loadConfig() {
     return new Promise<ProjectConfig>((resolve, reject) => {
-        requirejs(['text!config'],
+        requirejs(['text!./config.json'],
             function (configText: string) {
                 let config: ProjectConfig = JSON.parse(configText)
                 resolve(config)

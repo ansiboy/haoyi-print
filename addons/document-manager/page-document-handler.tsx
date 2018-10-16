@@ -45,9 +45,12 @@ export class DocumentFile {
         this.changedManage.setChangedData(pageData)
     }
 
-    save() {
-        this.originalPageData = JSON.parse(JSON.stringify(this._document.pageData));
-        return this.storage.save(this._document).then(o => {
+    save(document: PageDocument) {
+        if (!document)
+            throw Errors.argumentNull('document')
+            
+        this.originalPageData = JSON.parse(JSON.stringify(document.pageData));
+        return this.storage.save(document).then(o => {
             this._canSave = false
             return o
         });
@@ -81,19 +84,9 @@ export class DocumentFile {
         this._document.pageData = pageData
     }
 
-    static async load(storage: DocumentStorage, fileName: string): Promise<PageDocument> {
-        let data = await storage.load(fileName);
-        if (data == null) {
-            throw Errors.fileNotExists(fileName);
-        }
-
-        data.name = fileName
-        return data
-    }
-
-    static new(storage: DocumentStorage, init: PageDocument) {
+    static create(storage: DocumentStorage, init: PageDocument, isNew: boolean) {
         console.assert(init.name)
-        return new DocumentFile(storage, init, true);
+        return new DocumentFile(storage, init, isNew);
     }
 
 }
